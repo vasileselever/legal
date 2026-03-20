@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.git
+**/.vs
+**/.vscode
+**/logs/
+**/*.user
+**/*.suo
+**/Thumbs.db
+**/.DS_Store
+legal-ui/.env.local
+legal-ui/.env.development.local

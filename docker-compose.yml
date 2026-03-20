@@ -1,0 +1,93 @@
+# ============================================================
+# LegalRO - Production Docker Compose
+# ============================================================
+# Usage:
+#   1. Copy .env.example to .env and fill in your values
+#   2. docker compose up -d --build
+#   3. Access the app at https://your-domain.com
+# ============================================================
+
+services:
+  # -----------------------------------------------------------
+  # SQL Server Database
+  # -----------------------------------------------------------
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: legalro-db
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+      MSSQL_PID: Express
+    volumes:
+      - sqldata:/var/opt/mssql
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # -----------------------------------------------------------
+  # LegalRO Application (API + Frontend)
+  # -----------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: legalro-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=db;Database=LegalRO_CaseManagement;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true;Encrypt=true"
+      Jwt__Key: ${JWT_SECRET_KEY}
+      Jwt__Issuer: LegalRO.CaseManagement
+      Jwt__Audience: LegalRO.CaseManagement.Client
+      Jwt__ExpiryHours: "8"
+      Cors__AllowedOrigins__0: "https://${DOMAIN}"
+      Cors__AllowedOrigins__1: "http://${DOMAIN}"
+      Ai__AzureOpenAI__Endpoint: ${AZURE_OPENAI_ENDPOINT:-}
+      Ai__AzureOpenAI__ApiKey: ${AZURE_OPENAI_KEY:-}
+      Ai__AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
+    ports:
+      - "8080:8080"
+    volumes:
+      - app-logs:/app/logs
+    healthcheck:
+      test: curl -f http://localhost:8080/health || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # -----------------------------------------------------------
+  # Caddy Reverse Proxy (auto HTTPS with Let's Encrypt)
+  # -----------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    container_name: legalro-caddy
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+
+volumes:
+  sqldata:
+  app-logs:
+  caddy-data:
+  caddy-config:
