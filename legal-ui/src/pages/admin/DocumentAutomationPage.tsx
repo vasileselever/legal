@@ -7,7 +7,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import {
   type DocumentTemplateListItem, type SessionListItem, type SessionDetail,
   type GeneratedDocumentDetail, type ClauseLibraryItem, type QualityCheckResult,
-  type DocAutomationStats, type CreateDocumentTemplateDto,
+  type DocAutomationStats,
   getTemplates, getTemplate, getSessions, getSession, startSession, submitAnswers,
   generateDocument, getGeneratedDocuments, getGeneratedDocument, runQualityCheck,
   getClauses, getDocAutomationStats, abandonSession, deleteGeneratedDocument,
