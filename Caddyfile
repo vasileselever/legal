@@ -1,4 +1,8 @@
 {$DOMAIN} {
+    # Use Caddy's internal CA for local / dev domains (letsencrypt won't issue for .local).
+    # Remove this line in production to allow automatic Let's Encrypt issuance.
+    tls internal
+
     # Reverse proxy to the .NET app
     reverse_proxy app:8080
 
