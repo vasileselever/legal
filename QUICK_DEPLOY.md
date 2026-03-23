@@ -344,3 +344,7 @@ docker compose logs caddy -f        # Web proxy
 
 For detailed deployment guide, see: `DEPLOYMENT_GUIDE.md`
 
+### For Visual Studio Developers
+?? **Read first:** [README_DOCKER_DEPLOYMENT.md](README_DOCKER_DEPLOYMENT.md) (5 min overview)  
+?? **Then read:** [QUICK_DEPLOY.md](QUICK_DEPLOY.md) (checklist format)
+

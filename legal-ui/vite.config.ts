@@ -4,7 +4,7 @@ import fs from 'fs'
 import path from 'path'
 
 // Attempt to load local certs from ./certs (created by mkcert). If not present, fall back to HTTP.
-function loadLocalHttps() {
+function loadLocalHttps(): { key: Buffer; cert: Buffer } | undefined {
   try {
     const certDir = path.resolve(__dirname, 'certs')
     const keyPath = path.join(certDir, 'localhost-key.pem')
@@ -16,9 +16,9 @@ function loadLocalHttps() {
       }
     }
   } catch {
-    // ignore errors and fall back to false
+    // ignore errors and fall back to undefined
   }
-  return false
+  return undefined
 }
 
 export default defineConfig({
@@ -35,5 +35,21 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Split vendor packages into separate chunks
+          if (id.includes('node_modules/react')) {
+            return 'vendor-react'
+          }
+          if (id.includes('node_modules/@headlessui') || id.includes('node_modules/@heroicons')) {
+            return 'vendor-ui'
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // Increase limit to suppress warning
   },
 })

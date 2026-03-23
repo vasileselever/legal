@@ -159,9 +159,12 @@ Build ? Build Solution
 
 # In PowerShell
 cd legal-ui
-npm ci && npm run build
+npm ci
+npm run build
 cd ..
-git add . && git commit -m "Ready for deployment" && git push
+git add .
+git commit -m "Ready for deployment"
+git push
 ```
 
 ### Step 3: Setup Server (30 minutes)
