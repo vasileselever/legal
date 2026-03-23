@@ -59,10 +59,32 @@ fi
 
 if [ ! -f "$APP_DIR/.git/config" ]; then
     sudo chown $USER:$USER "$APP_DIR"
-    echo "Enter your Git repository URL (https://github.com/username/legal.git):"
+    echo "Enter your Git repository URL:"
+    echo "  - HTTPS with PAT: https://USERNAME:TOKEN@github.com/vasileselever/legal.git"
+    echo "  - HTTPS without auth: https://github.com/vasileselever/legal.git (if public)"
+    echo "  - SSH: git@github.com:vasileselever/legal.git (if SSH key configured)"
+    echo ""
     read -p "URL: " GIT_URL
     cd "$APP_DIR"
-    git clone "$GIT_URL" .
+    
+    # Try to clone with better error handling
+    if ! git clone "$GIT_URL" .; then
+        echo -e "${RED}? Clone failed. Authentication issue?${NC}"
+        echo ""
+        echo "Solutions:"
+        echo "1. Generate GitHub Personal Access Token:"
+        echo "   - Go to: https://github.com/settings/tokens"
+        echo "   - Create token with 'repo' scope"
+        echo "   - Use: https://vasileselever:TOKEN@github.com/vasileselever/legal.git"
+        echo ""
+        echo "2. Use SSH (if configured):"
+        echo "   - Use: git@github.com:vasileselever/legal.git"
+        echo ""
+        echo "3. If repo is public, try without auth:"
+        echo "   - Use: https://github.com/vasileselever/legal.git"
+        echo ""
+        exit 1
+    fi
     echo -e "${GREEN}? Repository cloned${NC}"
 else
     cd "$APP_DIR"
