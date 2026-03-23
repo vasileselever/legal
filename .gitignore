@@ -384,14 +384,17 @@ FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+//.vscode/settings.json
+//.vscode/tasks.json
+//.vscode/launch.json
+//.vscode/extensions.json
 *.code-workspace
 
 # Local History for Visual Studio Code
 .history/
+
+# Ignore local dev HTTPS certs (mkcert)
+legal-ui/certs/
 
 # Windows Installer files from build outputs
 *.cab

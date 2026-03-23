@@ -128,6 +128,7 @@ public class DocumentAutomationService : IDocumentAutomationService
             .FirstOrDefaultAsync(x => x.Id == templateId && x.FirmId == firmId, ct);
         if (t == null) return null;
 
+        // Update basic properties
         if (dto.Name is not null) t.Name = dto.Name;
         if (dto.Description is not null) t.Description = dto.Description;
         if (dto.Category.HasValue) t.Category = dto.Category.Value;
@@ -139,7 +140,74 @@ public class DocumentAutomationService : IDocumentAutomationService
         if (dto.Tags is not null) t.Tags = dto.Tags;
         if (dto.IsActive.HasValue) t.IsActive = dto.IsActive.Value;
 
+        // Handle field updates if provided
+        if (dto.Fields.Count > 0)
+        {
+            // Collect IDs of fields being updated
+            var incomingFieldIds = dto.Fields.Where(f => f.Id.HasValue).Select(f => f.Id!.Value).ToHashSet();
+            var existingFieldIds = t.Fields.Where(f => !f.IsDeleted).Select(f => f.Id).ToHashSet();
+
+            // Mark fields that are not in the incoming list as deleted (soft delete)
+            foreach (var field in t.Fields.Where(f => !f.IsDeleted && !incomingFieldIds.Contains(f.Id)))
+            {
+                field.IsDeleted = true;
+            }
+
+            // Update or create fields
+            foreach (var dtoField in dto.Fields)
+            {
+                if (dtoField.Id.HasValue && existingFieldIds.Contains(dtoField.Id.Value))
+                {
+                    // Update existing field
+                    var existing = t.Fields.FirstOrDefault(f => f.Id == dtoField.Id.Value);
+                    if (existing != null && !existing.IsDeleted)
+                    {
+                        existing.FieldKey = dtoField.FieldKey;
+                        existing.Label = dtoField.Label;
+                        existing.LabelEn = dtoField.LabelEn;
+                        existing.HelpText = dtoField.HelpText;
+                        existing.FieldType = dtoField.FieldType;
+                        existing.SortOrder = dtoField.SortOrder;
+                        existing.Section = dtoField.Section;
+                        existing.IsRequired = dtoField.IsRequired;
+                        existing.DefaultValue = dtoField.DefaultValue;
+                        existing.OptionsJson = dtoField.OptionsJson;
+                        existing.ConditionJson = dtoField.ConditionJson;
+                        existing.ValidationPattern = dtoField.ValidationPattern;
+                        existing.ValidationMessage = dtoField.ValidationMessage;
+                    }
+                }
+                else if (!dtoField.Id.HasValue || !existingFieldIds.Contains(dtoField.Id.Value))
+                {
+                    // Create new field
+                    var newField = new DocumentTemplateField
+                    {
+                        TemplateId = templateId,
+                        FieldKey = dtoField.FieldKey,
+                        Label = dtoField.Label,
+                        LabelEn = dtoField.LabelEn,
+                        HelpText = dtoField.HelpText,
+                        FieldType = dtoField.FieldType,
+                        SortOrder = dtoField.SortOrder,
+                        Section = dtoField.Section,
+                        IsRequired = dtoField.IsRequired,
+                        DefaultValue = dtoField.DefaultValue,
+                        OptionsJson = dtoField.OptionsJson,
+                        ConditionJson = dtoField.ConditionJson,
+                        ValidationPattern = dtoField.ValidationPattern,
+                        ValidationMessage = dtoField.ValidationMessage
+                    };
+                    t.Fields.Add(newField);
+                }
+            }
+        }
+
         await _db.SaveChangesAsync(ct);
+        
+        // Reload to get updated relationships
+        await _db.Entry(t).Collection(x => x.Fields).LoadAsync(ct);
+        await _db.Entry(t).Collection(x => x.ClauseMappings).LoadAsync(ct);
+        
         return MapTemplateDetail(t);
     }
 
@@ -817,7 +885,7 @@ public class DocumentAutomationService : IDocumentAutomationService
         EstimatedMinutes = t.EstimatedMinutes,
         Tags = t.Tags,
         CreatedAt = t.CreatedAt,
-        Fields = t.Fields.Select(MapField).ToList(),
+        Fields = t.Fields.Where(f => !f.IsDeleted).OrderBy(f => f.SortOrder).Select(MapField).ToList(),
         ClauseMappings = t.ClauseMappings
             .Where(m => !m.IsDeleted)
             .OrderBy(m => m.SortOrder)
@@ -884,7 +952,7 @@ public class DocumentAutomationService : IDocumentAutomationService
         ClientId = s.ClientId,
         CreatedAt = s.CreatedAt,
         CompletedAt = s.CompletedAt,
-        Fields = s.Template.Fields.Select(MapField).ToList(),
+        Fields = s.Template.Fields.Where(f => !f.IsDeleted).OrderBy(f => f.SortOrder).Select(MapField).ToList(),
         Answers = s.Answers.Select(a => new DocumentSessionAnswerDto
         {
             Id = a.Id,

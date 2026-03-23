@@ -70,6 +70,28 @@ public class UpdateDocumentTemplateDto
     public int? EstimatedMinutes { get; set; }
     public string? Tags { get; set; }
     public bool? IsActive { get; set; }
+    
+    /// <summary>Updated fields for the template. If provided, all fields will be replaced with these.</summary>
+    public List<UpdateDocumentTemplateFieldDto> Fields { get; set; } = new();
+}
+
+/// <summary>DTO for updating template fields</summary>
+public class UpdateDocumentTemplateFieldDto
+{
+    public Guid? Id { get; set; } // null = new field, otherwise existing field
+    public string FieldKey { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string? LabelEn { get; set; }
+    public string? HelpText { get; set; }
+    public TemplateFieldType FieldType { get; set; }
+    public int SortOrder { get; set; }
+    public string? Section { get; set; }
+    public bool IsRequired { get; set; } = true;
+    public string? DefaultValue { get; set; }
+    public string? OptionsJson { get; set; }
+    public string? ConditionJson { get; set; }
+    public string? ValidationPattern { get; set; }
+    public string? ValidationMessage { get; set; }
 }
 
 // ?? Field DTOs ???????????????????????????????????????????????????????

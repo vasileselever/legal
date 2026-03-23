@@ -959,18 +959,24 @@ function TemplateEditor({ editId, onBack }: { editId: string | null; onBack: () 
 
     setSaving(true);
     try {
-      const fieldDtos = fields.filter(f => f.fieldKey.trim()).map((f, i) => ({
-        fieldKey: f.fieldKey.trim(),
-        label: f.label.trim() || f.fieldKey.trim(),
-        labelEn: f.labelEn || undefined,
-        helpText: f.helpText || undefined,
-        fieldType: f.fieldType,
-        sortOrder: i + 1,
-        section: f.section || undefined,
-        isRequired: f.isRequired,
-        defaultValue: f.defaultValue || undefined,
-        optionsJson: f.optionsJson || undefined,
-      }));
+      // For field DTOs: if the key looks like a UUID and wasn't just generated, it's an existing field
+      const fieldDtos = fields.filter(f => f.fieldKey.trim()).map((f, i) => {
+        // Check if this is an existing field ID (looks like UUID)
+        const isExistingFieldId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(f.key);
+        return {
+          id: isExistingFieldId ? f.key : undefined,
+          fieldKey: f.fieldKey.trim(),
+          label: f.label.trim() || f.fieldKey.trim(),
+          labelEn: f.labelEn || undefined,
+          helpText: f.helpText || undefined,
+          fieldType: f.fieldType,
+          sortOrder: i + 1,
+          section: f.section || undefined,
+          isRequired: f.isRequired,
+          defaultValue: f.defaultValue || undefined,
+          optionsJson: f.optionsJson || undefined,
+        };
+      });
 
       if (isCreate) {
         await createTemplate({
@@ -983,7 +989,7 @@ function TemplateEditor({ editId, onBack }: { editId: string | null; onBack: () 
           bodyTemplateEn: bodyTemplateEn || undefined,
           estimatedMinutes,
           tags: tags || undefined,
-          fields: fieldDtos,
+          fields: fieldDtos.map(f => ({ ...f, id: undefined })),
         });
         setSuccess('Șablon creat cu succes!');
       } else {
@@ -998,6 +1004,7 @@ function TemplateEditor({ editId, onBack }: { editId: string | null; onBack: () 
           estimatedMinutes,
           tags: tags || undefined,
           isActive,
+          fields: fieldDtos,
         });
         setSuccess('Șablon actualizat cu succes!');
       }
