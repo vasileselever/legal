@@ -172,7 +172,8 @@ git push
 # On your Ubuntu server
 ssh user@your-server-ip
 cd /home/user
-wget https://raw.githubusercontent.com/your-username/legal/main/deploy.sh
+git clone https://github.com/vasileselever/legal.git legal
+cd legal
 bash deploy.sh
 # Follow prompts
 ```
