@@ -19,6 +19,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		legal-ui\vite.config.ts = legal-ui\vite.config.ts
 	EndProjectSection
 EndProject
+
+
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "legal-ui", "legal-ui", "{A1B2C3D4-0001-0000-0000-000000000001}"
+	ProjectSection(SolutionItems) = preProject
+		..\legal-ui\index.html = ..\legal-ui\index.html
+		..\legal-ui\package.json = ..\legal-ui\package.json
+		..\legal-ui\src\App.tsx = ..\legal-ui\src\App.tsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A1B2C3D4-0002-0000-0000-000000000002}"
+	ProjectSection(SolutionItems) = preProject
+		..\docs\USER_GUIDE.md = ..\docs\USER_GUIDE.md
+	EndProjectSection
+EndProject
+
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
