@@ -45,7 +45,12 @@ public class LeadsController : ControllerBase
         try
         {
             var firmId = ClaimsHelper.GetFirmId(User);
-            var query = _context.Leads.Where(l => l.FirmId == firmId).AsQueryable();
+
+            // Include AssignedLawyer navigation property to ensure it's loaded
+            var query = _context.Leads
+                .Include(l => l.AssignedLawyer)
+                .Where(l => l.FirmId == firmId)
+                .AsQueryable();
 
             // Apply filters
             if (status.HasValue) query = query.Where(l => l.Status == status.Value);
@@ -81,6 +86,7 @@ public class LeadsController : ControllerBase
                     Score = l.Score,
                     PracticeArea = l.PracticeArea,
                     Urgency = l.Urgency,
+                    AssignedTo = l.AssignedTo,
                     AssignedToName = l.AssignedLawyer != null
                         ? l.AssignedLawyer.FirstName + " " + l.AssignedLawyer.LastName
                         : null,

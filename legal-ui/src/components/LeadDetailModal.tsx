@@ -14,7 +14,7 @@ import {
   CONSULTATION_STATUS_COLORS, consultationService,
 } from '../api/consultationService';
 
-interface Props { leadId: string; onClose: () => void; onStatusChanged: () => void; }
+interface Props { leadId: string; onClose: () => void; onStatusChanged: () => void; refreshTrigger?: number; } // ✅ ADDED: refreshTrigger
 
 const FIELDS = (lead: LeadDetailItem) => [
   ['Email', lead.email],
@@ -29,7 +29,7 @@ const FIELDS = (lead: LeadDetailItem) => [
 
 const STATUS_FLOW = [1, 2, 3, 4, 5, 6, 7];
 
-export function LeadDetailModal({ leadId, onClose, onStatusChanged }: Props) {
+export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigger }: Props) {
   const [lead, setLead]                 = useState<LeadDetailItem | null>(null);
   const [convs, setConvs]               = useState<ConversationItem[]>([]);
   const [users, setUsers]               = useState<UserInfo[]>([]);
@@ -60,6 +60,13 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged }: Props) {
   };
 
   useEffect(() => { load(); }, [leadId]);
+  
+  // ✅ ADDED: Refresh when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger !== undefined) {
+      load();
+    }
+  }, [refreshTrigger]);
 
   const handleStatusChange = async (newStatus: number) => {
     if (!lead) return;
@@ -189,7 +196,11 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged }: Props) {
                 <select style={{ ...inp, width: 'auto', minWidth: '220px' }}
                   value={lead.assignedTo || ''}
                   onChange={async e => {
-                    try { await leadService.updateLead(leadId, { assignedTo: e.target.value || undefined }); await load(); }
+                    try { 
+                      await leadService.updateLead(leadId, { assignedTo: e.target.value || undefined }); 
+                      await load();
+                      onStatusChanged(); // ✅ ADDED: Notify parent to refresh the list
+                    }
                     catch (err: any) { setError(err.message); }
                   }}>
                   <option value="">-- Neasignat --</option>

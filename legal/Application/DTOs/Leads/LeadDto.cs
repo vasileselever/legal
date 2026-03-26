@@ -18,6 +18,7 @@ public class LeadListDto
     public int Score { get; set; }
     public PracticeArea PracticeArea { get; set; }
     public LeadUrgency Urgency { get; set; }
+    public Guid? AssignedTo { get; set; }
     public string? AssignedToName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? NextConsultation { get; set; }
@@ -203,6 +204,7 @@ public class ConsultationDto
 {
     public Guid Id { get; set; }
     public Guid LeadId { get; set; }
+    public string? LeadName { get; set; }  // ? ADDED: Lead name for display
     public Guid LawyerId { get; set; }
     public string LawyerName { get; set; } = string.Empty;
     public DateTime ScheduledAt { get; set; }
@@ -223,6 +225,30 @@ public class CreateConsultationDto
     [Required]
     public Guid LeadId { get; set; }
 
+    [Required]
+    public Guid LawyerId { get; set; }
+
+    [Required]
+    public DateTime ScheduledAt { get; set; }
+
+    [Range(15, 120, ErrorMessage = "Duration must be between 15 and 120 minutes")]
+    public int DurationMinutes { get; set; } = 30;
+
+    [Required]
+    public ConsultationType Type { get; set; }
+
+    [MaxLength(300)]
+    public string? Location { get; set; }
+
+    [MaxLength(1000)]
+    public string? PreparationNotes { get; set; }
+}
+
+/// <summary>
+/// DTO for updating a consultation
+/// </summary>
+public class UpdateConsultationDto
+{
     [Required]
     public Guid LawyerId { get; set; }
 

@@ -1,18 +1,32 @@
 import { apiClient } from './apiClient';
 
 export interface ConsultationItem {
-  id: string; leadId: string; leadName?: string;
-  lawyerId: string; lawyerName: string;
-  scheduledAt: string; durationMinutes: number;
-  type: number; status: number;
-  videoMeetingLink?: string; location?: string;
-  isConfirmed: boolean; consultationNotes?: string;
+  id: string; 
+  leadId: string; 
+  leadName?: string;  // ? ADDED: Lead name
+  lawyerId: string; 
+  lawyerName: string;
+  scheduledAt: string; 
+  durationMinutes: number;
+  type: number; 
+  status: number;
+  videoMeetingLink?: string; 
+  location?: string;
+  isConfirmed: boolean; 
+  consultationNotes?: string;
 }
 export interface CreateConsultationDto {
   leadId: string; lawyerId: string; scheduledAt: string;
   durationMinutes: number; type: number;
   location?: string; preparationNotes?: string;
 }
+
+export interface UpdateConsultationDto {
+  lawyerId: string; scheduledAt: string;
+  durationMinutes: number; type: number;
+  location?: string; preparationNotes?: string;
+}
+
 export const CONSULTATION_TYPE_LABELS: Record<number, string> = { 1: 'Telefon', 2: 'Video', 3: 'Fizic' };
 export const CONSULTATION_TYPE_COLORS: Record<number, string> = { 1: '#7b1fa2', 2: '#1976d2', 3: '#e65100' };
 export const CONSULTATION_STATUS_LABELS: Record<number, string> = {
@@ -40,6 +54,16 @@ export const consultationService = {
     const { data } = await apiClient.post('/consultations', dto);
     if (!data.success) throw new Error(data.message);
     return data.data;
+  },
+
+  update: async (id: string, dto: UpdateConsultationDto): Promise<void> => {
+    const { data } = await apiClient.put('/consultations/' + id, dto);
+    if (!data.success) throw new Error(data.message);
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { data } = await apiClient.delete('/consultations/' + id);
+    if (!data.success) throw new Error(data.message);
   },
 
   // API uses PATCH /consultations/{id}/status with body = bare number

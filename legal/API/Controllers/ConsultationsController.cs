@@ -28,7 +28,7 @@ public class ConsultationsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all consultations with filtering
+    /// Get all consultations for the authenticated user's firm with filtering
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<ConsultationDto>>), StatusCodes.Status200OK)]
@@ -40,9 +40,12 @@ public class ConsultationsController : ControllerBase
     {
         try
         {
+            var firmId = ClaimsHelper.GetFirmId(User);
+
             var query = _context.Consultations
                 .Include(c => c.Lawyer)
                 .Include(c => c.Lead)
+                .Where(c => c.Lead.FirmId == firmId)  // Firm isolation
                 .AsQueryable();
 
             if (lawyerId.HasValue)
@@ -63,8 +66,9 @@ public class ConsultationsController : ControllerBase
                 {
                     Id = c.Id,
                     LeadId = c.LeadId,
+                    LeadName = c.Lead != null ? c.Lead.Name : null,
                     LawyerId = c.LawyerId,
-                    LawyerName = $"{c.Lawyer.FirstName} {c.Lawyer.LastName}",
+                    LawyerName = c.Lawyer != null ? $"{c.Lawyer.FirstName} {c.Lawyer.LastName}" : "Unknown",
                     ScheduledAt = c.ScheduledAt,
                     DurationMinutes = c.DurationMinutes,
                     Type = c.Type,
@@ -83,6 +87,14 @@ public class ConsultationsController : ControllerBase
                 Message = $"Retrieved {consultations.Count} consultations"
             });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<List<ConsultationDto>>
+            {
+                Success = false,
+                Message = "User not associated with a firm"
+            });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving consultations");
@@ -95,7 +107,7 @@ public class ConsultationsController : ControllerBase
     }
 
     /// <summary>
-    /// Get consultation by ID
+    /// Get consultation by ID (scoped to the user's firm)
     /// </summary>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<ConsultationDto>), StatusCodes.Status200OK)]
@@ -104,16 +116,19 @@ public class ConsultationsController : ControllerBase
     {
         try
         {
+            var firmId = ClaimsHelper.GetFirmId(User);
+
             var consultation = await _context.Consultations
                 .Include(c => c.Lawyer)
                 .Include(c => c.Lead)
-                .Where(c => c.Id == id)
+                .Where(c => c.Id == id && c.Lead.FirmId == firmId)  // Firm isolation
                 .Select(c => new ConsultationDto
                 {
                     Id = c.Id,
                     LeadId = c.LeadId,
+                    LeadName = c.Lead != null ? c.Lead.Name : null,
                     LawyerId = c.LawyerId,
-                    LawyerName = $"{c.Lawyer.FirstName} {c.Lawyer.LastName}",
+                    LawyerName = c.Lawyer != null ? $"{c.Lawyer.FirstName} {c.Lawyer.LastName}" : "Unknown",
                     ScheduledAt = c.ScheduledAt,
                     DurationMinutes = c.DurationMinutes,
                     Type = c.Type,
@@ -141,6 +156,14 @@ public class ConsultationsController : ControllerBase
                 Message = "Consultation retrieved successfully"
             });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<ConsultationDto>
+            {
+                Success = false,
+                Message = "User not associated with a firm"
+            });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving consultation {ConsultationId}", id);
@@ -153,7 +176,7 @@ public class ConsultationsController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new consultation
+    /// Create a new consultation (validates Lead and Lawyer belong to the user's firm)
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
@@ -169,15 +192,18 @@ public class ConsultationsController : ControllerBase
 
         try
         {
+            var firmId = ClaimsHelper.GetFirmId(User);
             var userId = ClaimsHelper.GetUserId(User);
 
-            var lead = await _context.Leads.FindAsync(dto.LeadId);
+            // Validate lead belongs to the same firm
+            var lead = await _context.Leads.FirstOrDefaultAsync(l => l.Id == dto.LeadId && l.FirmId == firmId);
             if (lead == null)
-                return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Lead not found" });
+                return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Lead not found or doesn't belong to your firm" });
 
-            var lawyer = await _context.Users.FindAsync(dto.LawyerId);
+            // Validate lawyer belongs to the same firm
+            var lawyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.LawyerId && u.FirmId == firmId);
             if (lawyer == null)
-                return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Lawyer not found" });
+                return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Lawyer not found or doesn't belong to your firm" });
 
             var hasConflict = await _context.Consultations
                 .AnyAsync(c =>
@@ -224,6 +250,10 @@ public class ConsultationsController : ControllerBase
                 Message = "Consultation scheduled successfully"
             });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<Guid> { Success = false, Message = "User not associated with a firm" });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating consultation");
@@ -232,7 +262,7 @@ public class ConsultationsController : ControllerBase
     }
 
     /// <summary>
-    /// Update consultation status
+    /// Update consultation status (scoped to the user's firm)
     /// </summary>
     [HttpPatch("{id}/status")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
@@ -243,9 +273,11 @@ public class ConsultationsController : ControllerBase
     {
         try
         {
+            var firmId = ClaimsHelper.GetFirmId(User);
+
             var consultation = await _context.Consultations
                 .Include(c => c.Lead)
-                .Where(c => c.Id == id)
+                .Where(c => c.Id == id && c.Lead.FirmId == firmId)  // Firm isolation
                 .FirstOrDefaultAsync();
 
             if (consultation == null)
@@ -267,7 +299,6 @@ public class ConsultationsController : ControllerBase
             }
             else if (status == ConsultationStatus.NoShow)
             {
-                // Create activity for no-show
                 var activity = new LeadActivity
                 {
                     LeadId = consultation.LeadId,
@@ -290,6 +321,10 @@ public class ConsultationsController : ControllerBase
                 Message = "Consultation status updated successfully"
             });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User not associated with a firm" });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating consultation status {ConsultationId}", id);
@@ -302,7 +337,7 @@ public class ConsultationsController : ControllerBase
     }
 
     /// <summary>
-    /// Confirm consultation attendance
+    /// Confirm consultation attendance (scoped to the user's firm)
     /// </summary>
     [HttpPost("{id}/confirm")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
@@ -311,7 +346,12 @@ public class ConsultationsController : ControllerBase
     {
         try
         {
-            var consultation = await _context.Consultations.FindAsync(id);
+            var firmId = ClaimsHelper.GetFirmId(User);
+
+            var consultation = await _context.Consultations
+                .Include(c => c.Lead)
+                .Where(c => c.Id == id && c.Lead.FirmId == firmId)  // Firm isolation
+                .FirstOrDefaultAsync();
 
             if (consultation == null)
             {
@@ -337,6 +377,10 @@ public class ConsultationsController : ControllerBase
                 Message = "Consultation confirmed successfully"
             });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User not associated with a firm" });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error confirming consultation {ConsultationId}", id);
@@ -349,7 +393,7 @@ public class ConsultationsController : ControllerBase
     }
 
     /// <summary>
-    /// Get lawyer availability for consultation scheduling
+    /// Get lawyer availability for consultation scheduling (scoped to the user's firm)
     /// </summary>
     [HttpGet("availability/{lawyerId}")]
     [AllowAnonymous] // Allow public access for online booking
@@ -419,6 +463,200 @@ public class ConsultationsController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while retrieving availability"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Update consultation details (scoped to the user's firm)
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> UpdateConsultation(
+        Guid id,
+        [FromBody] UpdateConsultationDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
+            });
+
+        try
+        {
+            var firmId = ClaimsHelper.GetFirmId(User);
+            var userId = ClaimsHelper.GetUserId(User);
+
+            var consultation = await _context.Consultations
+                .Include(c => c.Lead)
+                .Where(c => c.Id == id && c.Lead.FirmId == firmId)  // Firm isolation
+                .FirstOrDefaultAsync();
+
+            if (consultation == null)
+            {
+                return NotFound(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Consultation not found"
+                });
+            }
+
+            // Validate lawyer belongs to the same firm
+            var lawyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.LawyerId && u.FirmId == firmId);
+            if (lawyer == null)
+                return BadRequest(new ApiResponse<bool> { Success = false, Message = "Lawyer not found or doesn't belong to your firm" });
+
+            // Check for scheduling conflicts (excluding current consultation)
+            var hasConflict = await _context.Consultations
+                .AnyAsync(c =>
+                    c.Id != id &&
+                    c.LawyerId == dto.LawyerId &&
+                    c.Status != ConsultationStatus.Cancelled &&
+                    c.ScheduledAt < dto.ScheduledAt.AddMinutes(dto.DurationMinutes) &&
+                    dto.ScheduledAt < c.ScheduledAt.AddMinutes(c.DurationMinutes));
+
+            if (hasConflict)
+                return BadRequest(new ApiResponse<bool> { Success = false, Message = "Lawyer has a scheduling conflict at this time" });
+
+            // Update consultation
+            consultation.LawyerId = dto.LawyerId;
+            consultation.ScheduledAt = dto.ScheduledAt;
+            consultation.DurationMinutes = dto.DurationMinutes;
+            consultation.Type = dto.Type;
+            consultation.Location = dto.Location;
+            consultation.PreparationNotes = dto.PreparationNotes;
+
+            // Update video link if type changed to Video
+            if (dto.Type == ConsultationType.Video && string.IsNullOrEmpty(consultation.VideoMeetingLink))
+            {
+                consultation.VideoMeetingLink = GenerateVideoMeetingLink();
+            }
+            else if (dto.Type != ConsultationType.Video)
+            {
+                consultation.VideoMeetingLink = null;
+            }
+
+            // Log activity
+            _context.LeadActivities.Add(new LeadActivity
+            {
+                LeadId = consultation.LeadId,
+                ActivityType = "ConsultationUpdated",
+                Description = $"Consultation rescheduled to {dto.ScheduledAt:yyyy-MM-dd HH:mm} with {lawyer.FirstName} {lawyer.LastName}",
+                UserId = userId
+            });
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Consultation updated: {ConsultationId} by user {UserId}", id, userId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Consultation updated successfully"
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User not associated with a firm" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating consultation {ConsultationId}", id);
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = "An error occurred while updating the consultation"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Delete (cancel) consultation (scoped to the user's firm)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteConsultation(Guid id)
+    {
+        try
+        {
+            var firmId = ClaimsHelper.GetFirmId(User);
+            var userId = ClaimsHelper.GetUserId(User);
+
+            var consultation = await _context.Consultations
+                .Include(c => c.Lead)
+                .Include(c => c.Lawyer)
+                .Where(c => c.Id == id && c.Lead.FirmId == firmId)  // Firm isolation
+                .FirstOrDefaultAsync();
+
+            if (consultation == null)
+            {
+                return NotFound(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Consultation not found"
+                });
+            }
+
+            // Soft delete: Mark as cancelled instead of deleting
+            consultation.Status = ConsultationStatus.Cancelled;
+            consultation.IsDeleted = true;
+
+            // Log activity
+            _context.LeadActivities.Add(new LeadActivity
+            {
+                LeadId = consultation.LeadId,
+                ActivityType = "ConsultationCancelled",
+                Description = $"Consultation cancelled: {consultation.ScheduledAt:yyyy-MM-dd HH:mm} with {consultation.Lawyer.FirstName} {consultation.Lawyer.LastName}",
+                UserId = userId
+            });
+
+            // Update lead status if needed
+            if (consultation.Lead.Status == LeadStatus.ConsultationScheduled)
+            {
+                // Check if there are other scheduled consultations for this lead
+                var hasOtherConsultations = await _context.Consultations
+                    .AnyAsync(c => 
+                        c.LeadId == consultation.LeadId &&
+                        c.Id != id &&
+                        c.Status != ConsultationStatus.Cancelled &&
+                        !c.IsDeleted);
+
+                if (!hasOtherConsultations)
+                {
+                    // Revert lead status
+                    consultation.Lead.Status = LeadStatus.Contacted;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Consultation cancelled: {ConsultationId} by user {UserId}", id, userId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Consultation cancelled successfully"
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User not associated with a firm" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting consultation {ConsultationId}", id);
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = "An error occurred while cancelling the consultation"
             });
         }
     }
