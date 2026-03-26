@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { AdminLayout } from './AdminLayout';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -384,7 +384,7 @@ export function UsersPage() {
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <Badge label={ROLE_LABELS[u.role] ?? String(u.role)} color={ROLE_COLORS[u.role] ?? '#666'} />
                       </td>
-                      {/* Status � toggle switch */}
+                      {/* Status – toggle switch */}
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <ToggleSwitch
                           checked={u.isActive}
@@ -630,90 +630,100 @@ function EditUserModal({ user, isCurrentUser, onClose, onSaved, onError }: {
   );
 }
 
-// ?? Stats Modal ????????????????????????????????????????????????????????????????
+
+// ── Stats Modal ────────────────────────────────────────────────────────────────
 function StatsModal({ user, onClose }: { user: UserInfo; onClose: () => void }) {
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+    const [stats, setStats] = useState<UserStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true); setError('');
-      try { setStats(await userService.getStats(user.id)); }
-      catch (e: any) { setError(e.message); }
-      finally { setLoading(false); }
-    })();
-  }, [user.id]);
+    useEffect(() => {
+        (async () => {
+            setLoading(true); setError('');
+            try { setStats(await userService.getStats(user.id)); }
+            catch (e: any) { setError(e.message); }
+            finally { setLoading(false); }
+        })();
+    }, [user.id]);
 
-  const statRow = (icon: string, label: string, value: string | number) => (
-    <div key={label} style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '0.65rem 0', borderBottom: '1px solid #f0f0f0',
-    }}>
-      <span style={{ fontSize: '0.9rem', color: '#555', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span>{icon}</span> {label}
-      </span>
-      <span style={{ fontWeight: 700, color: '#1a237e', fontSize: '1.1rem' }}>{value}</span>
-    </div>
-  );
+    const statRowStyle: React.CSSProperties = {
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '0.65rem 0', borderBottom: '1px solid #f0f0f0',
+    };
 
-  return (
-    <div style={modalOverlay} onClick={onClose}>
-      <div style={modalBox} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-          <h3 style={{ margin: 0, color: '#1a237e', fontSize: '1.1rem' }}>
-            &#x1F4CA; Statistici &mdash; {user.firstName} {user.lastName}
-          </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#999' }}>&times;</button>
+    return (
+        <div style={modalOverlay} onClick={onClose}>
+            <div style={modalBox} onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                    <h3 style={{ margin: 0, color: '#1a237e', fontSize: '1.1rem' }}>
+                        &#x1F4CA; Statistici &mdash; {user.firstName} {user.lastName}
+                    </h3>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: '#999' }}>&times;</button>
+                </div>
+
+                {/* User info header */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem',
+                    padding: '0.875rem', background: '#f8f9ff', borderRadius: '8px',
+                }}>
+                    <div style={{
+                        width: '44px', height: '44px', borderRadius: '50%',
+                        background: '#e8eaf6', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 700, color: '#3949ab', fontSize: '1rem',
+                    }}>
+                        {user.firstName[0]}{user.lastName[0]}
+                    </div>
+                    <div>
+                        <div style={{ fontWeight: 600, color: '#1a237e' }}>{user.firstName} {user.lastName}</div>
+                        <div style={{ fontSize: '0.82rem', color: '#888' }}>{user.email}</div>
+                    </div>
+                    <Badge label={ROLE_LABELS[user.role] ?? String(user.role)} color={ROLE_COLORS[user.role] ?? '#666'} />
+                </div>
+
+                {loading ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>Se \u00EEncarc\u0103...</div>
+                ) : error ? (
+                    <div style={{ background: '#ffebee', borderRadius: '6px', padding: '0.75rem', color: '#c62828', fontSize: '0.88rem' }}>
+                        {error}
+                    </div>
+                ) : stats && (
+                    <div>
+                        <div style={statRowStyle}>
+                            <span style={{ fontSize: '0.9rem', color: '#555', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>&#x1F4BC;</span> Dosare responsabil</span>
+                            <span style={{ fontWeight: 700, color: '#1a237e', fontSize: '1.1rem' }}>{stats.casesResponsible}</span>
+                        </div>
+                        <div style={statRowStyle}>
+                            <span style={{ fontSize: '0.9rem', color: '#555', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>&#x1F4C1;</span> Dosare asignat</span>
+                            <span style={{ fontWeight: 700, color: '#1a237e', fontSize: '1.1rem' }}>{stats.casesAssigned}</span>
+                        </div>
+                        <div style={statRowStyle}>
+                            <span style={{ fontSize: '0.9rem', color: '#555', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>&#x2705;</span> Task-uri asignate</span>
+                            <span style={{ fontWeight: 700, color: '#1a237e', fontSize: '1.1rem' }}>{stats.tasksAssigned}</span>
+                        </div>
+                        <div style={statRowStyle}>
+                            <span style={{ fontSize: '0.9rem', color: '#555', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>&#x1F4C4;</span> Documente \u00EEnc\u0103rcate</span>
+                            <span style={{ fontWeight: 700, color: '#1a237e', fontSize: '1.1rem' }}>{stats.documentsUploaded}</span>
+                        </div>
+                        <div style={statRowStyle}>
+                            <span style={{ fontSize: '0.9rem', color: '#555', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>&#x1F552;</span> Ultima activitate</span>
+                            <span style={{ fontWeight: 700, color: '#1a237e', fontSize: '1.1rem' }}>
+                                {stats.lastActivity
+                                    ? new Date(stats.lastActivity).toLocaleString('ro-RO', {
+                                        day: '2-digit', month: 'short', year: 'numeric',
+                                        hour: '2-digit', minute: '2-digit',
+                                    })
+                                    : 'N/A'}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+                    <button onClick={onClose} style={btnSecondary}>\u00CEnchide</button>
+                </div>
+            </div>
         </div>
-
-        {/* User info header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem',
-          padding: '0.875rem', background: '#f8f9ff', borderRadius: '8px',
-        }}>
-          <div style={{
-            width: '44px', height: '44px', borderRadius: '50%',
-            background: '#e8eaf6', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 700, color: '#3949ab', fontSize: '1rem',
-          }}>
-            {user.firstName[0]}{user.lastName[0]}
-          </div>
-          <div>
-            <div style={{ fontWeight: 600, color: '#1a237e' }}>{user.firstName} {user.lastName}</div>
-            <div style={{ fontSize: '0.82rem', color: '#888' }}>{user.email}</div>
-          </div>
-          <Badge label={ROLE_LABELS[user.role] ?? String(user.role)} color={ROLE_COLORS[user.role] ?? '#666'} />
-        </div>
-
-        {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>Se \u00EIncarc\u0103...</div>
-        ) : error ? (
-          <div style={{ background: '#ffebee', borderRadius: '6px', padding: '0.75rem', color: '#c62828', fontSize: '0.88rem' }}>
-            {error}
-          </div>
-        ) : stats && (
-          <div>
-            {statRow('\uD83D\uDCBC', 'Dosare responsabil', stats.casesResponsible)}
-            {statRow('\uD83D\uDCC1', 'Dosare asignat', stats.casesAssigned)}
-            {statRow('\u2705', 'Task-uri asignate', stats.tasksAssigned)}
-            {statRow('\uD83D\uDCC4', 'Documente \u00EEnc\u0103rcate', stats.documentsUploaded)}
-            {statRow('\uD83D\uDD52', 'Ultima activitate', stats.lastActivity
-              ? new Date(stats.lastActivity).toLocaleString('ro-RO', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit',
-              })
-              : 'N/A'
-            )}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-          <button onClick={onClose} style={btnSecondary}>\u00CEnchide</button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }
 
 // ?? Reset Password Modal ???????????????????????????????????????????????????????
