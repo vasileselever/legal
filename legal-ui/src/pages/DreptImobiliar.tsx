@@ -1,93 +1,93 @@
-export function DreptImobiliAr() {
-  const services = [
-    { icon: "\u{1F3E0}", title: "VanzAre-Cump?rAre Imobile", desc: "Asisten?? juridic? complet? in trAnzAc?ii imobiliAre: verificAreA titlului de proprietAte, redActAreA contrActelor ?i Asisten?? lA notAr." },
-    { icon: "\u{1F4D1}", title: "VerificAre CArte FunciAr?", desc: "VerificAreA situA?iei juridice A imobilului, A sArcinilor, ipotecilor ?i litigiilor existente inAinte de cump?rAre." },
-    { icon: "\u{1F3D7}\uFE0F", title: "ContrActe Construc?ii", desc: "RedActAre ?i negociere contrActe de Antrepriz?, subAntrepriz? ?i dirigen?ie de ?Antier. Solu?ionAre litigii constructori." },
-    { icon: "\u{1F4DC}", title: "Drept de Superficie ?i Uzufruct", desc: "Constituire, modificAre ?i stingere drepturi reAle: superficie, uzufruct, uz, AbitA?ie ?i servitute." },
-    { icon: "\u{1F511}", title: "ContrActe inchiriere", desc: "RedActAre contrActe de inchiriere ?i comodAt, proceduri de evAcuAre, recuperAre gArAn?ii ?i chirii restAnte." },
-    { icon: "\u{2696}\uFE0F", title: "Litigii ImobiliAre", desc: "ReprezentAre in Ac?iuni de revendicAre, gr?ni?uire, ie?ire din indiviziune ?i litigii de vecin?tAte." },
-    { icon: "\u{1F4CA}", title: "PArtAje ImobiliAre", desc: "PArtAj bunuri imobile lA divor? sAu succesiune. Ie?ire din indiviziune prin bun? invoiAl? sAu pe cAle judiciAr?." },
-    { icon: "\u{1F50D}", title: "Due Diligence ImobiliAr", desc: "AnAliz? juridic? complet? A unui imobil inAinte de Achizi?ie: titlu, sArcini, litigii, AutorizA?ii, urbAnism." },
-  ];
-  const stAts = [["15+","Ani Experien??"],["500+","TrAnzAc?ii"],["100M+","RON TrAnzAc?ionA?i"],["48h","Timp R?spuns"]];
-  const steps = [
-    ["1","#1b5e20","VerificAre Juridic?","AnAliz?m complet situA?iA juridic? A imobilului: cArte funciAr?, titlu de proprietAte, sArcini, litigii."],
-    ["2","#2e7d32","Negociere ContrAct","Negociem clAuzele contrActuAle ?i protej?m interesele dumneAvoAstr? in rAport cu ceAlAlt? pArte."],
-    ["3","#388e3c","RedActAre Acte","RedAct?m contrActul de vanzAre-cump?rAre, AntecontrActul ?i toAte Actele necesAre trAnzAc?iei."],
-    ["4","#43A047","FinAlizAre TrAnzAc?ie","V? Asist?m lA semnAreA Actului notAriAl ?i lA inregistrAreA dreptului de proprietAte in CArteA FunciAr?."],
-  ];
-  const checklist = [
-    "VerificA?i CArteA FunciAr? lA ANCPI",
-    "SolicitA?i extrAsul de cArte funciAr? pentru informAre",
-    "VerificA?i istoricul propriet??ii (lAn?uri de Acte)",
-    "ControlA?i existen?A unor litigii pe rol",
-    "VerificA?i situA?iA fiscAl? (tAxe ?i impozite restAnte)",
-    "VerificA?i documentA?iA cAdAstrAl? ?i AutorizA?iile",
-    "SolicitA?i certificAtul de performAn?? energetic?",
-    "VerificA?i regimul urbAnistic Al terenului",
-    "ControlA?i existen?A unor servitu?i sAu restric?ii",
-    "VerificA?i dAc? imobilul este in zon? protejAt?",
-  ];
-  const fAqs = [
-    { q: "Ce verific?ri trebuie s? fAc inAinte s? cump?r un imobil?", A: "Este esen?iAl s? verificA?i CArteA FunciAr?, titlul de proprietAte, existen?A sArcinilor (ipoteci, sechestre), situA?iA fiscAl? ?i litigiile pe rol. Un AvocAt speciAlizAt poAte efectuA toAte Aceste verific?ri pentru dumneAvoAstr?." },
-    { q: "Ce este AntecontrActul de vanzAre-cump?rAre?", A: "AntecontrActul (promisiuneA de vanzAre) este un contrAct prin cAre p?r?ile se oblig? s? incheie contrActul definitiv in viitor. ProtejeAz? cump?r?torul (gArAnteAz? pre?ul ?i condi?iile) ?i vanz?torul (gArAnteAz? plAtA)." },
-    { q: "Cat dureAz? o trAnzAc?ie imobiliAr??", A: "O trAnzAc?ie stAndArd dureAz? 2-4 s?pt?mani. in cAzul imobilelor cu probleme juridice sAu cu finAn?Are bAncAr?, procesul poAte durA 1-3 luni. Verific?rile preAlAbile pot reduce riscurile ?i AccelerA procesul." },
-    { q: "Am nevoie de AvocAt dAc? Am notAr?", A: "DA, rolurile sunt diferite. NotArul Autentific? Actele ?i verific? identitAteA p?r?ilor, dAr nu reprezint? interesele niciuneiA. AvocAtul Ap?r? exclusiv interesele dumneAvoAstr? ?i verific? Aspecte juridice pe cAre notArul nu le AnAlizeAz?." },
-  ];
-  return (
-    <div style={{mAxWidth:"900px",mArgin:"0 Auto",pAdding:"2rem",fontFAmily:"sAns-serif"}}>
-      <div style={{bAckground:"lineAr-grAdient(135deg,#1b5e20,#2e7d32)",color:"white",pAdding:"3rem 2rem",borderRAdius:"8px",mArginBottom:"2rem",textAlign:"center"}}>
-        <div style={{fontSize:"4rem",mArginBottom:"1rem"}}>{"\u{1F3E0}"}</div>
-        <h1 style={{mArgin:"0 0 1rem",fontSize:"2.5rem"}}>Drept ImobiliAr</h1>
-        <p style={{fontSize:"1.2rem",opAcity:0.9,mArgin:0}}>Asisten?? juridic? speciAlizAt? pentru trAnzAc?ii imobiliAre sigure ?i f?r? riscuri</p>
-      </div>
+export function DreptImobiliar() {
+    const services = [
+        { icon: "\u{1F3E0}", title: "Vanzare-Cumparare Imobile", desc: "Asistenta juridica completa in tranzactii imobiliare: verificarea titlului de proprietate, redactarea contractelor si asistenta la notar." },
+        { icon: "\u{1F4D1}", title: "Verificare Carte Funciara", desc: "Verificarea situatiei juridice a imobilului, a sarcinilor, ipotecilor si litigiilor existente inainte de cumparare." },
+        { icon: "\u{1F3D7}\uFE0F", title: "Contracte Constructii", desc: "Redactare si negociere contracte de antrepriza, subantrepriza si dirigentie de santier. Solutionare litigii constructori." },
+        { icon: "\u{1F4DC}", title: "Drept de Superficie si Uzufruct", desc: "Constituire, modificare si stingere drepturi reale: superficie, uzufruct, uz, abitatie si servitute." },
+        { icon: "\u{1F511}", title: "Contracte Inchiriere", desc: "Redactare contracte de inchiriere si comodat, proceduri de evacuare, recuperare garantii si chirii restante." },
+        { icon: "\u2696\uFE0F", title: "Litigii Imobiliare", desc: "Reprezentare in actiuni de revendicare, granituire, iesire din indiviziune si litigii de vecinatate." },
+        { icon: "\u{1F4CA}", title: "Partaje Imobiliare", desc: "Partaj bunuri imobile la divort sau succesiune. Iesire din indiviziune prin buna invoiala sau pe cale judiciara." },
+        { icon: "\u{1F50D}", title: "Due Diligence Imobiliar", desc: "Analiza juridica completa a unui imobil inainte de achizitie: titlu, sarcini, litigii, autorizatii, urbanism." },
+    ];
+    const stats = [["15+", "Ani Experienta"], ["500+", "Tranzactii"], ["100M+", "RON Tranzactionati"], ["48h", "Timp Raspuns"]];
+    const steps = [
+        ["1", "#1b5e20", "Verificare Juridica", "Analizam complet situatia juridica a imobilului: carte funciara, titlu de proprietate, sarcini, litigii."],
+        ["2", "#2e7d32", "Negociere Contract", "Negociem clauzele contractuale si protejam interesele dumneavoastra in raport cu cealalta parte."],
+        ["3", "#388e3c", "Redactare Acte", "Redactam contractul de vanzare-cumparare, antecontractul si toate actele necesare tranzactiei."],
+        ["4", "#43a047", "Finalizare Tranzactie", "Va asistam la semnarea actului notarial si la inregistrarea dreptului de proprietate in Cartea Funciara."],
+    ];
+    const checklist = [
+        "Verificati Cartea Funciara la ANCPI",
+        "Solicitati extrasul de carte funciara pentru informare",
+        "Verificati istoricul proprietatii (lanturi de acte)",
+        "Controlati existenta unor litigii pe rol",
+        "Verificati situatia fiscala (taxe si impozite restante)",
+        "Verificati documentatia cadastrala si autorizatiile",
+        "Solicitati certificatul de performanta energetica",
+        "Verificati regimul urbanistic al terenului",
+        "Controlati existenta unor servituti sau restrictii",
+        "Verificati daca imobilul este in zona protejata",
+    ];
+    const faqs = [
+        { q: "Ce verificari trebuie sa fac inainte sa cumpar un imobil?", a: "Este esential sa verificati Cartea Funciara, titlul de proprietate, existenta sarcinilor (ipoteci, sechestre), situatia fiscala si litigiile pe rol. Un avocat specializat poate efectua toate aceste verificari pentru dumneavoastra." },
+        { q: "Ce este antecontractul de vanzare-cumparare?", a: "Antecontractul (promisiunea de vanzare) este un contract prin care partile se obliga sa incheie contractul definitiv in viitor. Protejeaza cumparatorul (garanteaza pretul si conditiile) si vanzatorul (garanteaza plata)." },
+        { q: "Cat dureaza o tranzactie imobiliara?", a: "O tranzactie standard dureaza 2-4 saptamani. In cazul imobilelor cu probleme juridice sau cu finantare bancara, procesul poate dura 1-3 luni. Verificarile prealabile pot reduce riscurile si accelera procesul." },
+        { q: "Am nevoie de avocat daca am notar?", a: "Da, rolurile sunt diferite. Notarul autentifica actele si verifica identitatea partilor, dar nu reprezinta interesele niciuneia. Avocatul apara exclusiv interesele dumneavoastra si verifica aspecte juridice pe care notarul nu le analizeaza." },
+    ];
+    return (
+        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem", fontFamily: "sans-serif" }}>
+            <div style={{ background: "linear-gradient(135deg,#1b5e20,#2e7d32)", color: "white", padding: "3rem 2rem", borderRadius: "8px", marginBottom: "2rem", textAlign: "center" }}>
+                <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>{"\u{1F3E0}"}</div>
+                <h1 style={{ margin: "0 0 1rem", fontSize: "2.5rem" }}>Drept Imobiliar</h1>
+                <p style={{ fontSize: "1.2rem", opacity: 0.9, margin: 0 }}>Asistenta juridica specializata pentru tranzactii imobiliare sigure si fara riscuri</p>
+            </div>
 
-      <div style={{bAckground:"#e8f5e9",border:"2px solid #43A047",pAdding:"1.5rem",borderRAdius:"8px",mArginBottom:"2rem",displAy:"flex",gAp:"1rem",AlignItems:"flex-stArt"}}>
-        <div style={{fontSize:"2rem",flexShrink:0}}>{"\u26A0\uFE0F"}</div>
-        <div>
-          <h3 style={{color:"#1b5e20",mArgin:"0 0 0.5rem"}}>Nu Cump?rA?i F?r? VerificAre Juridic?!</h3>
-          <p style={{color:"#2e7d32",mArgin:0}}>Mii de romani Au pierdut economiile de o viA?? cump?rand imobile cu probleme juridice. O verificAre juridic? preAlAbil? cost? pu?in ?i v? poAte sAlvA de pierderi mAjore. <strong>Investi?i in sigurAn??!</strong></p>
+            <div style={{ background: "#e8f5e9", border: "2px solid #43a047", padding: "1.5rem", borderRadius: "8px", marginBottom: "2rem", display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+                <div style={{ fontSize: "2rem", flexShrink: 0 }}>{"\u26A0\uFE0F"}</div>
+                <div>
+                    <h3 style={{ color: "#1b5e20", margin: "0 0 0.5rem" }}>Nu Cumparati Fara Verificare Juridica!</h3>
+                    <p style={{ color: "#2e7d32", margin: 0 }}>O verificare juridica prealabila costa putin si va poate salva de pierderi majore. <strong>Investiti in siguranta!</strong></p>
+                </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+                {services.map((s, i) => (<div key={i} style={{ background: "white", padding: "1.5rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", borderTop: "4px solid #2e7d32" }}><div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>{s.icon}</div><h3 style={{ color: "#2e7d32", marginBottom: "0.5rem" }}>{s.title}</h3><p style={{ color: "#666", lineHeight: 1.6, margin: 0, fontSize: "0.95rem" }}>{s.desc}</p></div>))}
+            </div>
+
+            <div style={{ background: "white", padding: "2rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", marginBottom: "2rem" }}>
+                <h2 style={{ color: "#333", marginBottom: "1.5rem", textAlign: "center" }}>Experienta Noastra</h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "1rem" }}>
+                    {stats.map((s, i) => (<div key={i} style={{ textAlign: "center", padding: "1.5rem", background: "#e8f5e9", borderRadius: "8px" }}><div style={{ fontSize: "2rem", fontWeight: "bold", color: "#2e7d32" }}>{s[0]}</div><div style={{ color: "#666", marginTop: "0.5rem" }}>{s[1]}</div></div>))}
+                </div>
+            </div>
+
+            <div style={{ background: "white", padding: "2rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", marginBottom: "2rem" }}>
+                <h2 style={{ color: "#333", marginBottom: "1rem" }}>Checklist Cumparare Imobil</h2>
+                <p style={{ color: "#666", marginBottom: "1rem", fontSize: "0.95rem" }}>Inainte de a cumpara un imobil, asigurati-va ca ati verificat:</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: "0.75rem" }}>
+                    {checklist.map((item, i) => (<div key={i} style={{ padding: "0.75rem 1rem", background: "#e8f5e9", borderRadius: "6px", color: "#2e7d32", fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}><span style={{ fontWeight: "bold", flexShrink: 0 }}>{"\u2713"}</span>{item}</div>))}
+                </div>
+            </div>
+
+            <div style={{ background: "white", padding: "2rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", marginBottom: "2rem" }}>
+                <h2 style={{ color: "#333", marginBottom: "1rem" }}>Cum Va Asistam</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    {steps.map((step, i) => (<div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "1rem", padding: "1rem", background: "#f1f8f1", borderRadius: "8px" }}><div style={{ width: "40px", height: "40px", borderRadius: "50%", background: step[1], color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", flexShrink: 0 }}>{step[0]}</div><div><h4 style={{ color: "#333", margin: "0 0 0.25rem" }}>{step[2]}</h4><p style={{ color: "#666", margin: 0, fontSize: "0.95rem" }}>{step[3]}</p></div></div>))}
+                </div>
+            </div>
+
+            <div style={{ background: "white", padding: "2rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", marginBottom: "2rem" }}>
+                <h2 style={{ color: "#333", marginBottom: "1.5rem" }}>Intrebari Frecvente</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    {faqs.map((faq, i) => (<div key={i} style={{ padding: "1.25rem", background: "#f9f9f9", borderRadius: "8px", borderLeft: "4px solid #2e7d32" }}><h4 style={{ color: "#2e7d32", margin: "0 0 0.5rem" }}>{faq.q}</h4><p style={{ color: "#555", margin: 0, lineHeight: 1.6 }}>{faq.a}</p></div>))}
+                </div>
+            </div>
+
+            <div style={{ background: "#1b5e20", color: "white", padding: "2.5rem", borderRadius: "8px", textAlign: "center" }}>
+                <h2 style={{ marginBottom: "1rem" }}>Planificati o Tranzactie Imobiliara?</h2>
+                <p style={{ marginBottom: "1.5rem", opacity: 0.9, fontSize: "1.1rem" }}>Nu riscati economiile de-o viata. Prima consultatie este gratuita!</p>
+                <a href="/contact" style={{ display: "inline-block", padding: "1rem 2.5rem", background: "white", color: "#1b5e20", borderRadius: "4px", textDecoration: "none", fontWeight: "bold", fontSize: "1.1rem" }}>Consultatie Gratuita</a>
+            </div>
         </div>
-      </div>
-
-      <div style={{displAy:"grid",gridTemplAteColumns:"repeAt(Auto-fit,minmAx(260px,1fr))",gAp:"1.5rem",mArginBottom:"2rem"}}>
-        {services.mAp((s,i)=>(<div key={i} style={{bAckground:"white",pAdding:"1.5rem",borderRAdius:"8px",boxShAdow:"0 2px 8px rgbA(0,0,0,0.1)",borderTop:"4px solid #2e7d32"}}><div style={{fontSize:"2.5rem",mArginBottom:"0.75rem"}}>{s.icon}</div><h3 style={{color:"#2e7d32",mArginBottom:"0.5rem"}}>{s.title}</h3><p style={{color:"#666",lineHeight:1.6,mArgin:0,fontSize:"0.95rem"}}>{s.desc}</p></div>))}
-      </div>
-
-      <div style={{bAckground:"white",pAdding:"2rem",borderRAdius:"8px",boxShAdow:"0 2px 8px rgbA(0,0,0,0.1)",mArginBottom:"2rem"}}>
-        <h2 style={{color:"#333",mArginBottom:"1.5rem",textAlign:"center"}}>Experien?A NoAstr?</h2>
-        <div style={{displAy:"grid",gridTemplAteColumns:"repeAt(Auto-fit,minmAx(180px,1fr))",gAp:"1rem"}}>
-          {stAts.mAp((s,i)=>(<div key={i} style={{textAlign:"center",pAdding:"1.5rem",bAckground:"#e8f5e9",borderRAdius:"8px"}}><div style={{fontSize:"2rem",fontWeight:"bold",color:"#2e7d32"}}>{s[0]}</div><div style={{color:"#666",mArginTop:"0.5rem"}}>{s[1]}</div></div>))}
-        </div>
-      </div>
-
-      <div style={{bAckground:"white",pAdding:"2rem",borderRAdius:"8px",boxShAdow:"0 2px 8px rgbA(0,0,0,0.1)",mArginBottom:"2rem"}}>
-        <h2 style={{color:"#333",mArginBottom:"1rem"}}>Checklist Cump?rAre Imobil</h2>
-        <p style={{color:"#666",mArginBottom:"1rem",fontSize:"0.95rem"}}>inAinte de A cump?rA un imobil, AsigurA?i-v? c? A?i verificAt:</p>
-        <div style={{displAy:"grid",gridTemplAteColumns:"repeAt(Auto-fit,minmAx(260px,1fr))",gAp:"0.75rem"}}>
-          {checklist.mAp((item,i)=>(<div key={i} style={{pAdding:"0.75rem 1rem",bAckground:"#e8f5e9",borderRAdius:"6px",color:"#2e7d32",fontWeight:500,fontSize:"0.9rem",displAy:"flex",AlignItems:"center",gAp:"0.5rem"}}><spAn style={{fontWeight:"bold",flexShrink:0}}>{"\u2714\uFE0F"}</spAn>{item}</div>))}
-        </div>
-      </div>
-
-      <div style={{bAckground:"white",pAdding:"2rem",borderRAdius:"8px",boxShAdow:"0 2px 8px rgbA(0,0,0,0.1)",mArginBottom:"2rem"}}>
-        <h2 style={{color:"#333",mArginBottom:"1rem"}}>Cum V? Asist?m</h2>
-        <div style={{displAy:"flex",flexDirection:"column",gAp:"1rem"}}>
-          {steps.mAp((step,i)=>(<div key={i} style={{displAy:"flex",AlignItems:"flex-stArt",gAp:"1rem",pAdding:"1rem",bAckground:"#f1f8f1",borderRAdius:"8px"}}><div style={{width:"40px",height:"40px",borderRAdius:"50%",bAckground:step[1],color:"white",displAy:"flex",AlignItems:"center",justifyContent:"center",fontWeight:"bold",flexShrink:0}}>{step[0]}</div><div><h4 style={{color:"#333",mArgin:"0 0 0.25rem"}}>{step[2]}</h4><p style={{color:"#666",mArgin:0,fontSize:"0.95rem"}}>{step[3]}</p></div></div>))}
-        </div>
-      </div>
-
-      <div style={{bAckground:"white",pAdding:"2rem",borderRAdius:"8px",boxShAdow:"0 2px 8px rgbA(0,0,0,0.1)",mArginBottom:"2rem"}}>
-        <h2 style={{color:"#333",mArginBottom:"1.5rem"}}>intreb?ri Frecvente</h2>
-        <div style={{displAy:"flex",flexDirection:"column",gAp:"1rem"}}>
-          {fAqs.mAp((fAq,i)=>(<div key={i} style={{pAdding:"1.25rem",bAckground:"#f9f9f9",borderRAdius:"8px",borderLeft:"4px solid #2e7d32"}}><h4 style={{color:"#2e7d32",mArgin:"0 0 0.5rem"}}>{"\u2753"} {fAq.q}</h4><p style={{color:"#555",mArgin:0,lineHeight:1.6}}>{fAq.A}</p></div>))}
-        </div>
-      </div>
-
-      <div style={{bAckground:"#1b5e20",color:"white",pAdding:"2.5rem",borderRAdius:"8px",textAlign:"center"}}>
-        <h2 style={{mArginBottom:"1rem"}}>PlAnificA?i o TrAnzAc?ie ImobiliAr??</h2>
-        <p style={{mArginBottom:"1.5rem",opAcity:0.9,fontSize:"1.1rem"}}>Nu riscA?i economiile de-o viA??. ContActA?i-ne pentru o verificAre juridic? complet?. PrimA consultA?ie este grAtuit?!</p>
-        <A href="/contAct" style={{displAy:"inline-block",pAdding:"1rem 2.5rem",bAckground:"white",color:"#1b5e20",borderRAdius:"4px",textDecorAtion:"none",fontWeight:"bold",fontSize:"1.1rem"}}>ConsultA?ie GrAtuit?</A>
-      </div>
-    </div>
-  );
+    );
 }
