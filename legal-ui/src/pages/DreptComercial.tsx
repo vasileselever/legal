@@ -1,19 +1,19 @@
 export function DreptComercial() {
   const services = [
-    { icon: "\u{1F3E2}", title: "Înfiin?are Societ??i", desc: "Asisten?? complet? la înfiin?area SRL, SA, PFA ?i altor forme juridice. Redactarea actelor constitutive ?i înregistrarea la ONRC." },
+    { icon: "\u{1F3E2}", title: "ÃŽnfiin?are Societ??i", desc: "Asisten?? complet? la Ã®nfiin?area SRL, SA, PFA ?i altor forme juridice. Redactarea actelor constitutive ?i Ã®nregistrarea la ONRC." },
     { icon: "\u{1F4DD}", title: "Contracte Comerciale", desc: "Redactare ?i negociere contracte de distribu?ie, franciz?, agen?ie, furnizare de servicii ?i parteneriat comercial." },
-    { icon: "\u{1F91D}", title: "Fuziuni ?i Achizi?ii", desc: "Consultan?? juridic? în tranzac?ii M&A, due diligence, negociere ?i structurare tranzac?ii de vânzare-cump?rare de ac?iuni sau active." },
-    { icon: "\u{2696}\uFE0F", title: "Litigii Comerciale", desc: "Reprezentare în litigii între profesioni?ti, contesta?ii facturi, litigii contractuale ?i recuperare crean?e comerciale." },
-    { icon: "\u{1F6E1}\uFE0F", title: "Protec?ia Brandului", desc: "Înregistrare m?rci comerciale, protec?ia drepturilor de proprietate intelectual? ?i combaterea concuren?ei neloiale." },
-    { icon: "\u{1F4CB}", title: "Guvernan?? Corporativ?", desc: "Consultan?? privind structurile de conducere, regulamente interne, hot?râri AGA ?i CA, ?i conformitate corporativ?." },
-    { icon: "\u{1F4C9}", title: "Insolven??", desc: "Reprezentare în proceduri de insolven??, reorganizare judiciar? ?i faliment, atât pentru creditori cât ?i pentru debitori." },
-    { icon: "\u{1F30D}", title: "Drept Comercial Interna?ional", desc: "Consultan?? în contracte interna?ionale, arbitraj comercial interna?ional ?i conformitate cu reglement?rile UE." },
+    { icon: "\u{1F91D}", title: "Fuziuni ?i Achizi?ii", desc: "Consultan?? juridic? Ã®n tranzac?ii M&A, due diligence, negociere ?i structurare tranzac?ii de vÃ¢nzare-cump?rare de ac?iuni sau active." },
+    { icon: "\u{2696}\uFE0F", title: "Litigii Comerciale", desc: "Reprezentare Ã®n litigii Ã®ntre profesioni?ti, contesta?ii facturi, litigii contractuale ?i recuperare crean?e comerciale." },
+    { icon: "\u{1F6E1}\uFE0F", title: "Protec?ia Brandului", desc: "ÃŽnregistrare m?rci comerciale, protec?ia drepturilor de proprietate intelectual? ?i combaterea concuren?ei neloiale." },
+    { icon: "\u{1F4CB}", title: "Guvernan?? Corporativ?", desc: "Consultan?? privind structurile de conducere, regulamente interne, hot?rÃ¢ri AGA ?i CA, ?i conformitate corporativ?." },
+    { icon: "\u{1F4C9}", title: "Insolven??", desc: "Reprezentare Ã®n proceduri de insolven??, reorganizare judiciar? ?i faliment, atÃ¢t pentru creditori cÃ¢t ?i pentru debitori." },
+    { icon: "\u{1F30D}", title: "Drept Comercial Interna?ional", desc: "Consultan?? Ã®n contracte interna?ionale, arbitraj comercial interna?ional ?i conformitate cu reglement?rile UE." },
   ];
   const stats = [["15+","Ani Experien??"],["300+","Companii Asistate"],["50+","Tranzac?ii M&A"],["24h","Timp R?spuns"]];
   const steps = [
-    ["1","#1565c0","Analiz? Business","În?elegem structura afacerii ?i identific?m riscurile juridice specifice domeniului dumneavoastr?."],
+    ["1","#1565c0","Analiz? Business","ÃŽn?elegem structura afacerii ?i identific?m riscurile juridice specifice domeniului dumneavoastr?."],
     ["2","#1976d2","Strategie Juridic?","Propunem solu?ii juridice adaptate obiectivelor comerciale ale companiei."],
-    ["3","#42a5f5","Implementare","Redact?m documentele necesare ?i reprezent?m compania în negocieri sau în fa?a autorit??ilor."],
+    ["3","#42a5f5","Implementare","Redact?m documentele necesare ?i reprezent?m compania Ã®n negocieri sau Ã®n fa?a autorit??ilor."],
     ["4","#4caf50","Monitorizare","Asigur?m conformitatea juridic? continu? ?i v? inform?m despre modific?rile legislative relevante."],
   ];
   const sectors = ["Retail ?i E-commerce","IT ?i Tehnologie","Construc?ii ?i Imobiliare","Produc?ie ?i Industrie","Servicii Financiare","S?n?tate ?i Farmacie","HoReCa","Transport ?i Logistic?"];

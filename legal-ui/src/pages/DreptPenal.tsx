@@ -1,20 +1,20 @@
 export function DreptPenal() {
   const services = [
-    { icon: "\u{1F6E1}\uFE0F", title: "Ap?rare Penal?", desc: "Reprezentare ?i ap?rare Ón toate fazele procesului penal: urm?rire penala, camer? preliminar?, judecat? ?i c?ile de atac." },
+    { icon: "\u{1F6E1}\uFE0F", title: "Ap?rare Penal?", desc: "Reprezentare ?i ap?rare √Æn toate fazele procesului penal: urm?rire penala, camer? preliminar?, judecat? ?i c?ile de atac." },
     { icon: "\u{1F465}", title: "Asisten?? la Audieri", desc: "Asisten?? juridic? la audierile din fa?a organelor de poli?ie, parchet sau instan??. Protej?m drepturile clien?ilor no?tri." },
-    { icon: "\u{1F4B0}", title: "Infrac?iuni Economice", desc: "Ap?rare Ón dosare de evaziune fiscal?, fraud?, delapidare, sp?lare de bani ?i alte infrac?iuni economice." },
-    { icon: "\u{1F4BB}", title: "Criminalitate Informatic?", desc: "Consultan?? ?i ap?rare Ón cazuri de fraud? informatic?, acces neautorizat la sisteme ?i alte infrac?iuni cibernetice." },
-    { icon: "\u{1F697}", title: "Infrac?iuni Rutiere", desc: "Ap?rare Ón dosare de conducere sub influen?a alcoolului, p?r?sirea locului accidentului ?i alte infrac?iuni rutiere." },
-    { icon: "\u{1F464}", title: "Infrac?iuni contra Persoanei", desc: "Reprezentare Ón dosare de loviri, v?t?m?ri corporale, amenin?are, ?antaj ?i alte infrac?iuni Ómpotriva persoanei." },
-    { icon: "\u{1F512}", title: "Infrac?iuni contra Patrimoniului", desc: "Ap?rare Ón dosare de furt, t‚lh?rie, Ón?el?ciune, distrugere ?i alte infrac?iuni contra patrimoniului." },
-    { icon: "\u{1F4D1}", title: "Constituire Parte Civil?", desc: "Asist?m victimele infrac?iunilor Ón constituirea ca parte civil? ?i ob?inerea de desp?gubiri Ón procesul penal." },
+    { icon: "\u{1F4B0}", title: "Infrac?iuni Economice", desc: "Ap?rare √Æn dosare de evaziune fiscal?, fraud?, delapidare, sp?lare de bani ?i alte infrac?iuni economice." },
+    { icon: "\u{1F4BB}", title: "Criminalitate Informatic?", desc: "Consultan?? ?i ap?rare √Æn cazuri de fraud? informatic?, acces neautorizat la sisteme ?i alte infrac?iuni cibernetice." },
+    { icon: "\u{1F697}", title: "Infrac?iuni Rutiere", desc: "Ap?rare √Æn dosare de conducere sub influen?a alcoolului, p?r?sirea locului accidentului ?i alte infrac?iuni rutiere." },
+    { icon: "\u{1F464}", title: "Infrac?iuni contra Persoanei", desc: "Reprezentare √Æn dosare de loviri, v?t?m?ri corporale, amenin?are, ?antaj ?i alte infrac?iuni √Æmpotriva persoanei." },
+    { icon: "\u{1F512}", title: "Infrac?iuni contra Patrimoniului", desc: "Ap?rare √Æn dosare de furt, t√¢lh?rie, √Æn?el?ciune, distrugere ?i alte infrac?iuni contra patrimoniului." },
+    { icon: "\u{1F4D1}", title: "Constituire Parte Civil?", desc: "Asist?m victimele infrac?iunilor √Æn constituirea ca parte civil? ?i ob?inerea de desp?gubiri √Æn procesul penal." },
   ];
   const stats = [["15+","Ani Experien??"],["400+","Dosare Penale"],["92%","Achit?ri/Reduceri"],["24/7","Disponibil"]];
   const steps = [
-    ["1","#c62828","Consulta?ie Urgent?","Contacta?i-ne imediat. Œn materie penal?, asisten?a juridic? prompt? este esen?ial?."],
+    ["1","#c62828","Consulta?ie Urgent?","Contacta?i-ne imediat. √én materie penal?, asisten?a juridic? prompt? este esen?ial?."],
     ["2","#d32f2f","Analiza Dosarului","Studiem cu aten?ie toate probele, declara?iile ?i actele din dosar pentru a construi cea mai bun? ap?rare."],
     ["3","#e53935","Strategie de Ap?rare","Elabor?m o strategie de ap?rare personalizat? bazat? pe circumstan?ele specifice ale cazului."],
-    ["4","#ef5350","Reprezentare Ón Instan??","V? reprezent?m cu profesionalism Ón fa?a tuturor organelor judiciare p‚n? la solu?ionarea definitiv?."],
+    ["4","#ef5350","Reprezentare √Æn Instan??","V? reprezent?m cu profesionalism √Æn fa?a tuturor organelor judiciare p√¢n? la solu?ionarea definitiv?."],
   ];
   const rights = [
     "Dreptul de a fi informat despre acuza?ii",
@@ -23,7 +23,7 @@ export function DreptPenal() {
     "Dreptul de a consulta dosarul",
     "Dreptul la un interpret autorizat",
     "Dreptul la un proces echitabil",
-    "Dreptul de a propune probe Ón ap?rare",
+    "Dreptul de a propune probe √Æn ap?rare",
     "Dreptul de a exercita c?ile de atac",
   ];
   return (
@@ -31,14 +31,14 @@ export function DreptPenal() {
       <div style={{background:"linear-gradient(135deg,#b71c1c,#d32f2f)",color:"white",padding:"3rem 2rem",borderRadius:"8px",marginBottom:"2rem",textAlign:"center"}}>
         <div style={{fontSize:"4rem",marginBottom:"1rem"}}>{"\u2696\uFE0F"}</div>
         <h1 style={{margin:"0 0 1rem",fontSize:"2.5rem"}}>Drept Penal</h1>
-        <p style={{fontSize:"1.2rem",opacity:0.9,margin:0}}>Ap?rare penal? profesionist?. Protej?m drepturile dumneavoastr? Ón orice situa?ie.</p>
+        <p style={{fontSize:"1.2rem",opacity:0.9,margin:0}}>Ap?rare penal? profesionist?. Protej?m drepturile dumneavoastr? √Æn orice situa?ie.</p>
       </div>
 
       <div style={{background:"#fff3e0",border:"2px solid #f57c00",padding:"1.5rem",borderRadius:"8px",marginBottom:"2rem",display:"flex",gap:"1rem",alignItems:"flex-start"}}>
         <div style={{fontSize:"2rem",flexShrink:0}}>{"\u{1F6A8}"}</div>
         <div>
           <h3 style={{color:"#e65100",margin:"0 0 0.5rem"}}>Re?inere sau Arest? Suna?i Imediat!</h3>
-          <p style={{color:"#bf360c",margin:0}}>Œn caz de re?inere, arest preventiv sau audiere, ave?i dreptul la un avocat Ónainte de orice declara?ie. Nu face?i nicio declara?ie f?r? avocat prezent.</p>
+          <p style={{color:"#bf360c",margin:0}}>√én caz de re?inere, arest preventiv sau audiere, ave?i dreptul la un avocat √Ænainte de orice declara?ie. Nu face?i nicio declara?ie f?r? avocat prezent.</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export function DreptPenal() {
 
       <div style={{background:"#b71c1c",color:"white",padding:"2.5rem",borderRadius:"8px",textAlign:"center"}}>
         <h2 style={{marginBottom:"1rem"}}>Ave?i Nevoie de Ap?rare Penal??</h2>
-        <p style={{marginBottom:"1.5rem",opacity:0.9,fontSize:"1.1rem"}}>Nu a?tepta?i! Œn materie penal?, fiecare or? conteaz?. Contacta?i-ne acum!</p>
+        <p style={{marginBottom:"1.5rem",opacity:0.9,fontSize:"1.1rem"}}>Nu a?tepta?i! √én materie penal?, fiecare or? conteaz?. Contacta?i-ne acum!</p>
         <a href="/contact" style={{display:"inline-block",padding:"1rem 2.5rem",background:"white",color:"#b71c1c",borderRadius:"4px",textDecoration:"none",fontWeight:"bold",fontSize:"1.1rem"}}>Contacta?i-ne Acum</a>
       </div>
     </div>

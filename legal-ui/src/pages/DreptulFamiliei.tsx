@@ -1,40 +1,40 @@
 export function DreptulFamiliei() {
   const services = [
-    { icon: "\u{1F494}", title: "Divor?", desc: "Asisten?? complet? Ón procedura de divor?: pe cale notarial?, la prim?rie sau Ón instan??. Divor? amiabil sau divor? contencios." },
+    { icon: "\u{1F494}", title: "Divor?", desc: "Asisten?? complet? √Æn procedura de divor?: pe cale notarial?, la prim?rie sau √Æn instan??. Divor? amiabil sau divor? contencios." },
     { icon: "\u{1F476}", title: "Custodia Copilului", desc: "Stabilirea autorit??ii p?rinte?ti, a locuin?ei minorului ?i a programului de vizit?. Ap?rarea interesului superior al copilului." },
-    { icon: "\u{1F3E0}", title: "Partaj Bunuri", desc: "Œmp?r?irea bunurilor comune dob‚ndite Ón timpul c?s?toriei. Partaj amiabil sau judiciar, inclusiv bunuri imobile ?i conturi bancare." },
-    { icon: "\u{1F4B5}", title: "Pensie Alimentar?", desc: "Stabilirea, majorarea sau reducerea pensiei de Óntre?inere pentru copii sau so?/so?ie. Executare silit? Ón caz de nepl?tire." },
-    { icon: "\u{1F4DD}", title: "Contracte Matrimoniale", desc: "Redactarea conven?iilor matrimoniale Ónainte sau dup? c?s?torie. Regimul separa?iei de bunuri, comunit??ii conven?ionale." },
-    { icon: "\u{2764}\uFE0F", title: "Adop?ie", desc: "Asisten?? juridic? Ón procedura de adop?ie na?ional?. Reprezentare Ón fa?a instan?elor ?i autorit??ilor competente." },
-    { icon: "\u{1F6E1}\uFE0F", title: "Violen?? Domestic?", desc: "Ob?inerea ordinului de protec?ie, asisten?a victimelor violen?ei domestice ?i reprezentare Ón procesele penale conexe." },
+    { icon: "\u{1F3E0}", title: "Partaj Bunuri", desc: "√émp?r?irea bunurilor comune dob√¢ndite √Æn timpul c?s?toriei. Partaj amiabil sau judiciar, inclusiv bunuri imobile ?i conturi bancare." },
+    { icon: "\u{1F4B5}", title: "Pensie Alimentar?", desc: "Stabilirea, majorarea sau reducerea pensiei de √Æntre?inere pentru copii sau so?/so?ie. Executare silit? √Æn caz de nepl?tire." },
+    { icon: "\u{1F4DD}", title: "Contracte Matrimoniale", desc: "Redactarea conven?iilor matrimoniale √Ænainte sau dup? c?s?torie. Regimul separa?iei de bunuri, comunit??ii conven?ionale." },
+    { icon: "\u{2764}\uFE0F", title: "Adop?ie", desc: "Asisten?? juridic? √Æn procedura de adop?ie na?ional?. Reprezentare √Æn fa?a instan?elor ?i autorit??ilor competente." },
+    { icon: "\u{1F6E1}\uFE0F", title: "Violen?? Domestic?", desc: "Ob?inerea ordinului de protec?ie, asisten?a victimelor violen?ei domestice ?i reprezentare √Æn procesele penale conexe." },
     { icon: "\u{1F4D1}", title: "Tutel? ?i Curatel?", desc: "Instituirea tutelei pentru minori lipsi?i de ocrotire p?rinteasc? ?i a curatelei pentru persoane cu capacitate limitat?." },
   ];
   const stats = [["15+","Ani Experien??"],["250+","Dosare Familie"],["98%","Clien?i Mul?umi?i"],["48h","Timp R?spuns"]];
   const steps = [
-    ["1","#6a1b9a","Consulta?ie Confiden?ial?","Discut?m situa?ia familiei Óntr-un cadru privat ?i empatic. Confiden?ialitate garantat?."],
-    ["2","#7b1fa2","Evaluare ?i Plan","Analiz?m op?iunile juridice disponibile ?i stabilim Ómpreun? cea mai bun? cale de urmat."],
-    ["3","#8e24aa","Mediere sau Litigiu","Œncerc?m rezolvarea amiabil? prin mediere. Dac? nu e posibil, v? reprezent?m Ón instan??."],
+    ["1","#6a1b9a","Consulta?ie Confiden?ial?","Discut?m situa?ia familiei √Æntr-un cadru privat ?i empatic. Confiden?ialitate garantat?."],
+    ["2","#7b1fa2","Evaluare ?i Plan","Analiz?m op?iunile juridice disponibile ?i stabilim √Æmpreun? cea mai bun? cale de urmat."],
+    ["3","#8e24aa","Mediere sau Litigiu","√éncerc?m rezolvarea amiabil? prin mediere. Dac? nu e posibil, v? reprezent?m √Æn instan??."],
     ["4","#9c27b0","Protec?ia Intereselor","Ne asigur?m c? drepturile dumneavoastr? ?i ale copiilor sunt pe deplin protejate."],
   ];
   const faqs = [
-    { q: "C‚t dureaz? un divor??", a: "Un divor? pe cale notarial? dureaz? aprox. 30 zile. Un divor? Ón instan?? dureaz? 3-12 luni Ón func?ie de complexitate ?i dac? exist? copii minori." },
-    { q: "Cine ob?ine custodia copilului?", a: "Instan?a decide Ón func?ie de interesul superior al copilului. De regul? se instituie autoritatea p?rinteasc? comun?, cu stabilirea locuin?ei la unul dintre p?rin?i." },
-    { q: "Cum se Ómparte casa Ón caz de divor??", a: "Bunurile comune se Ómpart Ón cote egale (50/50), cu excep?ia cazului Ón care exist? o conven?ie matrimonial? sau se dovedesc contribu?ii diferite." },
-    { q: "Ce se Ónt‚mpl? cu pensia alimentar??", a: "P?rintele la care nu locuie?te copilul pl?te?te pensie de Óntre?inere. Cuantumul este stabilit de instan??, de regul? Óntre 15-25% din venitul net." },
+    { q: "C√¢t dureaz? un divor??", a: "Un divor? pe cale notarial? dureaz? aprox. 30 zile. Un divor? √Æn instan?? dureaz? 3-12 luni √Æn func?ie de complexitate ?i dac? exist? copii minori." },
+    { q: "Cine ob?ine custodia copilului?", a: "Instan?a decide √Æn func?ie de interesul superior al copilului. De regul? se instituie autoritatea p?rinteasc? comun?, cu stabilirea locuin?ei la unul dintre p?rin?i." },
+    { q: "Cum se √Æmparte casa √Æn caz de divor??", a: "Bunurile comune se √Æmpart √Æn cote egale (50/50), cu excep?ia cazului √Æn care exist? o conven?ie matrimonial? sau se dovedesc contribu?ii diferite." },
+    { q: "Ce se √Ænt√¢mpl? cu pensia alimentar??", a: "P?rintele la care nu locuie?te copilul pl?te?te pensie de √Æntre?inere. Cuantumul este stabilit de instan??, de regul? √Æntre 15-25% din venitul net." },
   ];
   return (
     <div style={{maxWidth:"900px",margin:"0 auto",padding:"2rem",fontFamily:"sans-serif"}}>
       <div style={{background:"linear-gradient(135deg,#4a148c,#7b1fa2)",color:"white",padding:"3rem 2rem",borderRadius:"8px",marginBottom:"2rem",textAlign:"center"}}>
         <div style={{fontSize:"4rem",marginBottom:"1rem"}}>{"\u{1F46A}"}</div>
         <h1 style={{margin:"0 0 1rem",fontSize:"2.5rem"}}>Dreptul Familiei</h1>
-        <p style={{fontSize:"1.2rem",opacity:0.9,margin:0}}>Asisten?? juridic? discret? ?i empatic? Ón cele mai sensibile momente ale vie?ii</p>
+        <p style={{fontSize:"1.2rem",opacity:0.9,margin:0}}>Asisten?? juridic? discret? ?i empatic? √Æn cele mai sensibile momente ale vie?ii</p>
       </div>
 
       <div style={{background:"#f3e5f5",border:"2px solid #9c27b0",padding:"1.5rem",borderRadius:"8px",marginBottom:"2rem",display:"flex",gap:"1rem",alignItems:"flex-start"}}>
         <div style={{fontSize:"2rem",flexShrink:0}}>{"\u{1F49C}"}</div>
         <div>
           <h3 style={{color:"#6a1b9a",margin:"0 0 0.5rem"}}>Abordare Empatic? ?i Confiden?ial?</h3>
-          <p style={{color:"#4a148c",margin:0}}>Œn?elegem c? problemele de familie sunt extrem de sensibile. V? oferim un spa?iu sigur, confiden?ial ?i f?r? judec??i, axat pe g?sirea celor mai bune solu?ii pentru dumneavoastr? ?i familia dvs.</p>
+          <p style={{color:"#4a148c",margin:0}}>√én?elegem c? problemele de familie sunt extrem de sensibile. V? oferim un spa?iu sigur, confiden?ial ?i f?r? judec??i, axat pe g?sirea celor mai bune solu?ii pentru dumneavoastr? ?i familia dvs.</p>
         </div>
       </div>
 
@@ -57,14 +57,14 @@ export function DreptulFamiliei() {
       </div>
 
       <div style={{background:"white",padding:"2rem",borderRadius:"8px",boxShadow:"0 2px 8px rgba(0,0,0,0.1)",marginBottom:"2rem"}}>
-        <h2 style={{color:"#333",marginBottom:"1.5rem"}}>Œntreb?ri Frecvente</h2>
+        <h2 style={{color:"#333",marginBottom:"1.5rem"}}>√éntreb?ri Frecvente</h2>
         <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
           {faqs.map((faq,i)=>(<div key={i} style={{padding:"1.25rem",background:"#f9f9f9",borderRadius:"8px",borderLeft:"4px solid #7b1fa2"}}><h4 style={{color:"#7b1fa2",margin:"0 0 0.5rem"}}>{"\u2753"} {faq.q}</h4><p style={{color:"#555",margin:0,lineHeight:1.6}}>{faq.a}</p></div>))}
         </div>
       </div>
 
       <div style={{background:"#4a148c",color:"white",padding:"2.5rem",borderRadius:"8px",textAlign:"center"}}>
-        <h2 style={{marginBottom:"1rem"}}>Ave?i Nevoie de Ajutor Ón Probleme de Familie?</h2>
+        <h2 style={{marginBottom:"1rem"}}>Ave?i Nevoie de Ajutor √Æn Probleme de Familie?</h2>
         <p style={{marginBottom:"1.5rem",opacity:0.9,fontSize:"1.1rem"}}>Suntem al?turi de dumneavoastr?. Prima consulta?ie este gratuit? ?i confiden?ial?.</p>
         <a href="/contact" style={{display:"inline-block",padding:"1rem 2.5rem",background:"white",color:"#4a148c",borderRadius:"4px",textDecoration:"none",fontWeight:"bold",fontSize:"1.1rem"}}>Consulta?ie Confiden?ial?</a>
       </div>
