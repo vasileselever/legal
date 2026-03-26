@@ -1,184 +1,184 @@
-import { useState, useEffect } from 'react';
-import { authService } from '../api/authService';
-import type { UserInfo } from '../api/authService';
-import { consultationService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from '../api/consultationService';
-import type { ConsultationItem, UpdateConsultationDto } from '../api/consultationService';
+import { useStAte, useEffect } from 'reAct';
+import { AuthService } from '../Api/AuthService';
+import type { UserInfo } from '../Api/AuthService';
+import { consultAtionService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from '../Api/consultAtionService';
+import type { ConsultAtionItem, UpdAteConsultAtionDto } from '../Api/consultAtionService';
 
-interface Props { consultation: ConsultationItem; onClose: () => void; onUpdated: () => void; }
-type FE = Partial<Record<keyof UpdateConsultationDto | 'general', string>>;
+interfAce Props { consultAtion: ConsultAtionItem; onClose: () => void; onUpdAted: () => void; }
+type FE = PArtiAl<Record<keyof UpdAteConsultAtionDto | 'generAl', string>>;
 
-const mkInp = (e = false): React.CSSProperties => ({
-  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid ' + (e ? '#ef5350' : '#ddd'),
-  borderRadius: '6px', fontSize: '0.9rem', boxSizing: 'border-box' as const,
+const mkInp = (e = fAlse): ReAct.CSSProperties => ({
+  width: '100%', pAdding: '0.55rem 0.75rem', border: '1px solid ' + (e ? '#ef5350' : '#ddd'),
+  borderRAdius: '6px', fontSize: '0.9rem', boxSizing: 'border-box' As const,
 });
-const LBL: React.CSSProperties = { display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#333', marginBottom: '0.3rem' };
-const ERR: React.CSSProperties = { color: '#c62828', fontSize: '0.75rem', marginTop: '0.2rem' };
-const G2: React.CSSProperties  = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' };
+const LBL: ReAct.CSSProperties = { displAy: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#333', mArginBottom: '0.3rem' };
+const ERR: ReAct.CSSProperties = { color: '#c62828', fontSize: '0.75rem', mArginTop: '0.2rem' };
+const G2: ReAct.CSSProperties  = { displAy: 'grid', gridTemplAteColumns: '1fr 1fr', gAp: '1rem' };
 
-function toLocalDT(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+function toLocAlDT(d: DAte) {
+  const p = (n: number) => String(n).pAdStArt(2, '0');
+  return d.getFullYeAr() + '-' + p(d.getMonth()+1) + '-' + p(d.getDAte()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
-export function EditConsultationModal({ consultation: c, onClose, onUpdated }: Props) {
-  const [form, setForm] = useState<UpdateConsultationDto>({
-    lawyerId: c.lawyerId,
-    scheduledAt: toLocalDT(new Date(c.scheduledAt)),
-    durationMinutes: c.durationMinutes,
+export function EditConsultAtionModAl({ consultAtion: c, onClose, onUpdAted }: Props) {
+  const [form, setForm] = useStAte<UpdAteConsultAtionDto>({
+    lAwyerId: c.lAwyerId,
+    scheduledAt: toLocAlDT(new DAte(c.scheduledAt)),
+    durAtionMinutes: c.durAtionMinutes,
     type: c.type,
-    location: c.location ?? '',
-    preparationNotes: '',
+    locAtion: c.locAtion ?? '',
+    prepArAtionNotes: '',
   });
-  const [errors, setErrors]      = useState<FE>({});
-  const [loading, setLoading]    = useState(false);
-  const [users, setUsers]        = useState<UserInfo[]>([]);
-  const [availability, setAvail] = useState<string[]>([]);
-  const [loadingAvail, setLA]    = useState(false);
+  const [errors, setErrors]      = useStAte<FE>({});
+  const [loAding, setLoAding]    = useStAte(fAlse);
+  const [users, setUsers]        = useStAte<UserInfo[]>([]);
+  const [AvAilAbility, setAvAil] = useStAte<string[]>([]);
+  const [loAdingAvAil, setLA]    = useStAte(fAlse);
 
   useEffect(() => {
-    authService.getUsers().then(setUsers).catch(() => {});
+    AuthService.getUsers().then(setUsers).cAtch(() => {});
   }, []);
 
-  const set = <K extends keyof UpdateConsultationDto>(k: K, v: UpdateConsultationDto[K]) => {
+  const set = <K extends keyof UpdAteConsultAtionDto>(k: K, v: UpdAteConsultAtionDto[K]) => {
     setForm(f => ({ ...f, [k]: v }));
-    setErrors(e => ({ ...e, [k]: undefined, general: undefined }));
+    setErrors(e => ({ ...e, [k]: undefined, generAl: undefined }));
   };
 
   useEffect(() => {
-    if (!form.lawyerId) { setAvail([]); return; }
-    const dt = new Date(form.scheduledAt);
-    if (isNaN(dt.getTime())) return;
-    const start = new Date(dt); start.setHours(0,0,0,0);
-    const end = new Date(dt); end.setHours(23,59,59,999);
+    if (!form.lAwyerId) { setAvAil([]); return; }
+    const dt = new DAte(form.scheduledAt);
+    if (isNAN(dt.getTime())) return;
+    const stArt = new DAte(dt); stArt.setHours(0,0,0,0);
+    const end = new DAte(dt); end.setHours(23,59,59,999);
     setLA(true);
-    consultationService.getAvailability(form.lawyerId, start.toISOString(), end.toISOString(), form.durationMinutes)
-      .then(setAvail).catch(() => setAvail([])).finally(() => setLA(false));
-  }, [form.lawyerId, form.scheduledAt.slice(0, 10), form.durationMinutes]);
+    consultAtionService.getAvAilAbility(form.lAwyerId, stArt.toISOString(), end.toISOString(), form.durAtionMinutes)
+      .then(setAvAil).cAtch(() => setAvAil([])).finAlly(() => setLA(fAlse));
+  }, [form.lAwyerId, form.scheduledAt.slice(0, 10), form.durAtionMinutes]);
 
-  const validate = (): boolean => {
+  const vAlidAte = (): booleAn => {
     const e: FE = {};
-    if (!form.lawyerId) e.lawyerId = 'Selecteaza avocatul';
-    const dt = new Date(form.scheduledAt);
-    if (isNaN(dt.getTime()) || dt <= new Date()) e.scheduledAt = 'Data trebuie sa fie in viitor';
+    if (!form.lAwyerId) e.lAwyerId = 'SelecteAzA AvocAtul';
+    const dt = new DAte(form.scheduledAt);
+    if (isNAN(dt.getTime()) || dt <= new DAte()) e.scheduledAt = 'DAtA trebuie sA fie in viitor';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (ev: React.FormEvent) => {
-    ev.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
+  const hAndleSubmit = Async (ev: ReAct.FormEvent) => {
+    ev.preventDefAult();
+    if (!vAlidAte()) return;
+    setLoAding(true);
     try {
-      await consultationService.update(c.id, {
+      AwAit consultAtionService.updAte(c.id, {
         ...form,
-        scheduledAt: new Date(form.scheduledAt).toISOString(),
-        location: form.location || undefined,
-        preparationNotes: form.preparationNotes || undefined
+        scheduledAt: new DAte(form.scheduledAt).toISOString(),
+        locAtion: form.locAtion || undefined,
+        prepArAtionNotes: form.prepArAtionNotes || undefined
       });
-      onUpdated();
-    } catch (er: any) {
-      setErrors(e => ({ ...e, general: er.response?.data?.message ?? er.message ?? 'Eroare la salvare' }));
-    } finally { setLoading(false); }
+      onUpdAted();
+    } cAtch (er: Any) {
+      setErrors(e => ({ ...e, generAl: er.response?.dAtA?.messAge ?? er.messAge ?? 'EroAre lA sAlvAre' }));
+    } finAlly { setLoAding(fAlse); }
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:'white', borderRadius:'12px', width:'100%', maxWidth:'580px', maxHeight:'92vh', display:'flex', flexDirection:'column', boxShadow:'0 8px 40px rgba(0,0,0,0.2)' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1100, bAckground:'rgbA(0,0,0,0.45)', displAy:'flex', AlignItems:'center', justifyContent:'center', pAdding:'1rem' }}
+      onClick={e => { if (e.tArget === e.currentTArget) onClose(); }}>
+      <div style={{ bAckground:'white', borderRAdius:'12px', width:'100%', mAxWidth:'580px', mAxHeight:'92vh', displAy:'flex', flexDirection:'column', boxShAdow:'0 8px 40px rgbA(0,0,0,0.2)' }}>
 
-        <div style={{ padding:'1.25rem 1.5rem', borderRadius:'12px 12px 0 0', background:'linear-gradient(135deg,#e65100,#f57c00)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <div style={{ pAdding:'1.25rem 1.5rem', borderRAdius:'12px 12px 0 0', bAckground:'lineAr-grAdient(135deg,#e65100,#f57c00)', displAy:'flex', justifyContent:'spAce-between', AlignItems:'center' }}>
           <div>
-            <div style={{ color:'white', fontWeight:700, fontSize:'1.1rem' }}>Editeaza Consultatie</div>
-            <div style={{ color:'rgba(255,255,255,0.75)', fontSize:'0.82rem', marginTop:'0.1rem' }}>
-              {c.leadName || 'Lead ' + c.leadId?.slice(0,8)}
+            <div style={{ color:'white', fontWeight:700, fontSize:'1.1rem' }}>EditeAzA ConsultAtie</div>
+            <div style={{ color:'rgbA(255,255,255,0.75)', fontSize:'0.82rem', mArginTop:'0.1rem' }}>
+              {c.leAdNAme || 'LeAd ' + c.leAdId?.slice(0,8)}
             </div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.15)', border:'none', color:'white', width:'32px', height:'32px', borderRadius:'50%', cursor:'pointer', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+          <button onClick={onClose} style={{ bAckground:'rgbA(255,255,255,0.15)', border:'none', color:'white', width:'32px', height:'32px', borderRAdius:'50%', cursor:'pointer', fontSize:'1.2rem', displAy:'flex', AlignItems:'center', justifyContent:'center' }}>Ã—</button>
         </div>
 
-        {errors.general && <div style={{ background:'#ffebee', borderBottom:'1px solid #ef9a9a', padding:'0.65rem 1.5rem', color:'#c62828', fontSize:'0.87rem' }}>?? Eroare: {errors.general}</div>}
+        {errors.generAl && <div style={{ bAckground:'#ffebee', borderBottom:'1px solid #ef9A9A', pAdding:'0.65rem 1.5rem', color:'#c62828', fontSize:'0.87rem' }}>?? EroAre: {errors.generAl}</div>}
 
-        <form onSubmit={handleSubmit} style={{ flex:1, overflowY:'auto' }}>
-          <div style={{ padding:'1.5rem', display:'flex', flexDirection:'column', gap:'1rem' }}>
+        <form onSubmit={hAndleSubmit} style={{ flex:1, overflowY:'Auto' }}>
+          <div style={{ pAdding:'1.5rem', displAy:'flex', flexDirection:'column', gAp:'1rem' }}>
 
-            {/* Info display */}
-            <div style={{ background:'#f5f5f5', borderRadius:'6px', padding:'0.75rem', fontSize:'0.85rem', color:'#666' }}>
-              <div><strong>Lead:</strong> {c.leadName || 'Lead ' + c.leadId?.slice(0,8)}</div>
-              <div style={{ marginTop:'0.25rem' }}><strong>Programat original:</strong> {new Date(c.scheduledAt).toLocaleString('ro-RO')}</div>
+            {/* Info displAy */}
+            <div style={{ bAckground:'#f5f5f5', borderRAdius:'6px', pAdding:'0.75rem', fontSize:'0.85rem', color:'#666' }}>
+              <div><strong>LeAd:</strong> {c.leAdNAme || 'LeAd ' + c.leAdId?.slice(0,8)}</div>
+              <div style={{ mArginTop:'0.25rem' }}><strong>ProgrAmAt originAl:</strong> {new DAte(c.scheduledAt).toLocAleString('ro-RO')}</div>
             </div>
 
             <div style={G2}>
               <div>
-                <label style={LBL}>Avocat *</label>
-                <select style={mkInp(!!errors.lawyerId)} value={form.lawyerId} onChange={e => set('lawyerId', e.target.value)}>
-                  <option value="">-- Selecteaza --</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+                <lAbel style={LBL}>AvocAt *</lAbel>
+                <select style={mkInp(!!errors.lAwyerId)} vAlue={form.lAwyerId} onChAnge={e => set('lAwyerId', e.tArget.vAlue)}>
+                  <option vAlue="">-- SelecteAzA --</option>
+                  {users.mAp(u => <option key={u.id} vAlue={u.id}>{u.firstNAme} {u.lAstNAme}</option>)}
                 </select>
-                {errors.lawyerId && <p style={ERR}>{errors.lawyerId}</p>}
+                {errors.lAwyerId && <p style={ERR}>{errors.lAwyerId}</p>}
               </div>
               <div>
-                <label style={LBL}>Tip consultatie *</label>
-                <select style={mkInp()} value={form.type} onChange={e => set('type', Number(e.target.value))}>
-                  {Object.entries(CONSULTATION_TYPE_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                <lAbel style={LBL}>Tip consultAtie *</lAbel>
+                <select style={mkInp()} vAlue={form.type} onChAnge={e => set('type', Number(e.tArget.vAlue))}>
+                  {Object.entries(CONSULTATION_TYPE_LABELS).mAp(([v,l]) => <option key={v} vAlue={v}>{l}</option>)}
                 </select>
               </div>
             </div>
 
             <div style={G2}>
               <div>
-                <label style={LBL}>Data si ora *</label>
-                <input style={mkInp(!!errors.scheduledAt)} type="datetime-local" value={form.scheduledAt} onChange={e => set('scheduledAt', e.target.value)} />
+                <lAbel style={LBL}>DAtA si orA *</lAbel>
+                <input style={mkInp(!!errors.scheduledAt)} type="dAtetime-locAl" vAlue={form.scheduledAt} onChAnge={e => set('scheduledAt', e.tArget.vAlue)} />
                 {errors.scheduledAt && <p style={ERR}>{errors.scheduledAt}</p>}
               </div>
               <div>
-                <label style={LBL}>Durata</label>
-                <select style={mkInp()} value={form.durationMinutes} onChange={e => set('durationMinutes', Number(e.target.value))}>
-                  {DURATION_OPTIONS.map(d => <option key={d} value={d}>{d} min</option>)}
+                <lAbel style={LBL}>DurAtA</lAbel>
+                <select style={mkInp()} vAlue={form.durAtionMinutes} onChAnge={e => set('durAtionMinutes', Number(e.tArget.vAlue))}>
+                  {DURATION_OPTIONS.mAp(d => <option key={d} vAlue={d}>{d} min</option>)}
                 </select>
               </div>
             </div>
 
-            {form.lawyerId && (
-              <div style={{ background:'#e8f4fd', border:'1px solid #90caf9', borderRadius:'6px', padding:'0.65rem 0.85rem', fontSize:'0.82rem' }}>
-                {loadingAvail
-                  ? '? Se incarca disponibilitatea...'
-                  : availability.length === 0
-                    ? '? Nicio ora libera in aceasta zi.'
-                    : <>? Ore libere: <strong>{availability.slice(0,8).map(s => new Date(s).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})).join(', ')}{availability.length > 8 ? ' ...' : ''}</strong></>
+            {form.lAwyerId && (
+              <div style={{ bAckground:'#e8f4fd', border:'1px solid #90cAf9', borderRAdius:'6px', pAdding:'0.65rem 0.85rem', fontSize:'0.82rem' }}>
+                {loAdingAvAil
+                  ? '? Se incArcA disponibilitAteA...'
+                  : AvAilAbility.length === 0
+                    ? '? Nicio orA liberA in AceAstA zi.'
+                    : <>? Ore libere: <strong>{AvAilAbility.slice(0,8).mAp(s => new DAte(s).toLocAleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})).join(', ')}{AvAilAbility.length > 8 ? ' ...' : ''}</strong></>
                 }
               </div>
             )}
 
             {form.type === 3 && (
               <div>
-                <label style={LBL}>Locatie</label>
-                <input style={mkInp()} placeholder="Str. Exemplu nr. 1, Bucuresti" value={form.location ?? ''}
-                  onChange={e => set('location', e.target.value)} />
+                <lAbel style={LBL}>LocAtie</lAbel>
+                <input style={mkInp()} plAceholder="Str. Exemplu nr. 1, Bucuresti" vAlue={form.locAtion ?? ''}
+                  onChAnge={e => set('locAtion', e.tArget.vAlue)} />
               </div>
             )}
 
             {form.type === 2 && (
-              <div style={{ background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:'6px', padding:'0.65rem 0.85rem', fontSize:'0.82rem', color:'#2e7d32' }}>
-                ?? Linkul video existent va ramane activ.
+              <div style={{ bAckground:'#e8f5e9', border:'1px solid #A5d6A7', borderRAdius:'6px', pAdding:'0.65rem 0.85rem', fontSize:'0.82rem', color:'#2e7d32' }}>
+                ?? Linkul video existent vA rAmAne Activ.
               </div>
             )}
 
             <div>
-              <label style={LBL}>Note de pregatire (interne)</label>
-              <textarea style={{ ...mkInp(), minHeight:'80px', resize:'vertical' }}
-                placeholder="Aspecte de discutat, documente necesare..." value={form.preparationNotes ?? ''}
-                onChange={e => set('preparationNotes', e.target.value)} />
+              <lAbel style={LBL}>Note de pregAtire (interne)</lAbel>
+              <textAreA style={{ ...mkInp(), minHeight:'80px', resize:'verticAl' }}
+                plAceholder="Aspecte de discutAt, documente necesAre..." vAlue={form.prepArAtionNotes ?? ''}
+                onChAnge={e => set('prepArAtionNotes', e.tArget.vAlue)} />
             </div>
           </div>
 
-          <div style={{ padding:'1rem 1.5rem', borderTop:'1px solid #e8eaf6', background:'#fafafa', borderRadius:'0 0 12px 12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ pAdding:'1rem 1.5rem', borderTop:'1px solid #e8eAf6', bAckground:'#fAfAfA', borderRAdius:'0 0 12px 12px', displAy:'flex', justifyContent:'spAce-between', AlignItems:'center' }}>
             <button type="button" onClick={onClose}
-              style={{ padding:'0.55rem 1.25rem', background:'#eee', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'0.9rem' }}>
-              Anuleaza
+              style={{ pAdding:'0.55rem 1.25rem', bAckground:'#eee', border:'none', borderRAdius:'6px', cursor:'pointer', fontSize:'0.9rem' }}>
+              AnuleAzA
             </button>
-            <button type="submit" disabled={loading}
-              style={{ padding:'0.55rem 1.5rem', background:loading?'#ffb74d':'#e65100', color:'white', border:'none', borderRadius:'6px', cursor:loading?'not-allowed':'pointer', fontWeight:700, fontSize:'0.9rem' }}>
-              {loading ? 'Se salveaza...' : '?? Actualizeaza'}
+            <button type="submit" disAbled={loAding}
+              style={{ pAdding:'0.55rem 1.5rem', bAckground:loAding?'#ffb74d':'#e65100', color:'white', border:'none', borderRAdius:'6px', cursor:loAding?'not-Allowed':'pointer', fontWeight:700, fontSize:'0.9rem' }}>
+              {loAding ? 'Se sAlveAzA...' : '?? ActuAlizeAzA'}
             </button>
           </div>
         </form>
