@@ -219,10 +219,19 @@ try
             
             await context.Database.MigrateAsync();
             Log.Information("Database migration completed successfully");
-            
-            if (app.Environment.IsDevelopment())
+
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    // Seed test data only in development
+            //    await DatabaseSeeder.SeedAsync(context, userManager);
+            //    Log.Information("Database seeding completed successfully");
+            //}
+
+            var shouldSeed = app.Environment.IsDevelopment()
+                || builder.Configuration.GetValue<bool>("SeedDatabase");
+
+            if (shouldSeed)
             {
-                // Seed test data only in development
                 await DatabaseSeeder.SeedAsync(context, userManager);
                 Log.Information("Database seeding completed successfully");
             }
