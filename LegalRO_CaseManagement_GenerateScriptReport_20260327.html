@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html>
+  <head>
+    <title>Save Scripts Report</title>
+  </head>
+  <body>
+    <p STYLE="font-family: Verdana, Arial, sans-serif; font-size: 14pt;">
+      <b>Save Scripts Report</b>
+    </p>
+    <p STYLE="font-family: Verdana, Arial, sans-serif; font-size: 10pt;">
+      <b>Report Date/Time:</b>27-Mar-26 9:40 AM<br /></p>
+    <table border="1" cellpadding="7" cellspacing="0" STYLE="font-family: Verdana, Arial, sans-serif; font-size: 9pt;">
+      <tr style="background-color:Silver">
+        <th colspan="2" align="center">Name</th>
+        <th align="center">Result</th>
+        <th align="center">Message</th>
+      </tr>
+      <tr valign="top">
+        <td>
+          <img src="resources\ProgressError.ico" />
+        </td>
+        <td>Getting the list of objects from 'LegalRO_CaseManagement'.</td>
+        <td>Failed</td>
+        <td>Microsoft.SqlServer.Management.SqlScriptPublish.SqlScriptPublishException: An error occurred while scripting the objects. ---&gt; Microsoft.SqlServer.Management.Smo.SmoException: Cyclic dependencies found.
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.DependencyGraphTraversal(Int32 num, Dictionary`2 dictionary, List`1 sortedList, HashSet`1 visited, HashSet`1 current)
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.DependencyGraphTraversal(Int32 num, Dictionary`2 dictionary, List`1 sortedList, HashSet`1 visited, HashSet`1 current)
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.DependencyGraphTraversal(Int32 num, Dictionary`2 dictionary, List`1 sortedList, HashSet`1 visited, HashSet`1 current)
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.SortDictionary(Dictionary`2 dictionary)
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.SortDataSet(List`1 objectList, Dictionary`2 idDictionary, DataSet ds)
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.ExecuteQueryUsingTempTable(List`1 objectList, List`1 list, String query)
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.ResolveTableOnlyDependencies()
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.ResolveDependencies()
+   at Microsoft.SqlServer.Management.Smo.SmoDependencyOrderer.Order(IEnumerable`1 urns)
+   at Microsoft.SqlServer.Management.Smo.ScriptMaker.DiscoverOrderScript(IEnumerable`1 urns)
+   at Microsoft.SqlServer.Management.Smo.ScriptMaker.ScriptWorker(List`1 urns, ISmoScriptWriter writer)
+   at Microsoft.SqlServer.Management.SqlScriptPublish.SqlScriptGenerator.DoScript(ScriptOutputOptions outputOptions)
+   --- End of inner exception stack trace ---
+   at Microsoft.SqlServer.Management.SqlScriptPublish.GeneratePublishPage.worker_DoWork(Object sender, DoWorkEventArgs e)
+   at System.ComponentModel.BackgroundWorker.OnDoWork(DoWorkEventArgs e)
+   at System.ComponentModel.BackgroundWorker.WorkerThreadStart(Object argument)</td>
+      </tr>
+    </table>
+  </body>
+</html>
