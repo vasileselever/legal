@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { consultationService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from '../api/consultationService';
 import type { ConsultationItem, UpdateConsultationDto } from '../api/consultationService';
+import { notificationService } from '../api/notificationService';
 import { apiClient } from '../api/apiClient';
 
 interface UserOption { id: string; firstName: string; lastName: string; }
@@ -20,20 +21,32 @@ function toLocalDT(d: Date) {
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 
+// Ensure the API datetime string is parsed as UTC (add Z if missing)
+function parseApiDate(s: string): Date {
+    if (!s) return new Date();
+    // If no timezone info, treat as UTC (backend returns datetime2 without Z)
+    return new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z');
+}
+
+// Shared formatter — same locale/timezone as ConsultationsPage dashboard
+const fmtDateTime = (d: string) =>
+    new Date(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 export function EditConsultationModal({ consultation: c, onClose, onUpdated }: Props) {
     const [form, setForm] = useState<UpdateConsultationDto>({
         lawyerId: c.lawyerId,
-        scheduledAt: toLocalDT(new Date(c.scheduledAt)),
+        scheduledAt: toLocalDT(parseApiDate(c.scheduledAt)),
         durationMinutes: c.durationMinutes,
         type: c.type,
         location: c.location ?? '',
         preparationNotes: '',
     });
-    const [errors, setErrors] = useState<FE>({});
+    const [errors, setErrors]   = useState<FE>({});
     const [loading, setLoading] = useState(false);
-    const [users, setUsers] = useState<UserOption[]>([]);
+    const [users, setUsers]     = useState<UserOption[]>([]);
     const [availability, setAvail] = useState<string[]>([]);
-    const [loadingAvail, setLA] = useState(false);
+    const [loadingAvail, setLA]    = useState(false);
+    const [notifyClient, setNotifyClient] = useState(true);
 
     useEffect(() => {
         apiClient.get('/auth/users').then(r => {
@@ -76,11 +89,14 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
                 scheduledAt: new Date(form.scheduledAt).toISOString(),
                 location: form.location || undefined,
                 preparationNotes: form.preparationNotes || undefined,
+                sendNotification: notifyClient,  // backend handles the email
             });
             onUpdated();
         } catch (er: any) {
             setErrors(e => ({ ...e, general: er.response?.data?.message ?? er.message ?? 'Eroare la salvare' }));
-        } finally { setLoading(false); }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -113,7 +129,7 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
 
                         <div style={{ background: '#f5f5f5', borderRadius: '6px', padding: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
                             <div><strong>Lead:</strong> {c.leadName || 'Lead ' + c.leadId?.slice(0, 8)}</div>
-                            <div style={{ marginTop: '0.25rem' }}><strong>Programat original:</strong> {new Date(c.scheduledAt).toLocaleString('ro-RO')}</div>
+                            <div style={{ marginTop: '0.25rem' }}><strong>Programat original:</strong> {fmtDateTime(c.scheduledAt)}</div>
                         </div>
 
                         <div style={G2}>
@@ -181,6 +197,37 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
                                 onChange={e => set('preparationNotes', e.target.value)}
                             />
                         </div>
+
+                        {/* Notification checkbox */}
+                        <label style={{
+                            display: 'flex', alignItems: 'center', gap: '0.75rem',
+                            padding: '0.7rem 1rem',
+                            background: notifyClient ? '#e3f2fd' : '#f5f5f5',
+                            border: `1px solid ${notifyClient ? '#90caf9' : '#e0e0e0'}`,
+                            borderRadius: '8px', cursor: 'pointer',
+                            transition: 'background 0.15s, border-color 0.15s',
+                            userSelect: 'none',
+                        }}>
+                            <input
+                                type="checkbox"
+                                checked={notifyClient}
+                                onChange={e => setNotifyClient(e.target.checked)}
+                                style={{ width: '17px', height: '17px', accentColor: '#1976d2', cursor: 'pointer', flexShrink: 0 }}
+                            />
+                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: notifyClient ? '#1565c0' : '#666' }}>
+                                ?? Trimite mail de notificare
+                            </span>
+                            {notifyClient && c.leadEmail && (
+                                <span style={{ fontSize: '0.8rem', color: '#1976d2', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                                    ? {c.leadEmail}
+                                </span>
+                            )}
+                            {!notifyClient && (
+                                <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: 'auto', fontStyle: 'italic' }}>
+                                    emailul nu va fi trimis
+                                </span>
+                            )}
+                        </label>
                     </div>
 
                     <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e8eaf6', background: '#fafafa', borderRadius: '0 0 12px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -204,7 +204,8 @@ public class ConsultationDto
 {
     public Guid Id { get; set; }
     public Guid LeadId { get; set; }
-    public string? LeadName { get; set; }  // ? ADDED: Lead name for display
+    public string LeadName { get; set; } = string.Empty;   // never null ? always serialized
+    public string LeadEmail { get; set; } = string.Empty;  // never null ? always serialized
     public Guid LawyerId { get; set; }
     public string LawyerName { get; set; } = string.Empty;
     public DateTime ScheduledAt { get; set; }
@@ -242,6 +243,11 @@ public class CreateConsultationDto
 
     [MaxLength(1000)]
     public string? PreparationNotes { get; set; }
+
+    /// <summary>
+    /// When true the backend sends a confirmation notification email to the lead.
+    /// </summary>
+    public bool SendNotification { get; set; } = false;
 }
 
 /// <summary>
@@ -266,6 +272,11 @@ public class UpdateConsultationDto
 
     [MaxLength(1000)]
     public string? PreparationNotes { get; set; }
+
+    /// <summary>
+    /// When true the backend sends a reschedule notification email to the lead.
+    /// </summary>
+    public bool SendNotification { get; set; } = false;
 }
 
 /// <summary>
@@ -330,4 +341,28 @@ public class ConvertToClientDto
 
     [MaxLength(500)]
     public string? Notes { get; set; }
+}
+
+/// <summary>
+/// Compact summary of a prior lead from the same person (same email or phone)
+/// </summary>
+public class PriorLeadDto
+{
+    public Guid Id { get; set; }
+    public PracticeArea PracticeArea { get; set; }
+    public LeadStatus Status { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? AssignedToName { get; set; }
+    public bool IsConverted => Status == LeadStatus.Converted;
+}
+
+/// <summary>
+/// Response returned after successfully creating a lead.
+/// Includes the new lead ID and any prior leads found for the same contact.
+/// </summary>
+public class CreateLeadResponseDto
+{
+    public Guid LeadId { get; set; }
+    public List<PriorLeadDto> PriorLeads { get; set; } = new();
+    public bool HasPriorLeads => PriorLeads.Count > 0;
 }

@@ -4,6 +4,7 @@ export interface ConsultationItem {
   id: string; 
   leadId: string; 
   leadName?: string;  // ? ADDED: Lead name
+  leadEmail?: string;  // Lead email for notification
   lawyerId: string; 
   lawyerName: string;
   scheduledAt: string; 
@@ -22,9 +23,13 @@ export interface CreateConsultationDto {
 }
 
 export interface UpdateConsultationDto {
-  lawyerId: string; scheduledAt: string;
-  durationMinutes: number; type: number;
-  location?: string; preparationNotes?: string;
+  lawyerId: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  type: number;
+  location?: string;
+  preparationNotes?: string;
+  sendNotification?: boolean;  // backend sends the email when true
 }
 
 export const CONSULTATION_TYPE_LABELS: Record<number, string> = { 1: 'Telefon', 2: 'Video', 3: 'Fizic' };

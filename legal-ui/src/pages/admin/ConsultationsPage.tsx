@@ -14,6 +14,20 @@ import type { ConsultationItem } from '../../api/consultationService';
 
 type Range = 'today' | 'week' | 'month' | 'all';
 
+// Ensure API datetime strings (no timezone suffix) are parsed as UTC
+const parseApiDate = (s: string): Date =>
+  new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z');
+
+// Shared time/date formatters — always use ro-RO locale, browser local timezone
+const fmtTime = (d: string) =>
+  parseApiDate(d).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+
+const fmtDateTime = (d: string) =>
+  parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+const fmtDay = (d: string) =>
+  parseApiDate(d).toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' });
+
 // Icon component for consistent rendering
 const Icon = ({ type, size = '14px' }: { type: string; size?: string }) => {
   const icons: Record<string, string> = {
@@ -99,7 +113,7 @@ export function ConsultationsPage() {
   // Group by calendar day
   const groups: Record<string, ConsultationItem[]> = {};
   items.forEach(c => {
-    const day = new Date(c.scheduledAt).toLocaleDateString('ro-RO', { weekday:'long', day:'numeric', month:'long' });
+    const day = fmtDay(c.scheduledAt);
     (groups[day] = groups[day] || []).push(c);
   });
 
@@ -109,8 +123,13 @@ export function ConsultationsPage() {
     background: active ? color : 'white', color: active ? 'white' : '#555', fontWeight: active ? 600 : 400,
   });
 
-  // Summary stats
-  const counts = { total: items.length, confirmed: items.filter(c => c.status===2).length, today: items.filter(c => new Date(c.scheduledAt).toDateString()===new Date().toDateString()).length };
+  // Summary stats — also use parseApiDate for today comparison
+  const todayStr = new Date().toDateString();
+  const counts = {
+    total: items.length,
+    confirmed: items.filter(c => c.status === 2).length,
+    today: items.filter(c => parseApiDate(c.scheduledAt).toDateString() === todayStr).length,
+  };
 
   return (
     <AdminLayout>
@@ -134,7 +153,7 @@ export function ConsultationsPage() {
           {[
             { label:'Total',      value:items.length, color:'#1a237e', icon:'calendar' },
             { label:'Confirmate', value:items.filter(c => c.status===2).length, color:'#2e7d32', icon:'confirm' },
-            { label:'Azi',        value:items.filter(c => new Date(c.scheduledAt).toDateString()===new Date().toDateString()).length, color:'#f57c00', icon:'clock' },
+            { label:'Azi',        value:items.filter(c => parseApiDate(c.scheduledAt).toDateString()===todayStr).length, color:'#f57c00', icon:'clock' },
           ].map(s => (
             <Card key={s.label} style={{ padding:'0.85rem 1.25rem', display:'flex', alignItems:'center', gap:'0.85rem' }}>
               <div style={{ fontSize:'2rem' }}><Icon type={s.icon} size="28px" /></div>
@@ -195,7 +214,7 @@ export function ConsultationsPage() {
                     <div style={{ display:'flex', alignItems:'center', gap:'0.65rem', marginBottom:'0.35rem', flexWrap:'wrap' }}>
                       <span style={{ fontWeight:700, color:'#1a237e', fontSize:'1rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <Icon type="clock" />
-                        {new Date(c.scheduledAt).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})}
+                        {fmtTime(c.scheduledAt)}
                         <span style={{ color:'#888', fontWeight:400, marginLeft:'0.3rem', fontSize:'0.82rem' }}>({c.durationMinutes} min)</span>
                       </span>
                       <Badge label={CONSULTATION_TYPE_LABELS[c.type]} color={CONSULTATION_TYPE_COLORS[c.type] ?? '#555'} />

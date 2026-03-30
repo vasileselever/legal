@@ -35,6 +35,29 @@ export interface CreateLeadDto {
   consentToMarketing: boolean; consentToDataProcessing: boolean;
 }
 
+export interface ActivityItem {
+  id: string;
+  activityType: string;
+  description: string;
+  userName?: string;
+  createdAt: string;
+}
+
+export interface PriorLead {
+  id: string;
+  practiceArea: number;
+  status: number;
+  createdAt: string;
+  assignedToName?: string;
+  isConverted: boolean;
+}
+
+export interface CreateLeadResult {
+  leadId: string;
+  priorLeads: PriorLead[];
+  hasPriorLeads: boolean;
+}
+
 export const PRACTICE_AREAS = [
   { value: 1, label: 'Drept Civil' },       { value: 2, label: 'Drept Comercial' },
   { value: 3, label: 'Drept Penal' },        { value: 4, label: 'Dreptul Familiei' },
@@ -90,10 +113,10 @@ export const leadService = {
     return data.data;
   },
 
-  createLead: async (dto: CreateLeadDto): Promise<string> => {
+  createLead: async (dto: CreateLeadDto): Promise<CreateLeadResult> => {
     const { data } = await apiClient.post('/leads', dto);
     if (!data.success) throw new Error(data.message);
-    return data.data;
+    return data.data as CreateLeadResult;
   },
 
   updateLead: async (id: string, patch: {
@@ -128,5 +151,20 @@ export const leadService = {
     const { data } = await apiClient.post('/leads/' + id + '/convert', { clientName, notes });
     if (!data.success) throw new Error(data.message);
     return data.data;
+  },
+
+  getHistory: async (id: string, page = 1, pageSize = 25): Promise<{ data: ActivityItem[]; pagination: { totalCount: number; totalPages: number; page: number } }> => {
+    const { data } = await apiClient.get('/leads/' + id + '/history', { params: { page, pageSize } });
+    if (!data.success && data.data === undefined) throw new Error(data.message);
+    return { data: data.data, pagination: data.pagination };
+  },
+
+  /** Look up existing leads for a contact by email and/or phone.
+   *  Used to warn staff that this person already has open/past leads. */
+  lookupByContact: async (params: { email?: string; phone?: string }): Promise<PriorLead[]> => {
+    if (!params.email && !params.phone) return [];
+    const { data } = await apiClient.get('/leads/lookup', { params });
+    if (!data.success) return [];
+    return data.data as PriorLead[];
   },
 };

@@ -2,9 +2,11 @@ using LegalRO.CaseManagement.Application.Services;
 using LegalRO.CaseManagement.Domain.Entities;
 using LegalRO.CaseManagement.Infrastructure.Data;
 using LegalRO.CaseManagement.Infrastructure.Services;
+using LegalRO.CaseManagement.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -27,7 +29,7 @@ Log.Information("Configuring LegalRO Case Management API...");
 try
 {
     // Add services to the container
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
     // Configure SQL Server with Entity Framework Core
@@ -43,19 +45,16 @@ try
     // Configure Identity
     builder.Services.AddIdentityCore<User>(options =>
     {
-        // Password settings (Romanian requirements)
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = true;
         options.Password.RequiredLength = 8;
-        
-        // Lockout settings
+
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.AllowedForNewUsers = true;
-        
-        // User settings
+
         options.User.RequireUniqueEmail = true;
     })
     .AddRoles<IdentityRole<Guid>>()
@@ -64,7 +63,7 @@ try
     .AddDefaultTokenProviders();
 
     // Configure JWT Authentication
-    var jwtKey = builder.Configuration["Jwt:Key"] 
+    var jwtKey = builder.Configuration["Jwt:Key"]
         ?? throw new InvalidOperationException("JWT Key not configured");
     var jwtIssuer = builder.Configuration["Jwt:Issuer"];
     var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -101,6 +100,13 @@ try
     // Register Billing & Financial Management service
     builder.Services.AddScoped<IBillingService, BillingService>();
 
+    // Register Notification services (Email/SMS)
+    builder.Services.Configure<NotificationSettings>(
+        builder.Configuration.GetSection("Notifications"));
+    builder.Services.AddScoped<EmailNotificationService>();
+    builder.Services.AddScoped<SmsNotificationService>();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
+
     // Add Controllers
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -114,9 +120,14 @@ try
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-                ?? new[] { "http://localhost:3000" };
-            
+            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? new[]
+                {
+                    "http://localhost:5173",   // Vite dev server
+                    "https://localhost:5173",  // Vite dev server (HTTPS)
+                    "http://localhost:3000",   // legacy / CRA
+                };
+
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
                   .AllowAnyHeader()
@@ -140,7 +151,6 @@ try
             }
         });
 
-        // Add JWT authentication to Swagger
         c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
@@ -183,14 +193,9 @@ try
         });
     }
 
-    // Redirect to HTTPS in all environments
-    app.UseHttpsRedirection();
-
-    // Serve the React SPA static files in production
     if (!app.Environment.IsDevelopment())
     {
-        app.UseDefaultFiles();
-        app.UseStaticFiles();
+        app.UseHttpsRedirection();
     }
 
     app.UseCors("AllowFrontend");
@@ -202,8 +207,29 @@ try
 
     app.MapHealthChecks("/health");
 
-    // Serve React SPA for non-API routes in production
-    if (!app.Environment.IsDevelopment())
+    // DEV ONLY: email smoke test — remove before production
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapPost("/dev/test-email", async (INotificationService notifications, IOptions<NotificationSettings> options, CancellationToken ct) =>
+        {
+            await notifications.SendLeadConfirmationEmailAsync(
+                toEmail: "test@legalro.local",
+                toName: "Test User",
+                practiceArea: "Drept Civil",
+                ct: ct);
+
+            var s = options.Value;
+            return Results.Ok(new
+            {
+                message = "Email sent — check http://localhost:8025",
+                smtpEnabled = s.Smtp?.IsEnabled,
+                smtpHost = s.Smtp?.Host,
+                smtpPort = s.Smtp?.Port
+            });
+        }).ExcludeFromDescription();
+    }
+
+    if (!app.Environment.IsDevelopment())   
     {
         app.MapFallbackToFile("index.html");
     }
@@ -216,16 +242,9 @@ try
         {
             var context = services.GetRequiredService<ApplicationDbContext>();
             var userManager = services.GetRequiredService<UserManager<User>>();
-            
+
             await context.Database.MigrateAsync();
             Log.Information("Database migration completed successfully");
-
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    // Seed test data only in development
-            //    await DatabaseSeeder.SeedAsync(context, userManager);
-            //    Log.Information("Database seeding completed successfully");
-            //}
 
             var shouldSeed = app.Environment.IsDevelopment()
                 || builder.Configuration.GetValue<bool>("SeedDatabase");
@@ -244,9 +263,9 @@ try
 
     Log.Information("Starting LegalRO Case Management API");
     Log.Information("Environment: {Environment}", app.Environment.EnvironmentName);
-    
+
     await app.RunAsync();
-    
+
     Log.Information("LegalRO Case Management API shut down gracefully");
 }
 catch (Exception ex)
@@ -258,6 +277,52 @@ finally
 {
     await Log.CloseAndFlushAsync();
 }
+
+public partial class Program { }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

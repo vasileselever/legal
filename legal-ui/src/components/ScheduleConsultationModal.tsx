@@ -5,6 +5,7 @@ import { leadService, PRACTICE_AREAS } from '../api/leadService';
 import type { LeadItem } from '../api/leadService';
 import { consultationService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from '../api/consultationService';
 import type { CreateConsultationDto } from '../api/consultationService';
+import { notificationService } from '../api/notificationService';
 
 interface Props { onClose: () => void; onCreated: () => void; prefillLeadId?: string; }
 type FE = Partial<Record<keyof CreateConsultationDto | 'general', string>>;
@@ -31,6 +32,9 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
   const [users, setUsers]        = useState<UserInfo[]>([]);
   const [availability, setAvail] = useState<string[]>([]);
   const [loadingAvail, setLA]    = useState(false);
+  const [notifStatus, setNotifStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifyClient, setNotifyClient] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -70,11 +74,38 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
     if (!validate()) return;
     setLoading(true);
     try {
-      await consultationService.create({ ...form, scheduledAt: new Date(form.scheduledAt).toISOString(), location: form.location || undefined, preparationNotes: form.preparationNotes || undefined });
-      onCreated();
+      await consultationService.create({
+        ...form,
+        scheduledAt: new Date(form.scheduledAt).toISOString(),
+        location: form.location || undefined,
+        preparationNotes: form.preparationNotes || undefined,
+      });
+
+      // Send reminder notification to lead
+      if (notifyClient && selLead?.email) {
+        setNotifStatus('sending');
+        try {
+          const res = await notificationService.testConsultationReminder({
+            to: selLead.email,
+            name: selLead.name,
+            scheduledAt: form.scheduledAt, // already local time from datetime-local input
+          });
+          setNotifStatus('sent');
+          setNotifMessage(res.message);
+        } catch (ne: any) {
+          setNotifStatus('error');
+          setNotifMessage(ne.message ?? 'Eroare la trimiterea notificarii');
+        }
+        // Wait so the user sees the confirmation, then close
+        setTimeout(() => onCreated(), 2000);
+      } else {
+        onCreated();
+      }
     } catch (er: any) {
       setErrors(e => ({ ...e, general: er.response?.data?.message ?? er.message ?? 'Eroare la salvare' }));
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const selLead = leads.find(l => l.id === form.leadId);
@@ -167,22 +198,85 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
               </div>
             )}
 
+            {/* Notify client checkbox — placed before notes so it's visible without scrolling */}
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.7rem 1rem',
+              background: notifyClient ? '#e3f2fd' : '#f5f5f5',
+              border: `1px solid ${notifyClient ? '#90caf9' : '#e0e0e0'}`,
+              borderRadius: '8px', cursor: 'pointer',
+              transition: 'background 0.15s, border-color 0.15s',
+              userSelect: 'none',
+            }}>
+              <input
+                type="checkbox"
+                checked={notifyClient}
+                onChange={e => setNotifyClient(e.target.checked)}
+                style={{ width: '17px', height: '17px', accentColor: '#1976d2', cursor: 'pointer', flexShrink: 0 }}
+              />
+              <span style={{ fontSize: '0.9rem', color: notifyClient ? '#1565c0' : '#666', fontWeight: 600 }}>
+                ?? Trimite mail de notificare
+              </span>
+              {notifyClient && selLead?.email && (
+                <span style={{ fontSize: '0.8rem', color: '#1976d2', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  ? {selLead.email}
+                </span>
+              )}
+              {!notifyClient && (
+                <span style={{ fontSize: '0.8rem', color: '#aaa', marginLeft: 'auto', fontStyle: 'italic' }}>
+                  emailul nu va fi trimis
+                </span>
+              )}
+            </label>
+
             <div>
               <label style={LBL}>Note de pregatire (interne)</label>
               <textarea style={{ ...mkInp(), minHeight:'80px', resize:'vertical' }}
                 placeholder="Aspecte de discutat, documente necesare..." value={form.preparationNotes ?? ''}
                 onChange={e => set('preparationNotes', e.target.value)} />
             </div>
+
+            {/* Notification status banners */}
+            {notifStatus === 'sending' && (
+              <div style={{ background:'#e3f2fd', border:'1px solid #90caf9', borderRadius:'8px', padding:'0.75rem 1rem', display:'flex', alignItems:'center', gap:'0.6rem', fontSize:'0.87rem', color:'#1565c0' }}>
+                <span style={{ fontSize:'1.1rem' }}>??</span>
+                <span>Se trimite emailul de reminder catre <strong>{selLead?.email}</strong>...</span>
+              </div>
+            )}
+
+            {notifStatus === 'sent' && (
+              <div style={{ background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:'8px', padding:'0.75rem 1rem', display:'flex', alignItems:'center', gap:'0.6rem', fontSize:'0.87rem' }}>
+                <span style={{ fontSize:'1.1rem' }}>?</span>
+                <div>
+                  <div style={{ fontWeight:700, color:'#2e7d32', marginBottom:'0.1rem' }}>Reminder trimis cu succes!</div>
+                  <div style={{ color:'#388e3c' }}>
+                    Email trimis la <strong>{selLead?.email}</strong> cu detaliile consultatiei programate pe{' '}
+                    <strong>{new Date(form.scheduledAt).toLocaleString('ro-RO', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' })}</strong>.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {notifStatus === 'error' && (
+              <div style={{ background:'#fff3e0', border:'1px solid #ffcc80', borderRadius:'8px', padding:'0.75rem 1rem', display:'flex', alignItems:'center', gap:'0.6rem', fontSize:'0.87rem' }}>
+                <span style={{ fontSize:'1.1rem' }}>??</span>
+                <div>
+                  <div style={{ fontWeight:700, color:'#e65100', marginBottom:'0.1rem' }}>Consultatia a fost salvata, dar emailul nu a putut fi trimis.</div>
+                  <div style={{ color:'#bf360c', fontSize:'0.82rem' }}>{notifMessage}</div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           <div style={{ padding:'1rem 1.5rem', borderTop:'1px solid #e8eaf6', background:'#fafafa', borderRadius:'0 0 12px 12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <button type="button" onClick={onClose}
-              style={{ padding:'0.55rem 1.25rem', background:'#eee', border:'none', borderRadius:'6px', cursor:'pointer', fontSize:'0.9rem' }}>
+            <button type="button" onClick={onClose} disabled={notifStatus === 'sending'}
+              style={{ padding:'0.55rem 1.25rem', background:'#eee', border:'none', borderRadius:'6px', cursor: notifStatus === 'sending' ? 'not-allowed' : 'pointer', fontSize:'0.9rem', opacity: notifStatus === 'sending' ? 0.5 : 1 }}>
               Anuleaza
             </button>
-            <button type="submit" disabled={loading}
-              style={{ padding:'0.55rem 1.5rem', background:loading?'#90caf9':'#1a237e', color:'white', border:'none', borderRadius:'6px', cursor:loading?'not-allowed':'pointer', fontWeight:700, fontSize:'0.9rem' }}>
-              {loading ? 'Se salveaza...' : 'Programeaza'}
+            <button type="submit" disabled={loading || notifStatus === 'sending' || notifStatus === 'sent'}
+              style={{ padding:'0.55rem 1.5rem', background: loading || notifStatus === 'sending' ? '#90caf9' : notifStatus === 'sent' ? '#a5d6a7' : '#1a237e', color:'white', border:'none', borderRadius:'6px', cursor: loading || notifStatus !== 'idle' ? 'not-allowed' : 'pointer', fontWeight:700, fontSize:'0.9rem' }}>
+              {loading ? 'Se salveaza...' : notifStatus === 'sending' ? 'Se trimite emailul...' : notifStatus === 'sent' ? '? Programat!' : 'Programeaza'}
             </button>
           </div>
         </form>

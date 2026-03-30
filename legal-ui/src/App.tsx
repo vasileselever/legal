@@ -20,6 +20,7 @@ import { DreptulMuncii } from './pages/DreptulMuncii';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useEffect } from 'react';
+import { NotificationTestPage } from './pages/admin/NotificationTestPage';
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ function App() {
           <Route path="/admin/research"      element={<PR><LegalResearchPage /></PR>} />
           <Route path="/admin/documents"     element={<PR><DocumentAutomationPage /></PR>} />
           <Route path="/admin/users"         element={<PR><UsersPage /></PR>} />
+          <Route path="/admin/notifications" element={<PR><NotificationTestPage /></PR>} />
 
           {/* Public site */}
           <Route path="/*" element={

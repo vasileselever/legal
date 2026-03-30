@@ -1,6 +1,7 @@
 using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Application.DTOs.Leads;
+using LegalRO.CaseManagement.Application.Services;
 using LegalRO.CaseManagement.Domain.Entities;
 using LegalRO.CaseManagement.Domain.Enums;
 using LegalRO.CaseManagement.Infrastructure.Data;
@@ -20,11 +21,16 @@ public class LeadsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<LeadsController> _logger;
+    private readonly INotificationService _notifications;
 
-    public LeadsController(ApplicationDbContext context, ILogger<LeadsController> logger)
+    public LeadsController(
+        ApplicationDbContext context,
+        ILogger<LeadsController> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     /// <summary>
@@ -100,7 +106,7 @@ public class LeadsController : ControllerBase
                 })
                 .ToListAsync();
 
-            var response = new PagedResponse<LeadListDto>
+            return Ok(new PagedResponse<LeadListDto>
             {
                 Data = leads,
                 Pagination = new PaginationMetadata
@@ -110,18 +116,12 @@ public class LeadsController : ControllerBase
                     TotalCount = totalCount,
                     TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
                 }
-            };
-
-            return Ok(response);
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving leads");
-            return StatusCode(500, new ApiResponse<List<LeadListDto>>
-            {
-                Success = false,
-                Message = "An error occurred while retrieving leads"
-            });
+            return StatusCode(500, new ApiResponse<List<LeadListDto>> { Success = false, Message = "An error occurred while retrieving leads" });
         }
     }
 
@@ -146,13 +146,7 @@ public class LeadsController : ControllerBase
                 .FirstOrDefaultAsync();
 
             if (lead == null)
-            {
-                return NotFound(new ApiResponse<LeadDetailDto>
-                {
-                    Success = false,
-                    Message = "Lead not found"
-                });
-            }
+                return NotFound(new ApiResponse<LeadDetailDto> { Success = false, Message = "Lead not found" });
 
             var leadDto = new LeadDetailDto
             {
@@ -223,35 +217,26 @@ public class LeadsController : ControllerBase
                     }).ToList()
             };
 
-            return Ok(new ApiResponse<LeadDetailDto>
-            {
-                Success = true,
-                Data = leadDto,
-                Message = "Lead retrieved successfully"
-            });
+            return Ok(new ApiResponse<LeadDetailDto> { Success = true, Data = leadDto, Message = "Lead retrieved successfully" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving lead {LeadId}", id);
-            return StatusCode(500, new ApiResponse<LeadDetailDto>
-            {
-                Success = false,
-                Message = "An error occurred while retrieving the lead"
-            });
+            return StatusCode(500, new ApiResponse<LeadDetailDto> { Success = false, Message = "An error occurred while retrieving the lead" });
         }
     }
 
     /// <summary>
-    /// Create a new lead
+    /// Create a new lead. Returns the new lead ID plus any prior leads found for the same contact.
     /// </summary>
     [HttpPost]
-    [AllowAnonymous] // Allow public intake form submissions
-    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<Guid>>> CreateLead([FromBody] CreateLeadDto dto)
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<CreateLeadResponseDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<CreateLeadResponseDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<CreateLeadResponseDto>>> CreateLead([FromBody] CreateLeadDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new ApiResponse<Guid>
+            return BadRequest(new ApiResponse<CreateLeadResponseDto>
             {
                 Success = false,
                 Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
@@ -266,19 +251,7 @@ public class LeadsController : ControllerBase
             else if (Request.Headers.TryGetValue("X-Firm-Id", out var headerFirmId) && Guid.TryParse(headerFirmId, out var parsedFirmId))
                 firmId = parsedFirmId;
             else
-                return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Firm identifier is required" });
-
-            // Validate email and phone uniqueness for this firm
-            var existingLead = await _context.Leads
-                .Where(l => l.FirmId == firmId && (l.Email == dto.Email || l.Phone == dto.Phone))
-                .FirstOrDefaultAsync();
-
-            if (existingLead != null)
-                return BadRequest(new ApiResponse<Guid>
-                {
-                    Success = false,
-                    Message = "A lead with this email or phone already exists"
-                });
+                return BadRequest(new ApiResponse<CreateLeadResponseDto> { Success = false, Message = "Firm identifier is required" });
 
             var lead = new Lead
             {
@@ -321,19 +294,44 @@ public class LeadsController : ControllerBase
             await PerformConflictCheck(lead);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Lead created: {LeadId} for firm {FirmId}", lead.Id, firmId);
+            // Find prior leads from same person (same email or phone, different lead ID)
+            var priorLeads = await _context.Leads
+                .Include(l => l.AssignedLawyer)
+                .Where(l => l.FirmId == firmId
+                         && l.Id != lead.Id
+                         && (l.Email == dto.Email || l.Phone == dto.Phone))
+                .OrderByDescending(l => l.CreatedAt)
+                .Select(l => new PriorLeadDto
+                {
+                    Id = l.Id,
+                    PracticeArea = l.PracticeArea,
+                    Status = l.Status,
+                    CreatedAt = l.CreatedAt,
+                    AssignedToName = l.AssignedLawyer != null
+                        ? l.AssignedLawyer.FirstName + " " + l.AssignedLawyer.LastName
+                        : null
+                })
+                .ToListAsync();
 
-            return CreatedAtAction(nameof(GetLead), new { id = lead.Id }, new ApiResponse<Guid>
+            // Send confirmation email (fire-and-forget)
+            _ = _notifications.SendLeadConfirmationEmailAsync(
+                lead.Email, lead.Name, lead.PracticeArea.ToString());
+
+            _logger.LogInformation("Lead created: {LeadId} for firm {FirmId}. Prior leads: {Count}", lead.Id, firmId, priorLeads.Count);
+
+            return CreatedAtAction(nameof(GetLead), new { id = lead.Id }, new ApiResponse<CreateLeadResponseDto>
             {
                 Success = true,
-                Data = lead.Id,
-                Message = "Lead created successfully"
+                Data = new CreateLeadResponseDto { LeadId = lead.Id, PriorLeads = priorLeads },
+                Message = priorLeads.Count > 0
+                    ? $"Lead creat. Atentie: {priorLeads.Count} lead(uri) anterioare gasite pentru acelasi contact."
+                    : "Lead created successfully"
             });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating lead");
-            return StatusCode(500, new ApiResponse<Guid> { Success = false, Message = "An error occurred while creating the lead" });
+            return StatusCode(500, new ApiResponse<CreateLeadResponseDto> { Success = false, Message = "An error occurred while creating the lead" });
         }
     }
 
@@ -346,21 +344,14 @@ public class LeadsController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> UpdateLead(Guid id, [FromBody] UpdateLeadDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new ApiResponse<bool>
-            {
-                Success = false,
-                Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
-            });
+            return BadRequest(new ApiResponse<bool> { Success = false, Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)) });
 
         try
         {
             var firmId = ClaimsHelper.GetFirmId(User);
             var userId = ClaimsHelper.GetUserId(User);
 
-            var lead = await _context.Leads
-                .Where(l => l.Id == id && l.FirmId == firmId)
-                .FirstOrDefaultAsync();
-
+            var lead = await _context.Leads.Where(l => l.Id == id && l.FirmId == firmId).FirstOrDefaultAsync();
             if (lead == null)
                 return NotFound(new ApiResponse<bool> { Success = false, Message = "Lead not found" });
 
@@ -392,32 +383,17 @@ public class LeadsController : ControllerBase
                 _context.LeadActivities.Add(activity);
 
                 await _context.SaveChangesAsync();
-
                 _logger.LogInformation("Lead updated: {LeadId}, Changes: {Changes}", id, string.Join(", ", changes));
 
-                return Ok(new ApiResponse<bool>
-                {
-                    Success = true,
-                    Data = true,
-                    Message = "Lead updated successfully"
-                });
+                return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Lead updated successfully" });
             }
 
-            return Ok(new ApiResponse<bool>
-            {
-                Success = true,
-                Data = false,
-                Message = "No changes detected"
-            });
+            return Ok(new ApiResponse<bool> { Success = true, Data = false, Message = "No changes detected" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating lead {LeadId}", id);
-            return StatusCode(500, new ApiResponse<bool>
-            {
-                Success = false,
-                Message = "An error occurred while updating the lead"
-            });
+            return StatusCode(500, new ApiResponse<bool> { Success = false, Message = "An error occurred while updating the lead" });
         }
     }
 
@@ -480,21 +456,12 @@ public class LeadsController : ControllerBase
                 LeadsByPracticeArea = await query.GroupBy(l => l.PracticeArea).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.Count)
             };
 
-            return Ok(new ApiResponse<LeadStatisticsDto>
-            {
-                Success = true,
-                Data = statistics,
-                Message = "Statistics retrieved successfully"
-            });
+            return Ok(new ApiResponse<LeadStatisticsDto> { Success = true, Data = statistics, Message = "Statistics retrieved successfully" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving lead statistics");
-            return StatusCode(500, new ApiResponse<LeadStatisticsDto>
-            {
-                Success = false,
-                Message = "An error occurred while retrieving statistics"
-            });
+            return StatusCode(500, new ApiResponse<LeadStatisticsDto> { Success = false, Message = "An error occurred while retrieving statistics" });
         }
     }
 
@@ -507,11 +474,7 @@ public class LeadsController : ControllerBase
     public async Task<ActionResult<ApiResponse<Guid>>> ConvertToClient(Guid id, [FromBody] ConvertToClientDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new ApiResponse<Guid>
-            {
-                Success = false,
-                Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
-            });
+            return BadRequest(new ApiResponse<Guid> { Success = false, Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)) });
 
         try
         {
@@ -525,13 +488,7 @@ public class LeadsController : ControllerBase
             if (lead.ConvertedToClientId.HasValue)
                 return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Lead has already been converted to a client" });
 
-            var client = new Client
-            {
-                FirmId = firmId,
-                Name = dto.ClientName,
-                Email = dto.ClientEmail ?? lead.Email,
-                Phone = dto.ClientPhone ?? lead.Phone
-            };
+            var client = new Client { FirmId = firmId, Name = dto.ClientName, Email = dto.ClientEmail ?? lead.Email, Phone = dto.ClientPhone ?? lead.Phone };
             _context.Clients.Add(client);
 
             lead.Status = LeadStatus.Converted;
@@ -548,7 +505,6 @@ public class LeadsController : ControllerBase
             });
 
             await _context.SaveChangesAsync();
-
             _logger.LogInformation("Lead {LeadId} converted to client {ClientId}", id, client.Id);
 
             return Ok(new ApiResponse<Guid> { Success = true, Data = client.Id, Message = "Lead converted to client successfully" });
@@ -595,12 +551,7 @@ public class LeadsController : ControllerBase
                 .Where(c => c.LeadId == id && !c.IsRead && c.IsFromLead)
                 .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsRead, true));
 
-            return Ok(new ApiResponse<List<LeadConversationDto>>
-            {
-                Success = true,
-                Data = conversations,
-                Message = $"Retrieved {conversations.Count} messages"
-            });
+            return Ok(new ApiResponse<List<LeadConversationDto>> { Success = true, Data = conversations, Message = $"Retrieved {conversations.Count} messages" });
         }
         catch (Exception ex)
         {
@@ -617,11 +568,7 @@ public class LeadsController : ControllerBase
     public async Task<ActionResult<ApiResponse<Guid>>> SendMessage(Guid id, [FromBody] CreateLeadMessageDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new ApiResponse<Guid>
-            {
-                Success = false,
-                Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
-            });
+            return BadRequest(new ApiResponse<Guid> { Success = false, Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)) });
 
         try
         {
@@ -677,6 +624,115 @@ public class LeadsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Get full activity history for a lead (paginated)
+    /// </summary>
+    [HttpGet("{id}/history")]
+    [ProducesResponseType(typeof(PagedResponse<LeadActivityDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LeadActivityDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PagedResponse<LeadActivityDto>>> GetLeadHistory(
+        Guid id,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25)
+    {
+        try
+        {
+            var firmId = ClaimsHelper.GetFirmId(User);
+
+            var leadExists = await _context.Leads.AnyAsync(l => l.Id == id && l.FirmId == firmId);
+            if (!leadExists)
+                return NotFound(new ApiResponse<LeadActivityDto> { Success = false, Message = "Lead not found" });
+
+            var query = _context.LeadActivities
+                .Include(a => a.User)
+                .Where(a => a.LeadId == id)
+                .OrderByDescending(a => a.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+
+            var activities = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new LeadActivityDto
+                {
+                    Id = a.Id,
+                    ActivityType = a.ActivityType,
+                    Description = a.Description,
+                    UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : null,
+                    CreatedAt = a.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new PagedResponse<LeadActivityDto>
+            {
+                Data = activities,
+                Pagination = new PaginationMetadata
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = totalCount,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving history for lead {LeadId}", id);
+            return StatusCode(500, new ApiResponse<LeadActivityDto> { Success = false, Message = "An error occurred while retrieving lead history" });
+        }
+    }
+
+    /// <summary>
+    /// Look up existing leads by email or phone (for duplicate/returning-contact detection in the UI).
+    /// Returns a lightweight list — safe to call before creating a new lead.
+    /// </summary>
+    [HttpGet("lookup")]
+    [ProducesResponseType(typeof(ApiResponse<List<PriorLeadDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<PriorLeadDto>>>> LookupByContact(
+        [FromQuery] string? email = null,
+        [FromQuery] string? phone = null)
+    {
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phone))
+            return BadRequest(new ApiResponse<List<PriorLeadDto>> { Success = false, Message = "Provide email or phone" });
+
+        try
+        {
+            var firmId = ClaimsHelper.GetFirmId(User);
+
+            var query = _context.Leads
+                .Include(l => l.AssignedLawyer)
+                .Where(l => l.FirmId == firmId);
+
+            if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(phone))
+                query = query.Where(l => l.Email == email || l.Phone == phone);
+            else if (!string.IsNullOrWhiteSpace(email))
+                query = query.Where(l => l.Email == email);
+            else
+                query = query.Where(l => l.Phone == phone);
+
+            var results = await query
+                .OrderByDescending(l => l.CreatedAt)
+                .Select(l => new PriorLeadDto
+                {
+                    Id = l.Id,
+                    PracticeArea = l.PracticeArea,
+                    Status = l.Status,
+                    CreatedAt = l.CreatedAt,
+                    AssignedToName = l.AssignedLawyer != null
+                        ? l.AssignedLawyer.FirstName + " " + l.AssignedLawyer.LastName
+                        : null
+                })
+                .ToListAsync();
+
+            return Ok(new ApiResponse<List<PriorLeadDto>> { Success = true, Data = results, Message = $"{results.Count} lead(uri) gasite" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error looking up leads by contact");
+            return StatusCode(500, new ApiResponse<List<PriorLeadDto>> { Success = false, Message = "An error occurred" });
+        }
+    }
+
     #region Private Methods
 
     /// <summary>
@@ -725,29 +781,59 @@ public class LeadsController : ControllerBase
     }
 
     /// <summary>
-    /// Perform automatic conflict of interest check
+    /// Perform automatic conflict of interest check.
+    /// - Matching an existing CLIENT by email ? DirectConflict (firm already represents this person)
+    /// - Matching a prior LEAD by email/phone ? RelatedParty (returning contact, different matter)
+    /// Multiple leads from the same person are the same are NOT a conflict.
     /// </summary>
     private async Task PerformConflictCheck(Lead lead)
     {
-        var conflictCheck = new ConflictCheck
-        {
-            LeadId = lead.Id,
-            Status = ConflictCheckStatus.NoConflict
-        };
-
+        // 1. Check against existing clients (real conflict risk)
         var existingClient = await _context.Clients
             .Where(c => c.FirmId == lead.FirmId && c.Email == lead.Email)
             .FirstOrDefaultAsync();
 
         if (existingClient != null)
         {
-            conflictCheck.Status = ConflictCheckStatus.ConflictDetected;
-            conflictCheck.ConflictType = ConflictType.DirectConflict;
-            conflictCheck.ConflictDescription = "Email matches existing client";
-            conflictCheck.ConflictingClientId = existingClient.Id;
+            _context.ConflictChecks.Add(new ConflictCheck
+            {
+                LeadId = lead.Id,
+                Status = ConflictCheckStatus.ConflictDetected,
+                ConflictType = ConflictType.DirectConflict,
+                ConflictDescription = "Email matches an existing client — verify there is no conflict of interest before proceeding",
+                ConflictingClientId = existingClient.Id
+            });
+            return; // Direct conflict takes precedence
         }
 
-        _context.ConflictChecks.Add(conflictCheck);
+        // 2. Check against prior leads from the same person.
+        //    This is NOT a conflict — the same person can have multiple matters.
+        //    We flag it as RelatedParty so staff are aware, but it does not block the lead.
+        var priorLead = await _context.Leads
+            .Where(l => l.FirmId == lead.FirmId
+                     && l.Id != lead.Id
+                     && (l.Email == lead.Email || l.Phone == lead.Phone))
+            .OrderByDescending(l => l.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (priorLead != null)
+        {
+            _context.ConflictChecks.Add(new ConflictCheck
+            {
+                LeadId = lead.Id,
+                Status = ConflictCheckStatus.NoConflict, // Not a conflict — same person, new matter
+                ConflictType = ConflictType.RelatedParty,
+                ConflictDescription = $"Returning contact — has {(priorLead.PracticeArea)} lead from {priorLead.CreatedAt:dd MMM yyyy}. Multiple matters from the same person are allowed."
+            });
+            return;
+        }
+
+        // 3. No conflict found
+        _context.ConflictChecks.Add(new ConflictCheck
+        {
+            LeadId = lead.Id,
+            Status = ConflictCheckStatus.NoConflict
+        });
     }
 
     #endregion

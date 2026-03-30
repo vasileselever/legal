@@ -61,12 +61,37 @@ export function PublicIntakeForm() {
   if (step === 'success') return (
     <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
       <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>?</div>
-      <h2 style={{ color: '#2e7d32', marginBottom: '1rem' }}>Mesaj trimis cu succes!</h2>
+      <h2 style={{ color: '#2e7d32', marginBottom: '0.75rem' }}>Cerere trimisa cu succes!</h2>
+
+      {/* Email confirmation notice */}
+      <div style={{
+        background: '#e3f2fd', border: '1px solid #90caf9', borderRadius: '10px',
+        padding: '1rem 1.25rem', marginBottom: '1.5rem',
+        display: 'flex', alignItems: 'flex-start', gap: '0.75rem', textAlign: 'left',
+      }}>
+        <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>??</span>
+        <div>
+          <div style={{ fontWeight: 700, color: '#1565c0', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+            Email de confirmare trimis!
+          </div>
+          <div style={{ color: '#1976d2', fontSize: '0.88rem', lineHeight: 1.6 }}>
+            Am trimis un email de confirmare la <strong>{form.email}</strong>.
+            Verificati inbox-ul (si folderul Spam daca nu il gasiti).
+          </div>
+        </div>
+      </div>
+
       <p style={{ color: '#555', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-        Va multumim! Un avocat va va contacta in maxim <strong>24 de ore</strong> lucratoare.
+        Un avocat va va contacta in maxim <strong>24 de ore</strong> lucratoare.
       </p>
-      <button onClick={() => { setStep('form'); setForm({ name: '', email: '', phone: '', practiceArea: 1, source: 1, description: '', urgency: 2, budgetRange: '', consentToMarketing: false, consentToDataProcessing: false }); }}
-        style={{ padding: '0.75rem 2rem', background: '#1976d2', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', fontWeight: 600 }}>
+
+      <button onClick={() => {
+        setStep('form');
+        setForm({ name: '', email: '', phone: '', practiceArea: 1, source: 1, description: '', urgency: 2, budgetRange: '', consentToMarketing: false, consentToDataProcessing: false });
+      }} style={{
+        padding: '0.75rem 2rem', background: '#1976d2', color: 'white',
+        border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', fontWeight: 600,
+      }}>
         Trimite alt mesaj
       </button>
     </div>

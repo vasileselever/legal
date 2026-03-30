@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { leadService } from '../api/leadService';
 import { authService } from '../api/authService';
+import { notificationService } from '../api/notificationService';
 import type { LeadDetailItem, ConversationItem } from '../api/leadService';
 import type { UserInfo } from '../api/authService';
 import { Badge } from './ui/Badge';
@@ -16,6 +17,14 @@ import {
 
 interface Props { leadId: string; onClose: () => void; onStatusChanged: () => void; refreshTrigger?: number; } // ✅ ADDED: refreshTrigger
 
+// Ensure API datetime strings (no timezone suffix) are parsed as UTC
+const parseApiDate = (s: string): Date =>
+  new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z');
+
+// Shared formatter used for consultation time display
+const fmtDateTime = (d: string) =>
+  parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
 const FIELDS = (lead: LeadDetailItem) => [
   ['Email', lead.email],
   ['Telefon', lead.phone],
@@ -23,8 +32,8 @@ const FIELDS = (lead: LeadDetailItem) => [
   ['Sursa', LEAD_SOURCES.find(s => s.value === lead.source)?.label ?? '-'],
   ['Buget', lead.budgetRange || '-'],
   ['Avocat Asignat', lead.assignedToName || 'Neasignat'],
-  ['Data Crearii', new Date(lead.createdAt).toLocaleDateString('ro-RO')],
-  ['Ultima Activitate', lead.lastActivityAt ? new Date(lead.lastActivityAt).toLocaleDateString('ro-RO') : '-'],
+  ['Data Crearii', parseApiDate(lead.createdAt).toLocaleDateString('ro-RO')],
+  ['Ultima Activitate', lead.lastActivityAt ? parseApiDate(lead.lastActivityAt).toLocaleDateString('ro-RO') : '-'],
 ] as [string, string][];
 
 const STATUS_FLOW = [1, 2, 3, 4, 5, 6, 7];
@@ -40,6 +49,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
   const [error, setError]               = useState('');
   const [showConsForm, setShowConsForm] = useState(false);
   const [consForm, setConsForm]         = useState({ lawyerId: '', scheduledAt: '', durationMinutes: 30, type: 3, location: '' });
+  const [notifyClientCons, setNotifyClientCons] = useState(true);
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '0.5rem 0.65rem', border: '1px solid #ddd',
@@ -99,6 +109,18 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
         type: consForm.type,
         location: consForm.location || undefined,
       });
+
+      // Send notification email if checkbox is checked
+      if (notifyClientCons && lead?.email) {
+        try {
+          await notificationService.testConsultationReminder({
+            to: lead.email,
+            name: lead.name,
+            scheduledAt: consForm.scheduledAt, // raw local datetime string from picker
+          });
+        } catch { /* non-fatal — consultation already saved */ }
+      }
+
       await handleStatusChange(4);
       setShowConsForm(false);
       setTab('consultations');
@@ -293,6 +315,40 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Locatie</label>
                     <input style={inp} placeholder="Adresa sau link video" value={consForm.location} onChange={e => setConsForm(f => ({ ...f, location: e.target.value }))} />
                   </div>
+
+                  {/* Notification checkbox */}
+                  <div style={{ gridColumn: '1/-1' }}>
+                    <label style={{
+                      display: 'flex', alignItems: 'center', gap: '0.65rem',
+                      padding: '0.6rem 0.85rem',
+                      background: notifyClientCons ? '#e3f2fd' : '#f5f5f5',
+                      border: `1px solid ${notifyClientCons ? '#90caf9' : '#e0e0e0'}`,
+                      borderRadius: '8px', cursor: 'pointer',
+                      transition: 'background 0.15s, border-color 0.15s',
+                      userSelect: 'none',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={notifyClientCons}
+                        onChange={e => setNotifyClientCons(e.target.checked)}
+                        style={{ width: '16px', height: '16px', accentColor: '#1976d2', cursor: 'pointer', flexShrink: 0 }}
+                      />
+                      <span style={{ fontSize: '0.88rem', fontWeight: 600, color: notifyClientCons ? '#1565c0' : '#666' }}>
+                        📧 Trimite mail de notificare
+                      </span>
+                      {notifyClientCons && lead?.email && (
+                        <span style={{ fontSize: '0.78rem', color: '#1976d2', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                          → {lead.email}
+                        </span>
+                      )}
+                      {!notifyClientCons && (
+                        <span style={{ fontSize: '0.78rem', color: '#aaa', marginLeft: 'auto', fontStyle: 'italic' }}>
+                          emailul nu va fi trimis
+                        </span>
+                      )}
+                    </label>
+                  </div>
+
                   <div style={{ gridColumn: '1/-1', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setShowConsForm(false)} style={{ padding: '0.5rem 1rem', background: '#eee', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Anuleaza</button>
                     <button type="submit" style={{ padding: '0.5rem 1.25rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Salveaza</button>
@@ -307,7 +363,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
                     padding: '0.875rem', marginBottom: '0.6rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: 600, color: '#1a237e', fontSize: '0.9rem' }}>
-                        {new Date(c.scheduledAt).toLocaleString('ro-RO')} · {c.durationMinutes} min · {CONSULTATION_TYPE_LABELS[c.type]}
+                        {fmtDateTime(c.scheduledAt)} · {c.durationMinutes} min · {CONSULTATION_TYPE_LABELS[c.type]}
                       </div>
                       <div style={{ fontSize: '0.82rem', color: '#666', marginTop: '0.2rem' }}>
                         {c.lawyerName}{c.location ? ' · ' + c.location : ''}

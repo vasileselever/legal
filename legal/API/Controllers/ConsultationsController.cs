@@ -1,12 +1,15 @@
 using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Application.DTOs.Leads;
+using LegalRO.CaseManagement.Application.Services;
 using LegalRO.CaseManagement.Domain.Entities;
 using LegalRO.CaseManagement.Domain.Enums;
 using LegalRO.CaseManagement.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace LegalRO.CaseManagement.API.Controllers;
 
@@ -20,11 +23,23 @@ public class ConsultationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<ConsultationsController> _logger;
+    private readonly INotificationService _notifications;
 
-    public ConsultationsController(ApplicationDbContext context, ILogger<ConsultationsController> logger)
+    private static readonly TimeZoneInfo _romaniaZone = TimeZoneInfo.FindSystemTimeZoneById(
+        "Europe/Bucharest");
+
+    private static DateTime ToRomaniaLocalTime(DateTime utcTime) =>
+        TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(utcTime, DateTimeKind.Utc), _romaniaZone);
+
+    public ConsultationsController(
+        ApplicationDbContext context,
+        ILogger<ConsultationsController> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     /// <summary>
@@ -66,9 +81,10 @@ public class ConsultationsController : ControllerBase
                 {
                     Id = c.Id,
                     LeadId = c.LeadId,
-                    LeadName = c.Lead != null ? c.Lead.Name : null,
+                    LeadName  = c.Lead != null ? c.Lead.Name  : string.Empty,
+                    LeadEmail = c.Lead != null ? c.Lead.Email : string.Empty,
                     LawyerId = c.LawyerId,
-                    LawyerName = c.Lawyer != null ? $"{c.Lawyer.FirstName} {c.Lawyer.LastName}" : "Unknown",
+                    LawyerName = c.Lawyer != null ? $"{c.Lawyer.FirstName} {c.Lawyer.LastName}" : string.Empty,
                     ScheduledAt = c.ScheduledAt,
                     DurationMinutes = c.DurationMinutes,
                     Type = c.Type,
@@ -126,9 +142,10 @@ public class ConsultationsController : ControllerBase
                 {
                     Id = c.Id,
                     LeadId = c.LeadId,
-                    LeadName = c.Lead != null ? c.Lead.Name : null,
+                    LeadName  = c.Lead != null ? c.Lead.Name  : string.Empty,
+                    LeadEmail = c.Lead != null ? c.Lead.Email : string.Empty,
                     LawyerId = c.LawyerId,
-                    LawyerName = c.Lawyer != null ? $"{c.Lawyer.FirstName} {c.Lawyer.LastName}" : "Unknown",
+                    LawyerName = c.Lawyer != null ? $"{c.Lawyer.FirstName} {c.Lawyer.LastName}" : string.Empty,
                     ScheduledAt = c.ScheduledAt,
                     DurationMinutes = c.DurationMinutes,
                     Type = c.Type,
@@ -242,6 +259,28 @@ public class ConsultationsController : ControllerBase
             });
 
             await _context.SaveChangesAsync();
+
+            // Send notification email to the lead if requested
+            if (dto.SendNotification && !string.IsNullOrWhiteSpace(lead.Email))
+            {
+                try
+                {
+                    await _notifications.SendConsultationReminderEmailAsync(
+                        toEmail: lead.Email,
+                        toName: lead.Name,
+                        scheduledAt: ToRomaniaLocalTime(consultation.ScheduledAt),
+                        lawyerName: $"{lawyer.FirstName} {lawyer.LastName}");
+
+                    _logger.LogInformation(
+                        "Notification email sent to {Email} for consultation {Id}",
+                        lead.Email, consultation.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to send notification email for consultation {Id}", consultation.Id);
+                }
+            }
 
             return CreatedAtAction(nameof(GetConsultation), new { id = consultation.Id }, new ApiResponse<Guid>
             {
@@ -550,6 +589,28 @@ public class ConsultationsController : ControllerBase
 
             await _context.SaveChangesAsync();
 
+            // Send notification email to the lead if requested
+            if (dto.SendNotification && !string.IsNullOrWhiteSpace(consultation.Lead?.Email))
+            {
+                try
+                {
+                    await _notifications.SendConsultationReminderEmailAsync(
+                        toEmail: consultation.Lead.Email,
+                        toName: consultation.Lead.Name,
+                        scheduledAt: ToRomaniaLocalTime(consultation.ScheduledAt),
+                        lawyerName: $"{lawyer.FirstName} {lawyer.LastName}");
+
+                    _logger.LogInformation(
+                        "Notification email sent to {Email} for consultation {Id}",
+                        consultation.Lead.Email, id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to send notification email for consultation {Id}", id);
+                }
+            }
+
             _logger.LogInformation("Consultation updated: {ConsultationId} by user {UserId}", id, userId);
 
             return Ok(new ApiResponse<bool>
@@ -670,8 +731,8 @@ public class ConsultationsController : ControllerBase
     {
         // TODO: Integrate with Zoom API, Teams API, or Google Meet API
         // For now, return a placeholder link
-        var meetingId = Guid.NewGuid().ToString("N").Substring(0, 10);
-        return $"https://meet.legalro.ro/{meetingId}";
+        var meetingID = Guid.NewGuid().ToString("N").Substring(0, 10);
+        return $"https://meet.legalro.ro/{meetingID}";
     }
 
     #endregion

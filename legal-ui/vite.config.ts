@@ -7,8 +7,8 @@ import path from 'path'
 function loadLocalHttps(): { key: Buffer; cert: Buffer } | undefined {
   try {
     const certDir = path.resolve(__dirname, 'certs')
-    const keyPath = path.join(certDir, 'localhost-key.pem')
-    const certPath = path.join(certDir, 'localhost.pem')
+    const keyPath = path.join(certDir, 'localhost+2-key.pem')
+    const certPath = path.join(certDir, 'localhost+2.pem')
     if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
       return {
         key: fs.readFileSync(keyPath),
@@ -30,7 +30,9 @@ export default defineConfig({
     https: loadLocalHttps(),
     proxy: {
       '/api': {
-        target: 'https://localhost:5001',
+        // Use the HTTP port so the proxy works whether VS launches http or https profile.
+        // If you always run the https profile, change this to https://localhost:5001
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },
