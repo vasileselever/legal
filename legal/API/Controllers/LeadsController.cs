@@ -1,4 +1,4 @@
-using LegalRO.CaseManagement.API.Helpers;
+ï»¿using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Application.DTOs.Leads;
 using LegalRO.CaseManagement.Application.Services;
@@ -74,10 +74,10 @@ public class LeadsController : ControllerBase
             // Get total count for pagination
             var totalCount = await query.CountAsync();
 
-            // Apply pagination and sorting (by score desc, then created desc)
+            // Apply pagination and sorting (newest first, then by score desc)
             var leads = await query
-                .OrderByDescending(l => l.Score)
-                .ThenByDescending(l => l.CreatedAt)
+                .OrderByDescending(l => l.CreatedAt)
+                .ThenByDescending(l => l.Score)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(l => new LeadListDto
@@ -315,7 +315,7 @@ public class LeadsController : ControllerBase
 
             // Send confirmation email (fire-and-forget)
             _ = _notifications.SendLeadConfirmationEmailAsync(
-                lead.Email, lead.Name, lead.PracticeArea.ToString());
+                lead.Email, lead.Name, lead.PracticeArea.ToRomanianLabel());
 
             _logger.LogInformation("Lead created: {LeadId} for firm {FirmId}. Prior leads: {Count}", lead.Id, firmId, priorLeads.Count);
 
@@ -684,7 +684,7 @@ public class LeadsController : ControllerBase
 
     /// <summary>
     /// Look up existing leads by email or phone (for duplicate/returning-contact detection in the UI).
-    /// Returns a lightweight list — safe to call before creating a new lead.
+    /// Returns a lightweight list â€” safe to call before creating a new lead.
     /// </summary>
     [HttpGet("lookup")]
     [ProducesResponseType(typeof(ApiResponse<List<PriorLeadDto>>), StatusCodes.Status200OK)]
@@ -800,14 +800,14 @@ public class LeadsController : ControllerBase
                 LeadId = lead.Id,
                 Status = ConflictCheckStatus.ConflictDetected,
                 ConflictType = ConflictType.DirectConflict,
-                ConflictDescription = "Email matches an existing client — verify there is no conflict of interest before proceeding",
+                ConflictDescription = "Email matches an existing client â€” verify there is no conflict of interest before proceeding",
                 ConflictingClientId = existingClient.Id
             });
             return; // Direct conflict takes precedence
         }
 
         // 2. Check against prior leads from the same person.
-        //    This is NOT a conflict — the same person can have multiple matters.
+        //    This is NOT a conflict â€” the same person can have multiple matters.
         //    We flag it as RelatedParty so staff are aware, but it does not block the lead.
         var priorLead = await _context.Leads
             .Where(l => l.FirmId == lead.FirmId
@@ -821,9 +821,9 @@ public class LeadsController : ControllerBase
             _context.ConflictChecks.Add(new ConflictCheck
             {
                 LeadId = lead.Id,
-                Status = ConflictCheckStatus.NoConflict, // Not a conflict — same person, new matter
+                Status = ConflictCheckStatus.NoConflict, // Not a conflict â€” same person, new matter
                 ConflictType = ConflictType.RelatedParty,
-                ConflictDescription = $"Returning contact — has {(priorLead.PracticeArea)} lead from {priorLead.CreatedAt:dd MMM yyyy}. Multiple matters from the same person are allowed."
+                ConflictDescription = $"Returning contact â€” has {priorLead.PracticeArea.ToRomanianLabel()} lead from {priorLead.CreatedAt:dd MMM yyyy}. Multiple matters from the same person are allowed."
             });
             return;
         }

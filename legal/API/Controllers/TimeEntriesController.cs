@@ -51,8 +51,16 @@ public class TimeEntriesController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var userId = ClaimsHelper.GetUserId(User);
-        var result = await _billing.CreateTimeEntryAsync(firmId, userId, request);
-        return CreatedAtAction(nameof(GetTimeEntry), new { id = result.Id }, result);
+        try
+        {
+            var result = await _billing.CreateTimeEntryAsync(firmId, userId, request);
+            return CreatedAtAction(nameof(GetTimeEntry), new { id = result.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating time entry for firm {FirmId}, user {UserId}", firmId, userId);
+            return StatusCode(500, new ApiError { Code = "CREATE_FAILED", Message = "Eroare la crearea pontajului. Verificati datele si incercati din nou." });
+        }
     }
 
     [HttpPut("{id}")]

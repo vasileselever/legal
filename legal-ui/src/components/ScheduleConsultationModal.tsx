@@ -6,6 +6,7 @@ import type { LeadItem } from '../api/leadService';
 import { consultationService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from '../api/consultationService';
 import type { CreateConsultationDto } from '../api/consultationService';
 import { notificationService } from '../api/notificationService';
+import { DateTimePicker } from './ui/DateTimePicker';
 
 interface Props { onClose: () => void; onCreated: () => void; prefillLeadId?: string; }
 type FE = Partial<Record<keyof CreateConsultationDto | 'general', string>>;
@@ -162,7 +163,12 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
             <div style={G2}>
               <div>
                 <label style={LBL}>Data si ora *</label>
-                <input style={mkInp(!!errors.scheduledAt)} type="datetime-local" value={form.scheduledAt} onChange={e => set('scheduledAt', e.target.value)} />
+                <DateTimePicker
+                  value={form.scheduledAt}
+                  onChange={v => set('scheduledAt', v)}
+                  hasError={!!errors.scheduledAt}
+                  required
+                />
                 {errors.scheduledAt && <p style={ERR}>{errors.scheduledAt}</p>}
               </div>
               <div>
@@ -179,7 +185,7 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
                   ? 'Se incarca disponibilitatea...'
                   : availability.length === 0
                     ? 'Nicio ora libera in aceasta zi.'
-                    : <>Ore libere: <strong>{availability.slice(0,8).map(s => new Date(s).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'})).join(', ')}{availability.length > 8 ? ' ...' : ''}</strong></>
+                    : <>Ore libere: <strong>{availability.slice(0,8).map(s => new Date(s).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit',hour12:false})).join(', ')}{availability.length > 8 ? ' ...' : ''}</strong></>
                 }
               </div>
             )}
@@ -251,7 +257,7 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
                   <div style={{ fontWeight:700, color:'#2e7d32', marginBottom:'0.1rem' }}>Reminder trimis cu succes!</div>
                   <div style={{ color:'#388e3c' }}>
                     Email trimis la <strong>{selLead?.email}</strong> cu detaliile consultatiei programate pe{' '}
-                    <strong>{new Date(form.scheduledAt).toLocaleString('ro-RO', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' })}</strong>.
+                    <strong>{new Date(form.scheduledAt).toLocaleString('ro-RO', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit', hour12: false })}</strong>.
                   </div>
                 </div>
               </div>

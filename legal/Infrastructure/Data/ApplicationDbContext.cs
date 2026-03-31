@@ -851,6 +851,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 .HasForeignKey(e => e.CaseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(e => e.Lead)
+                .WithMany()
+                .HasForeignKey(e => e.LeadId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(e => e.InvoiceLineItem)
                 .WithMany()
                 .HasForeignKey(e => e.InvoiceLineItemId)

@@ -18,12 +18,12 @@ type Range = 'today' | 'week' | 'month' | 'all';
 const parseApiDate = (s: string): Date =>
   new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z');
 
-// Shared time/date formatters — always use ro-RO locale, browser local timezone
+// Shared time/date formatters — always use ro-RO locale, browser local timezone, 24-hour clock
 const fmtTime = (d: string) =>
-  parseApiDate(d).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+  parseApiDate(d).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 const fmtDateTime = (d: string) =>
-  parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
 const fmtDay = (d: string) =>
   parseApiDate(d).toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -110,12 +110,17 @@ export function ConsultationsPage() {
     }
   };
 
-  // Group by calendar day
+  // Group by calendar day — preserve ascending order (API already returns ASC)
   const groups: Record<string, ConsultationItem[]> = {};
-  items.forEach(c => {
-    const day = fmtDay(c.scheduledAt);
-    (groups[day] = groups[day] || []).push(c);
-  });
+  const groupOrder: string[] = [];
+  items
+    .slice()
+    .sort((a, b) => parseApiDate(a.scheduledAt).getTime() - parseApiDate(b.scheduledAt).getTime())
+    .forEach(c => {
+      const day = fmtDay(c.scheduledAt);
+      if (!groups[day]) { groups[day] = []; groupOrder.push(day); }
+      groups[day].push(c);
+    });
 
   const btn = (active: boolean, color = '#1a237e'): React.CSSProperties => ({
     padding: '0.4rem 0.85rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem',
@@ -204,17 +209,17 @@ export function ConsultationsPage() {
               <span>Programeaza prima consultatie</span>
             </button>
           </Card>
-        ) : Object.entries(groups).map(([day, dayItems]) => (
+        ) : groupOrder.map(day => (
           <div key={day} style={{ marginBottom:'1.5rem' }}>
             <div style={{ fontSize:'0.82rem', fontWeight:700, color:'#888', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:'0.65rem' }}>{day}</div>
-            {dayItems.map(c => (
+            {groups[day].map(c => (
               <Card key={c.id} style={{ padding:'1rem 1.25rem', marginBottom:'0.6rem' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'0.75rem' }}>
                   <div style={{ flex:1 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:'0.65rem', marginBottom:'0.35rem', flexWrap:'wrap' }}>
                       <span style={{ fontWeight:700, color:'#1a237e', fontSize:'1rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <Icon type="clock" />
-                        {fmtTime(c.scheduledAt)}
+                        {fmtDateTime(c.scheduledAt)}
                         <span style={{ color:'#888', fontWeight:400, marginLeft:'0.3rem', fontSize:'0.82rem' }}>({c.durationMinutes} min)</span>
                       </span>
                       <Badge label={CONSULTATION_TYPE_LABELS[c.type]} color={CONSULTATION_TYPE_COLORS[c.type] ?? '#555'} />

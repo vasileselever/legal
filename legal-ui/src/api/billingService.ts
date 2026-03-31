@@ -1,4 +1,5 @@
 import { apiClient } from './apiClient';
+import axios from 'axios';
 
 // -- Enums / Labels ---------------------------------------------------
 
@@ -43,14 +44,14 @@ export const INVOICE_STATUS_COLORS: Record<number, string> = {
 
 export const CURRENCY_LABELS: Record<number, string> = { 1: 'RON', 2: 'EUR', 3: 'USD' };
 
-export const PAYMENT_METHODS: { value: number; label: string }[] = [
-  { value: 1, label: 'Transfer bancar' },
-  { value: 2, label: 'Card de credit' },
-  { value: 3, label: 'Numerar' },
-  { value: 4, label: 'Online (Stripe/PayU)' },
-  { value: 5, label: 'Transfer cont client' },
-  { value: 6, label: 'Cec' },
-];
+export const PAYMENT_METHODS: Record<number, string> = {
+  1: 'Transfer bancar',
+  2: 'Card de credit',
+  3: 'Numerar',
+  4: 'Online (Stripe/PayU)',
+  5: 'Transfer cont client',
+  6: 'Cec',
+};
 
 export const TRUST_TX_TYPES: Record<number, string> = {
   1: 'Depunere', 2: 'Retragere', 3: 'Transfer', 4: 'Dobanda', 5: 'Comision bancar', 6: 'Rambursare client',
@@ -59,7 +60,8 @@ export const TRUST_TX_TYPES: Record<number, string> = {
 // ?? Types ????????????????????????????????????????????????????????????
 
 export interface TimeEntryDto {
-  id: string; caseId: string; caseNumber?: string; caseTitle?: string;
+  id: string; caseId?: string; caseNumber?: string; caseTitle?: string;
+  leadId?: string; leadName?: string;
   userId: string; userFullName?: string;
   workDate: string; durationHours: number; description: string;
   activityCode?: string; isBillable: boolean;
@@ -152,6 +154,14 @@ export interface ArAgingDto {
   ninetyPlusDays: number; total: number;
 }
 
+// Lightweight case item for dropdowns
+export interface CaseItem {
+  id: string;
+  caseNumber: string;
+  title: string;
+  clientName: string;
+}
+
 export interface PagedResponse<T> {
   data: T[];
   pagination: { page: number; pageSize: number; totalCount: number; totalPages: number };
@@ -162,6 +172,24 @@ export interface PagedResponse<T> {
 const B = '/v1/billing';
 
 export const billingService = {
+  // Cases (for dropdowns) — uses a standalone axios call so a 401 from
+  // CasesController does NOT trigger the global auth:unauthorized redirect.
+  getCases: async (): Promise<CaseItem[]> => {
+    const token = localStorage.getItem('jwt_token');
+    const baseURL = (apiClient.defaults.baseURL || '/api');
+    const { data } = await axios.get(`${baseURL}/v1/cases`, {
+      params: { pageSize: 500 },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    // CasesController returns PagedResponse<CaseListItem>
+    return (data.data ?? data).map((c: any) => ({
+      id: c.id,
+      caseNumber: c.caseNumber,
+      title: c.title,
+      clientName: c.clientName ?? '',
+    }));
+  },
+
   // Time Entries
   getTimeEntries: async (params?: Record<string, any>): Promise<PagedResponse<TimeEntryDto>> => {
     const { data } = await apiClient.get(`${B}/time-entries`, { params });

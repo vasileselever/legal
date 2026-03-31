@@ -10,7 +10,8 @@ public class TimeEntry : BaseEntity
 {
     public Guid FirmId { get; set; }
     public Guid UserId { get; set; }
-    public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
+    public Guid? LeadId { get; set; }
 
     /// <summary>
     /// Date the work was performed
@@ -66,6 +67,7 @@ public class TimeEntry : BaseEntity
     // Navigation
     public Firm Firm { get; set; } = null!;
     public User User { get; set; } = null!;
-    public Case Case { get; set; } = null!;
+    public Case? Case { get; set; }
+    public Lead? Lead { get; set; }
     public InvoiceLineItem? InvoiceLineItem { get; set; }
 }

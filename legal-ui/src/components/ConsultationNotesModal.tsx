@@ -30,7 +30,7 @@ export function ConsultationNotesModal({ consultation: c, onClose, onSaved }: Pr
           <div>
             <div style={{ color:'white', fontWeight:700, fontSize:'1.05rem' }}>Note Consultatie</div>
             <div style={{ color:'rgba(255,255,255,0.75)', fontSize:'0.8rem', marginTop:'0.1rem' }}>
-              {new Date(c.scheduledAt).toLocaleString('ro-RO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} - {c.lawyerName}
+              {new Date(c.scheduledAt).toLocaleString('ro-RO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})} - {c.lawyerName}
             </div>
           </div>
           <button onClick={onClose} style={{ background:'rgba(255,255,255,0.15)', border:'none', color:'white', width:'32px', height:'32px', borderRadius:'50%', cursor:'pointer', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}>x</button>

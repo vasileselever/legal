@@ -6,6 +6,7 @@ import type { LeadDetailItem, ConversationItem } from '../api/leadService';
 import type { UserInfo } from '../api/authService';
 import { Badge } from './ui/Badge';
 import { Spinner } from './ui/Spinner';
+import { DateTimePicker } from './ui/DateTimePicker';
 import {
   LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, URGENCY_LABELS,
   PRACTICE_AREAS, LEAD_SOURCES,
@@ -23,7 +24,7 @@ const parseApiDate = (s: string): Date =>
 
 // Shared formatter used for consultation time display
 const fmtDateTime = (d: string) =>
-  parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
 const FIELDS = (lead: LeadDetailItem) => [
   ['Email', lead.email],
@@ -248,7 +249,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
                         <div>{c.message}</div>
                         <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.25rem', textAlign: 'right' }}>
                           {c.sender && <span>{c.sender} · </span>}
-                          {new Date(c.messageTimestamp).toLocaleString('ro-RO')}
+                          {new Date(c.messageTimestamp).toLocaleString('ro-RO', { hour12: false })}
                         </div>
                       </div>
                     </div>
@@ -297,7 +298,12 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Data si Ora *</label>
-                    <input style={inp} type="datetime-local" required value={consForm.scheduledAt} onChange={e => setConsForm(f => ({ ...f, scheduledAt: e.target.value }))} />
+                    <DateTimePicker
+                      value={consForm.scheduledAt}
+                      onChange={v => setConsForm(f => ({ ...f, scheduledAt: v }))}
+                      hasError={false}
+                      required
+                    />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Durata</label>

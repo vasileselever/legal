@@ -8,9 +8,11 @@ namespace LegalRO.CaseManagement.Application.DTOs.Billing;
 public class TimeEntryDto
 {
     public Guid Id { get; set; }
-    public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
     public string? CaseNumber { get; set; }
     public string? CaseTitle { get; set; }
+    public Guid? LeadId { get; set; }
+    public string? LeadName { get; set; }
     public Guid UserId { get; set; }
     public string? UserFullName { get; set; }
     public DateTime WorkDate { get; set; }
@@ -29,7 +31,8 @@ public class TimeEntryDto
 
 public class CreateTimeEntryRequest
 {
-    [Required] public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
+    public Guid? LeadId { get; set; }
     [Required] public DateTime WorkDate { get; set; }
     [Required][Range(0.01, 24)] public decimal DurationHours { get; set; }
     [Required][MaxLength(2000)] public string Description { get; set; } = string.Empty;
@@ -51,7 +54,8 @@ public class UpdateTimeEntryRequest
 
 public class StartTimerRequest
 {
-    [Required] public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
+    public Guid? LeadId { get; set; }
     [MaxLength(2000)] public string? Description { get; set; }
     [MaxLength(50)] public string? ActivityCode { get; set; }
     public bool IsBillable { get; set; } = true;

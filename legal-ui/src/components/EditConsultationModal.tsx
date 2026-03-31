@@ -3,6 +3,7 @@ import { consultationService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from 
 import type { ConsultationItem, UpdateConsultationDto } from '../api/consultationService';
 import { notificationService } from '../api/notificationService';
 import { apiClient } from '../api/apiClient';
+import { DateTimePicker } from './ui/DateTimePicker';
 
 interface UserOption { id: string; firstName: string; lastName: string; }
 interface Props { consultation: ConsultationItem; onClose: () => void; onUpdated: () => void; }
@@ -30,7 +31,7 @@ function parseApiDate(s: string): Date {
 
 // Shared formatter — same locale/timezone as ConsultationsPage dashboard
 const fmtDateTime = (d: string) =>
-    new Date(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    new Date(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
 export function EditConsultationModal({ consultation: c, onClose, onUpdated }: Props) {
     const [form, setForm] = useState<UpdateConsultationDto>({
@@ -152,7 +153,12 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
                         <div style={G2}>
                             <div>
                                 <label style={LBL}>Data si ora *</label>
-                                <input style={mkInp(!!errors.scheduledAt)} type="datetime-local" value={form.scheduledAt} onChange={e => set('scheduledAt', e.target.value)} />
+                                <DateTimePicker
+                                    value={form.scheduledAt}
+                                    onChange={v => set('scheduledAt', v)}
+                                    hasError={!!errors.scheduledAt}
+                                    required
+                                />
                                 {errors.scheduledAt && <p style={ERR}>{errors.scheduledAt}</p>}
                             </div>
                             <div>
@@ -169,7 +175,7 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
                                     ? 'Se incarca disponibilitatea...'
                                     : availability.length === 0
                                         ? 'Nicio ora libera in aceasta zi.'
-                                        : <>Ore libere: <strong>{availability.slice(0, 8).map(s => new Date(s).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })).join(', ')}{availability.length > 8 ? ' ...' : ''}</strong></>
+                                        : <>Ore libere: <strong>{availability.slice(0, 8).map(s => new Date(s).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false })).join(', ')}{availability.length > 8 ? ' ...' : ''}</strong></>
                                 }
                             </div>
                         )}

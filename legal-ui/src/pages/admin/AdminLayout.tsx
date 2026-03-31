@@ -9,7 +9,6 @@ const NAV = [
   { path: '/admin/research',       icon: '🔍', label: 'Cercetare AI' },
   { path: '/admin/documents',      icon: '📄', label: 'Documente' },
   { path: '/admin/users',          icon: '👥', label: 'Utilizatori' },
-  { path: '/admin/notifications',  icon: '🔔', label: 'Notificari' },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

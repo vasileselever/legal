@@ -1,3 +1,4 @@
+using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Cases;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Domain.Entities;
@@ -6,7 +7,6 @@ using LegalRO.CaseManagement.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using TaskStatusEnum = LegalRO.CaseManagement.Domain.Enums.TaskStatus;
 
 namespace LegalRO.CaseManagement.API.Controllers;
@@ -40,9 +40,7 @@ public class CasesController : ControllerBase
         [FromQuery] string sortBy = "createdAt",
         [FromQuery] string sortOrder = "desc")
     {
-        var firmId = GetUserFirmId();
-        if (firmId == Guid.Empty)
-            return Unauthorized(new ApiError { Code = "UNAUTHORIZED", Message = "User not associated with a firm" });
+        var firmId = ClaimsHelper.GetFirmId(User);
 
         var query = _context.Cases
             .Where(c => c.FirmId == firmId)
@@ -132,9 +130,7 @@ public class CasesController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<CaseResponse>> GetCase(Guid id)
     {
-        var firmId = GetUserFirmId();
-        if (firmId == Guid.Empty)
-            return Unauthorized();
+        var firmId = ClaimsHelper.GetFirmId(User);
 
         var caseEntity = await _context.Cases
             .Where(c => c.Id == id && c.FirmId == firmId)
@@ -210,11 +206,8 @@ public class CasesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CaseResponse>> CreateCase([FromBody] CreateCaseRequest request)
     {
-        var firmId = GetUserFirmId();
-        var userId = GetUserId();
-
-        if (firmId == Guid.Empty || userId == Guid.Empty)
-            return Unauthorized();
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
 
         // Verify client belongs to firm
         var clientExists = await _context.Clients
@@ -280,11 +273,8 @@ public class CasesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<CaseResponse>> UpdateCase(Guid id, [FromBody] UpdateCaseRequest request)
     {
-        var firmId = GetUserFirmId();
-        var userId = GetUserId();
-
-        if (firmId == Guid.Empty || userId == Guid.Empty)
-            return Unauthorized();
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
 
         var caseEntity = await _context.Cases
             .Where(c => c.Id == id && c.FirmId == firmId)
@@ -340,11 +330,8 @@ public class CasesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteCase(Guid id)
     {
-        var firmId = GetUserFirmId();
-        var userId = GetUserId();
-
-        if (firmId == Guid.Empty || userId == Guid.Empty)
-            return Unauthorized();
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
 
         var caseEntity = await _context.Cases
             .Where(c => c.Id == id && c.FirmId == firmId)
@@ -362,20 +349,4 @@ public class CasesController : ControllerBase
 
         return NoContent();
     }
-
-    #region Helper Methods
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
-    }
-
-    private Guid GetUserFirmId()
-    {
-        var firmIdClaim = User.FindFirst("FirmId")?.Value;
-        return Guid.TryParse(firmIdClaim, out var firmId) ? firmId : Guid.Empty;
-    }
-
-    #endregion
 }

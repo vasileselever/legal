@@ -5,6 +5,8 @@ import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
 import { ErrorBanner } from '../../components/ui/ErrorBanner';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { leadService } from '../../api/leadService';
+import type { LeadItem } from '../../api/leadService';
 import {
   billingService,
   TIME_ENTRY_STATUS, TIME_ENTRY_STATUS_COLORS,
@@ -246,7 +248,7 @@ function TimeEntriesTab() {
                       )}
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtDate(e.workDate)}</td>
-                    <td style={tdStyle}>{e.caseNumber || e.caseId.slice(0, 8)}</td>
+                    <td style={tdStyle}>{e.caseNumber || e.leadName || (e.caseId ? e.caseId.slice(0, 8) : e.leadId?.slice(0, 8) || '-')}</td>
                     <td style={tdStyle}>{e.userFullName || '-'}</td>
                     <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e' }}>{fmtHours(e.durationHours)}</td>
                     <td style={tdStyle}>{fmtMoney(e.hourlyRate, e.currency)}</td>
@@ -303,7 +305,7 @@ function ExpensesTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
-                  {['Data', 'Dosar', 'Categorie', 'Descriere', 'Suma', 'Facturat', 'Status'].map(h =>
+                  {['Data', 'Dosar', 'Categorie', 'Descriere', 'Suma', 'Facturabil', 'Status'].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
@@ -311,7 +313,7 @@ function ExpensesTab() {
                 {items.map(e => (
                   <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtDate(e.expenseDate)}</td>
-                    <td style={tdStyle}>{e.caseNumber || e.caseId.slice(0, 8)}</td>
+                    <td style={tdStyle}>{e.caseNumber || e.caseId?.slice(0, 8) || '-'}</td>
                     <td style={tdStyle}>{EXPENSE_CATEGORIES.find(c => c.value === e.category)?.label ?? '-'}</td>
                     <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.amount, e.currency)}</td>
@@ -340,7 +342,6 @@ function InvoicesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [detail, setDetail] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -357,36 +358,32 @@ function InvoicesTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Creeaza factura</button>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Creaza factura</button>
+      </div>
 
       {error && <ErrorBanner message={error} onRetry={load} />}
       {loading ? <Spinner /> : items.length === 0 ? (
-        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>Nicio factura gasita</Card>
+        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>Niciun factura gasita</Card>
       ) : (
-        <Card style={{ marginTop: '1rem' }}>
+        <Card>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
-                  {['Nr. Factura', 'Client', 'Dosar', 'Data', 'Scadenta', 'Total', 'Sold', 'Status', ''].map(h =>
+                  {['Nr. factura', 'Data', 'Dosar', 'Descriere', 'Suma', 'Status'].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
-                {items.map(inv => (
-                  <tr key={inv.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e', cursor: 'pointer', textDecoration: 'underline' }}
-                      onClick={() => setDetail(inv.id)}>{inv.invoiceNumber}</td>
-                    <td style={tdStyle}>{inv.clientName ?? '-'}</td>
-                    <td style={tdStyle}>{inv.caseNumber ?? '-'}</td>
-                    <td style={tdStyle}>{fmtDate(inv.invoiceDate)}</td>
-                    <td style={tdStyle}>{fmtDate(inv.dueDate)}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(inv.totalAmount, inv.currency)}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: inv.balanceDue > 0 ? '#c62828' : '#2e7d32' }}>{fmtMoney(inv.balanceDue, inv.currency)}</td>
-                    <td style={tdStyle}><Badge label={INVOICE_STATUS[inv.status] ?? '-'} color={INVOICE_STATUS_COLORS[inv.status] ?? '#999'} /></td>
-                    <td style={tdStyle}>
-                      <button style={{ ...btnOutline, padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setDetail(inv.id)}>Detalii</button>
-                    </td>
+                {items.map(e => (
+                  <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{e.invoiceNumber}</td>
+                    <td style={tdStyle}>{fmtDate(e.issueDate)}</td>
+                    <td style={tdStyle}>{e.caseNumber || e.caseId?.slice(0, 8) || '-'}</td>
+                    <td style={tdStyle}><div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</div></td>
+                    <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.totalAmount, e.currency)}</td>
+                    <td style={tdStyle}><Badge label={INVOICE_STATUS[e.status] ?? '-'} color={INVOICE_STATUS_COLORS[e.status] ?? '#999'} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -397,7 +394,6 @@ function InvoicesTab() {
       )}
 
       {showCreate && <CreateInvoiceModal onClose={() => setShowCreate(false)} onCreated={load} />}
-      {detail && <InvoiceDetailModal invoiceId={detail} onClose={() => { setDetail(null); load(); }} />}
     </div>
   );
 }
@@ -427,30 +423,32 @@ function PaymentsTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Inregistreaza plata</button>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga plata</button>
+      </div>
 
       {error && <ErrorBanner message={error} onRetry={load} />}
       {loading ? <Spinner /> : items.length === 0 ? (
-        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>Nicio plata inregistrata</Card>
+        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>Niciun plata gasita</Card>
       ) : (
-        <Card style={{ marginTop: '1rem' }}>
+        <Card>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
-                  {['Data', 'Factura', 'Client', 'Suma', 'Metoda', 'Referinta'].map(h =>
+                  {['Data', 'Dosar', 'Factura', 'Suma', 'Metoda de plata', 'Status'].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
-                {items.map(p => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtDate(p.paymentDate)}</td>
-                    <td style={{ ...tdStyle, color: '#1a237e', fontWeight: 600 }}>{p.invoiceNumber ?? '-'}</td>
-                    <td style={tdStyle}>{p.clientName ?? '-'}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: '#2e7d32' }}>{fmtMoney(p.amount, p.currency)}</td>
-                    <td style={tdStyle}>{PAYMENT_METHODS.find(m => m.value === p.method)?.label ?? '-'}</td>
-                    <td style={tdStyle}>{p.transactionReference ?? '-'}</td>
+                {items.map(e => (
+                  <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtDate(e.paymentDate)}</td>
+                    <td style={tdStyle}>{e.caseNumber || e.caseId?.slice(0, 8) || '-'}</td>
+                    <td style={tdStyle}>{e.invoiceNumber || e.invoiceId?.slice(0, 8) || '-'}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.amount, e.currency)}</td>
+                    <td style={tdStyle}>{PAYMENT_METHODS[e.method] ?? '-'}</td>
+                    <td style={tdStyle}><Badge label={e.status === 1 ? 'Finalizata' : 'Anulata'} color={e.status === 1 ? '#4caf50' : '#f44336'} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -460,7 +458,7 @@ function PaymentsTab() {
         </Card>
       )}
 
-      {showCreate && <RecordPaymentModal onClose={() => setShowCreate(false)} onCreated={load} />}
+      {showCreate && <CreatePaymentModal onClose={() => setShowCreate(false)} onCreated={load} />}
     </div>
   );
 }
@@ -474,41 +472,149 @@ function TrustAccountsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<TrustTransactionDto[]>([]);
+  const [txLoading, setTxLoading] = useState(false);
+  const [showDeposit, setShowDeposit] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setAccounts(await billingService.getTrustAccounts()); }
-    catch (e: any) { setError(e.message); }
+    try {
+      const data = await billingService.getTrustAccounts();
+      setAccounts(data);
+    } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
+  const loadTransactions = async (accountId: string) => {
+    if (expandedId === accountId) { setExpandedId(null); return; }
+    setExpandedId(accountId);
+    setTxLoading(true);
+    try {
+      const res = await billingService.getTrustTransactions(accountId, { page: 1, pageSize: 50 });
+      setTransactions(res.data);
+    } catch (e: any) { setError(e.message); }
+    finally { setTxLoading(false); }
+  };
+
+  const handleDeposit = async (accountId: string, amount: number, description: string) => {
+    try {
+      await billingService.createTrustTransaction({
+        trustAccountId: accountId,
+        transactionType: 1, // Deposit
+        transactionDate: new Date().toISOString(),
+        amount,
+        description,
+      });
+      setShowDeposit(null);
+      load();
+      if (expandedId === accountId) loadTransactions(accountId);
+    } catch (e: any) { setError(e.message); }
+  };
+
   return (
     <div style={{ marginTop: '1rem' }}>
-      <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Cont client nou</button>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga cont client</button>
+      </div>
 
       {error && <ErrorBanner message={error} onRetry={load} />}
       {loading ? <Spinner /> : accounts.length === 0 ? (
-        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>Niciun cont client creat</Card>
+        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🏦</div>
+          <div>Niciun cont client (trust) gasit.</div>
+          <div style={{ fontSize: '0.82rem', marginTop: '0.5rem', color: '#999' }}>
+            Conturile client sunt folosite pentru a gestiona fondurile depuse de clienti conform regulilor baroului.
+          </div>
+        </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {accounts.map(a => (
-            <Card key={a.id} style={{ padding: '1.25rem', cursor: 'pointer', borderLeft: `4px solid ${a.balance < a.minimumBalance ? '#c62828' : '#2e7d32'}` }}
-              onClick={() => setSelectedAccount(a.id)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.95rem' }}>{a.accountReference}</div>
-                  <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '0.15rem' }}>{a.clientName}</div>
+            <Card key={a.id} style={{ padding: 0, overflow: 'hidden' }}>
+              {/* Account header row */}
+              <div
+                style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', flexWrap: 'wrap' }}
+                onClick={() => loadTransactions(a.id)}
+              >
+                <div style={{ flex: '1 1 200px' }}>
+                  <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.95rem' }}>{a.clientName || 'Client necunoscut'}</div>
+                  <div style={{ fontSize: '0.78rem', color: '#888', marginTop: '0.15rem' }}>Ref: {a.accountReference}</div>
                 </div>
-                <Badge label={a.isActive ? 'Activ' : 'Inactiv'} color={a.isActive ? '#2e7d32' : '#757575'} />
+                <div style={{ textAlign: 'right', minWidth: '120px' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700, textTransform: 'uppercase' }}>Sold</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: a.balance < a.minimumBalance ? '#c62828' : '#2e7d32' }}>
+                    {fmtMoney(a.balance, a.currency)}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', minWidth: '100px' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700, textTransform: 'uppercase' }}>Minim</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#555' }}>{fmtMoney(a.minimumBalance, a.currency)}</div>
+                </div>
+                <div style={{ minWidth: '70px', textAlign: 'center' }}>
+                  <Badge label={a.isActive ? 'Activ' : 'Inactiv'} color={a.isActive ? '#4caf50' : '#f44336'} />
+                </div>
+                <div style={{ minWidth: '90px', textAlign: 'right' }}>
+                  <button style={{ ...btnOutline, padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}
+                    onClick={(e) => { e.stopPropagation(); setShowDeposit(a.id); }}>
+                    + Depunere
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#aaa', minWidth: '25px', textAlign: 'center' }}>
+                  {expandedId === a.id ? '▲' : '▼'}
+                </div>
               </div>
-              <div style={{ marginTop: '0.75rem', fontSize: '1.5rem', fontWeight: 800, color: a.balance < a.minimumBalance ? '#c62828' : '#2e7d32' }}>
-                {fmtMoney(a.balance, a.currency)}
-              </div>
-              {a.balance < a.minimumBalance && (
-                <div style={{ fontSize: '0.75rem', color: '#c62828', marginTop: '0.25rem' }}>Sub soldul minim ({fmtMoney(a.minimumBalance, a.currency)})</div>
+
+              {/* Notes */}
+              {a.notes && (
+                <div style={{ padding: '0 1.25rem 0.5rem', fontSize: '0.82rem', color: '#666', fontStyle: 'italic' }}>
+                  {a.notes}
+                </div>
+              )}
+
+              {/* Transaction history (expanded) */}
+              {expandedId === a.id && (
+                <div style={{ borderTop: '1px solid #f0f0f0', background: '#fafafa' }}>
+                  {txLoading ? <div style={{ padding: '1rem', textAlign: 'center' }}><Spinner /></div> : transactions.length === 0 ? (
+                    <div style={{ padding: '1.5rem', textAlign: 'center', color: '#aaa', fontSize: '0.85rem' }}>Nicio tranzactie</div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#f0f0f0' }}>
+                            {['Data', 'Tip', 'Descriere', 'Suma', 'Sold', 'Operator'].map(h =>
+                              <th key={h} style={{ ...thStyle, fontSize: '0.75rem', padding: '0.45rem 0.75rem' }}>{h}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {transactions.map(tx => (
+                            <tr key={tx.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                              <td style={{ ...tdStyle, padding: '0.45rem 0.75rem', fontSize: '0.82rem' }}>{fmtDate(tx.transactionDate)}</td>
+                              <td style={{ ...tdStyle, padding: '0.45rem 0.75rem', fontSize: '0.82rem' }}>
+                                <Badge label={TRUST_TX_TYPES[tx.transactionType] ?? '-'} color={tx.amount >= 0 ? '#2e7d32' : '#c62828'} />
+                              </td>
+                              <td style={{ ...tdStyle, padding: '0.45rem 0.75rem', fontSize: '0.82rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</td>
+                              <td style={{ ...tdStyle, padding: '0.45rem 0.75rem', fontSize: '0.82rem', fontWeight: 700, color: tx.amount >= 0 ? '#2e7d32' : '#c62828' }}>
+                                {tx.amount >= 0 ? '+' : ''}{fmtMoney(tx.amount, a.currency)}
+                              </td>
+                              <td style={{ ...tdStyle, padding: '0.45rem 0.75rem', fontSize: '0.82rem', fontWeight: 600 }}>{fmtMoney(tx.runningBalance, a.currency)}</td>
+                              <td style={{ ...tdStyle, padding: '0.45rem 0.75rem', fontSize: '0.82rem', color: '#888' }}>{tx.performedByName || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Inline deposit form */}
+              {showDeposit === a.id && (
+                <DepositForm
+                  onSubmit={(amount, desc) => handleDeposit(a.id, amount, desc)}
+                  onCancel={() => setShowDeposit(null)}
+                />
               )}
             </Card>
           ))}
@@ -516,7 +622,138 @@ function TrustAccountsTab() {
       )}
 
       {showCreate && <CreateTrustAccountModal onClose={() => setShowCreate(false)} onCreated={load} />}
-      {selectedAccount && <TrustTransactionsModal accountId={selectedAccount} onClose={() => { setSelectedAccount(null); load(); }} />}
+    </div>
+  );
+}
+
+// =====================================================================
+//  DEPOSIT FORM (inline in trust account card)
+// =====================================================================
+
+function DepositForm({ onSubmit, onCancel }: { onSubmit: (amount: number, desc: string) => void; onCancel: () => void }) {
+  const [amount, setAmount] = useState<number | ''>('');
+  const [description, setDescription] = useState('');
+
+  return (
+    <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #e0e0e0', background: '#f5f9ff', display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      <div>
+        <label style={labelStyle}>Suma</label>
+        <input type="number" step="0.01" min="0.01" style={{ ...inputStyle, width: '120px' }}
+          value={amount} onChange={e => setAmount(e.target.value ? parseFloat(e.target.value) : '')} />
+      </div>
+      <div style={{ flex: 1, minWidth: '200px' }}>
+        <label style={labelStyle}>Descriere</label>
+        <input type="text" style={inputStyle} placeholder="ex: Depunere onorariu dosar..."
+          value={description} onChange={e => setDescription(e.target.value)} />
+      </div>
+      <button style={btnStyle} disabled={!amount || !description.trim()}
+        onClick={() => amount && description.trim() && onSubmit(amount, description)}>
+        Depune
+      </button>
+      <button style={btnOutline} onClick={onCancel}>Anuleaza</button>
+    </div>
+  );
+}
+
+// =====================================================================
+//  CREATE TRUST ACCOUNT MODAL
+// =====================================================================
+
+function CreateTrustAccountModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
+  const [clientId, setClientId] = useState('');
+  const [currency, setCurrency] = useState(1);
+  const [minimumBalance, setMinimumBalance] = useState<number | ''>('');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
+
+  useEffect(() => {
+    // Load clients (converted leads) — use leads endpoint since there may not be a separate clients endpoint
+    leadService.getLeads({ page: 1, pageSize: 500 })
+      .then(res => setClients(res.data.map((l: any) => ({ id: l.id, name: l.name })))) // <-- FIX: Closed setClients() properly
+      .catch(() => setClients([]))
+      .finally(() => setClientsLoading(false));
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!clientId) { setError('Selectati un client.'); return; }
+    setLoading(true); setError('');
+    try {
+      await billingService.createTrustAccount({
+        clientId,
+        currency,
+        minimumBalance: minimumBalance || 0,
+        notes: notes || undefined,
+      });
+      onCreated();
+      onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga cont client (trust)</h2>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide">✕</button>
+        </div>
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #f44336' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Client *</label>
+            {clientsLoading ? (
+              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca clientii...</div>
+            ) : (
+              <select style={selectStyle} value={clientId} onChange={e => setClientId(e.target.value)}>
+                <option value="">— Selecteaza clientul —</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Moneda</label>
+            <select style={selectStyle} value={currency} onChange={e => setCurrency(+e.target.value)}>
+              {Object.entries(CURRENCY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Sold minim obligatoriu</label>
+            <input type="number" step="0.01" min="0" style={inputStyle}
+              value={minimumBalance}
+              onChange={e => setMinimumBalance(e.target.value ? parseFloat(e.target.value) : '')}
+              placeholder="0.00"
+            />
+            <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '0.2rem' }}>
+              Conform regulilor baroului, contul va afisa avertizare cand soldul scade sub aceasta valoare.
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Notite</label>
+            <textarea style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Informatii suplimentare despre cont..."
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose} disabled={loading}>Anuleaza</button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Creeaza cont'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -533,48 +770,82 @@ function RatesTab() {
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setRates(await billingService.getBillingRates()); }
-    catch (e: any) { setError(e.message); }
+    try {
+      const data = await billingService.getBillingRates();
+      setRates(data);
+    } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Stergeti acest tarif?')) return;
-    try { await billingService.deleteBillingRate(id); load(); }
-    catch (e: any) { setError(e.message); }
+    if (!confirm('Sigur doriti sa stergeti acest tarif?')) return;
+    try {
+      await billingService.deleteBillingRate(id);
+      load();
+    } catch (e: any) { setError(e.message); }
+  };
+
+  const scopeLabel = (r: BillingRateDto) => {
+    const parts: string[] = [];
+    if (r.userFullName) parts.push(`👤 ${r.userFullName}`);
+    if (r.clientName) parts.push(`🏢 ${r.clientName}`);
+    if (r.caseNumber) parts.push(`📁 ${r.caseNumber}`);
+    return parts.length > 0 ? parts.join('  ·  ') : 'Tarif implicit firma';
   };
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga tarif</button>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga tarif</button>
+        <span style={{ fontSize: '0.78rem', color: '#888', marginLeft: '0.5rem' }}>
+          Tarifele se aplica in ordine de prioritate: dosar &gt; client &gt; avocat &gt; firma
+        </span>
+      </div>
 
       {error && <ErrorBanner message={error} onRetry={load} />}
       {loading ? <Spinner /> : rates.length === 0 ? (
-        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>Niciun tarif configurat</Card>
+        <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>💲</div>
+          <div>Niciun tarif configurat.</div>
+          <div style={{ fontSize: '0.82rem', marginTop: '0.5rem', color: '#999' }}>
+            Adaugati tarife orare pentru avocati, clienti sau dosare. Se va folosi tariful implicit de 300 RON/ora daca nu exista alte tarife.
+          </div>
+        </Card>
       ) : (
-        <Card style={{ marginTop: '1rem' }}>
+        <Card>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
-                  {['Avocat', 'Client', 'Dosar', 'Tarif', 'De la', 'Pana la', 'Descriere', ''].map(h =>
+                  {['Aplicabilitate', 'Tarif orar', 'Moneda', 'Valabil de la', 'Valabil pana la', 'Descriere', ''].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {rates.map(r => (
                   <tr key={r.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                    <td style={tdStyle}>{r.userFullName ?? 'Firma (implicit)'}</td>
-                    <td style={tdStyle}>{r.clientName ?? '-'}</td>
-                    <td style={tdStyle}>{r.caseNumber ?? '-'}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e' }}>{fmtMoney(r.rate, r.currency)}/ora</td>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>
+                      {scopeLabel(r)}
+                    </td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e', fontSize: '1rem' }}>
+                      {fmtMoney(r.rate, r.currency)}
+                    </td>
+                    <td style={tdStyle}>{CURRENCY_LABELS[r.currency] ?? 'RON'}</td>
                     <td style={tdStyle}>{fmtDate(r.effectiveFrom)}</td>
-                    <td style={tdStyle}>{r.effectiveTo ? fmtDate(r.effectiveTo) : '-'}</td>
-                    <td style={tdStyle}>{r.description ?? '-'}</td>
+                    <td style={tdStyle}>{r.effectiveTo ? fmtDate(r.effectiveTo) : <span style={{ color: '#aaa' }}>Nedefinit</span>}</td>
+                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#666' }}>
+                      {r.description || '-'}
+                    </td>
                     <td style={tdStyle}>
-                      <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', color: '#c62828', cursor: 'pointer', fontWeight: 700 }}>X</button>
+                      <button
+                        onClick={() => handleDelete(r.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c62828', fontSize: '0.82rem', fontWeight: 600 }}
+                        title="Sterge tariful"
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -594,347 +865,417 @@ function RatesTab() {
 // =====================================================================
 
 function ReportsTab() {
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [fromDate, setFromDate] = useState(firstOfMonth.toISOString().slice(0, 10));
+  const [toDate, setToDate] = useState(now.toISOString().slice(0, 10));
+  const [summary, setSummary] = useState<BillingSummaryDto | null>(null);
   const [productivity, setProductivity] = useState<LawyerProductivityDto[]>([]);
+  const [aging, setAging] = useState<ArAgingDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setProductivity(await billingService.getLawyerProductivity()); }
-    catch (e: any) { setError(e.message); }
+    try {
+      const params = { from: fromDate, to: toDate };
+      const [s, p, a] = await Promise.all([
+        billingService.getBillingSummary(params),
+        billingService.getLawyerProductivity(params),
+        billingService.getArAging(),
+      ]);
+      setSummary(s); setProductivity(p); setAging(a);
+    } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, []);
+  }, [fromDate, toDate]);
 
   useEffect(() => { load(); }, [load]);
 
-  return (
-    <div style={{ marginTop: '1rem' }}>
-      {error && <ErrorBanner message={error} onRetry={load} />}
+  // Quick date-range presets
+  const setPreset = (months: number) => {
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth() - months + 1, 1);
+    setFromDate(start.toISOString().slice(0, 10));
+    setToDate(end.toISOString().slice(0, 10));
+  };
 
-      <Card style={{ marginTop: '0.5rem' }}>
-        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f0f0f0' }}>
-          <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#1a237e' }}>Productivitate avocati (ultima luna)</h3>
-        </div>
-        {loading ? <Spinner /> : productivity.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#aaa' }}>Nicio data disponibila</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f8f9fa' }}>
-                  {['Avocat', 'Total ore', 'Ore facturabile', 'Ore nefacturabile', 'Utilizare %', 'Facturat'].map(h =>
-                    <th key={h} style={thStyle}>{h}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {productivity.map(p => (
-                  <tr key={p.userId} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e' }}>{p.fullName}</td>
-                    <td style={tdStyle}>{fmtHours(p.totalHours)}</td>
-                    <td style={{ ...tdStyle, color: '#2e7d32', fontWeight: 600 }}>{fmtHours(p.billableHours)}</td>
-                    <td style={{ ...tdStyle, color: '#757575' }}>{fmtHours(p.nonBillableHours)}</td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ flex: 1, height: '8px', background: '#e0e0e0', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.min(p.utilizationRate, 100)}%`, height: '100%', background: p.utilizationRate >= 70 ? '#2e7d32' : p.utilizationRate >= 50 ? '#f57c00' : '#c62828', borderRadius: '4px' }} />
-                        </div>
-                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#555', minWidth: '3.5rem' }}>{p.utilizationRate}%</span>
-                      </div>
-                    </td>
-                    <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(p.billedAmount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+  const presetBtn = (label: string, months: number) => (
+    <button key={label} onClick={() => setPreset(months)}
+      style={{ padding: '0.3rem 0.65rem', fontSize: '0.78rem', border: '1px solid #ccc', borderRadius: '4px', background: '#fff', cursor: 'pointer', color: '#555' }}>
+      {label}
+    </button>
+  );
+
+  const KPI = (icon: string, label: string, value: string, color: string) => (
+    <div style={{ padding: '1rem', background: color + '08', borderRadius: '8px', borderLeft: `4px solid ${color}` }}>
+      <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{icon} {label}</div>
+      <div style={{ fontSize: '1.4rem', fontWeight: 800, color, marginTop: '0.25rem', lineHeight: 1 }}>{value}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* Date range filter bar */}
+      <Card style={{ padding: '1rem 1.25rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div>
+            <label style={labelStyle}>De la</label>
+            <input type="date" style={{ ...inputStyle, width: '160px' }} value={fromDate} onChange={e => setFromDate(e.target.value)} />
           </div>
-        )}
+          <div>
+            <label style={labelStyle}>Pana la</label>
+            <input type="date" style={{ ...inputStyle, width: '160px' }} value={toDate} onChange={e => setToDate(e.target.value)} />
+          </div>
+          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+            {presetBtn('Luna curenta', 1)}
+            {presetBtn('3 luni', 3)}
+            {presetBtn('6 luni', 6)}
+            {presetBtn('12 luni', 12)}
+          </div>
+          <button style={btnStyle} onClick={load} disabled={loading}>
+            {loading ? '...' : '🔄 Genereaza'}
+          </button>
+        </div>
       </Card>
+
+      {error && <ErrorBanner message={error} onRetry={load} />}
+      {loading ? <Spinner /> : (
+        <>
+          {/* ── Financial Summary KPIs ───────────────────────── */}
+          {summary && (
+            <Card style={{ padding: '1.25rem' }}>
+              <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#1a237e' }}>📊 Sumar Financiar</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                {KPI('🔧', 'WIP (Nefacturat)', fmtMoney(summary.totalWip), '#f57c00')}
+                {KPI('📄', 'Total Facturat', fmtMoney(summary.totalBilled), '#1976d2')}
+                {KPI('💰', 'Total Incasat', fmtMoney(summary.totalCollected), '#2e7d32')}
+                {KPI('⚠️', 'Restante', fmtMoney(summary.totalOutstanding), '#c62828')}
+                {KPI('📊', 'Rata realizare', `${summary.realizationRate}%`, '#6a1b9a')}
+                {KPI('📈', 'Rata colectare', `${summary.collectionRate}%`, '#00838f')}
+                {KPI('🔴', 'Facturi restante', `${summary.overdueInvoiceCount}`, '#c62828')}
+                {KPI('🏦', 'Sold conturi client', fmtMoney(summary.trustAccountsBalance), '#1a237e')}
+              </div>
+            </Card>
+          )}
+
+          {/* ── Lawyer Productivity ──────────────────────────── */}
+          <Card style={{ padding: '1.25rem' }}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#1a237e' }}>👤 Productivitate Avocati</h3>
+            {productivity.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#aaa' }}>
+                Niciun pontaj inregistrat in perioada selectata.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8f9fa' }}>
+                      {['Avocat', 'Ore totale', 'Ore facturabile', 'Ore nefacturabile', 'Utilizare', 'Facturat', 'Incasat'].map(h =>
+                        <th key={h} style={thStyle}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productivity.map(p => {
+                      const utilColor = p.utilizationRate >= 70 ? '#2e7d32' : p.utilizationRate >= 40 ? '#f57c00' : '#c62828';
+                      return (
+                        <tr key={p.userId} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                          <td style={{ ...tdStyle, fontWeight: 600 }}>{p.fullName}</td>
+                          <td style={tdStyle}>{fmtHours(p.totalHours)}</td>
+                          <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e' }}>{fmtHours(p.billableHours)}</td>
+                          <td style={{ ...tdStyle, color: '#888' }}>{fmtHours(p.nonBillableHours)}</td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ width: '60px', height: '8px', background: '#e0e0e0', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ width: `${Math.min(100, p.utilizationRate)}%`, height: '100%', background: utilColor, borderRadius: '4px' }} />
+                              </div>
+                              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: utilColor }}>{p.utilizationRate}%</span>
+                            </div>
+                          </td>
+                          <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(p.billedAmount)}</td>
+                          <td style={{ ...tdStyle, fontWeight: 700, color: '#2e7d32' }}>{fmtMoney(p.collectedAmount)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  {/* Totals row */}
+                  <tfoot>
+                    <tr style={{ background: '#f0f0f0', fontWeight: 700 }}>
+                      <td style={{ ...tdStyle, fontWeight: 800 }}>TOTAL</td>
+                      <td style={tdStyle}>{fmtHours(productivity.reduce((s, p) => s + p.totalHours, 0))}</td>
+                      <td style={{ ...tdStyle, color: '#1a237e' }}>{fmtHours(productivity.reduce((s, p) => s + p.billableHours, 0))}</td>
+                      <td style={{ ...tdStyle, color: '#888' }}>{fmtHours(productivity.reduce((s, p) => s + p.nonBillableHours, 0))}</td>
+                      <td style={tdStyle}>
+                        {(() => {
+                          const totalBillable = productivity.reduce((s, p) => s + p.billableHours, 0);
+                          const totalAll = productivity.reduce((s, p) => s + p.totalHours, 0);
+                          const avgUtil = totalAll > 0 ? Math.round(totalBillable / totalAll * 100) : 0;
+                          return <span style={{ fontWeight: 700 }}>{avgUtil}% medie</span>;
+                        })()}
+                      </td>
+                      <td style={{ ...tdStyle, fontWeight: 800 }}>{fmtMoney(productivity.reduce((s, p) => s + p.billedAmount, 0))}</td>
+                      <td style={{ ...tdStyle, fontWeight: 800, color: '#2e7d32' }}>{fmtMoney(productivity.reduce((s, p) => s + p.collectedAmount, 0))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </Card>
+
+          {/* ── AR Aging ─────────────────────────────────────── */}
+          {aging && (
+            <Card style={{ padding: '1.25rem' }}>
+              <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#1a237e' }}>📅 Vechime Creante (AR Aging)</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem' }}>
+                {([
+                  ['0–30 zile', aging.current, '#2e7d32'],
+                  ['31–60 zile', aging.thirtyDays, '#f57c00'],
+                  ['61–90 zile', aging.sixtyDays, '#e65100'],
+                  ['90+ zile', aging.ninetyPlusDays, '#c62828'],
+                  ['Total', aging.total, '#1a237e'],
+                ] as [string, number, string][]).map(([label, val, color]) => {
+                  const pct = aging.total > 0 ? Math.round(val / aging.total * 100) : 0;
+                  return (
+                    <div key={label} style={{ textAlign: 'center', padding: '1rem', background: color + '0a', borderRadius: '8px', position: 'relative' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#888', fontWeight: 700, textTransform: 'uppercase' }}>{label}</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 800, color, marginTop: '0.25rem' }}>{fmtMoney(val)}</div>
+                      {label !== 'Total' && aging.total > 0 && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <div style={{ width: '100%', height: '6px', background: '#e0e0e0', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: '3px' }} />
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#aaa', marginTop: '0.2rem' }}>{pct}% din total</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
 // =====================================================================
-//  MODALS
+//  CREATE TIME ENTRY MODAL
 // =====================================================================
 
-function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ caseId: '', workDate: new Date().toISOString().slice(0, 10), durationHours: '1', description: '', activityCode: '', isBillable: true, hourlyRateOverride: '', currency: 1 });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    setSubmitting(true); setError('');
-    try {
-      await billingService.createTimeEntry({
-        caseId: form.caseId, workDate: form.workDate,
-        durationHours: parseFloat(form.durationHours),
-        description: form.description, activityCode: form.activityCode || undefined,
-        isBillable: form.isBillable,
-        hourlyRateOverride: form.hourlyRateOverride ? parseFloat(form.hourlyRateOverride) : undefined,
-        currency: form.currency,
-      });
-      onCreated(); onClose();
-    } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
-  };
-
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 1rem', color: '#1a237e', fontSize: '1.1rem' }}>Adauga pontaj</h2>
-        {error && <div style={{ color: '#c62828', marginBottom: '0.75rem', fontSize: '0.85rem' }}>{error}</div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div><label style={labelStyle}>ID Dosar *</label><input style={inputStyle} value={form.caseId} onChange={e => setForm({ ...form, caseId: e.target.value })} placeholder="GUID dosar" /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Data *</label><input type="date" style={inputStyle} value={form.workDate} onChange={e => setForm({ ...form, workDate: e.target.value })} /></div>
-            <div><label style={labelStyle}>Ore *</label><input type="number" step="0.25" min="0.25" max="24" style={inputStyle} value={form.durationHours} onChange={e => setForm({ ...form, durationHours: e.target.value })} /></div>
-          </div>
-          <div><label style={labelStyle}>Descriere *</label><textarea style={{ ...inputStyle, minHeight: '60px' }} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Cod activitate</label><input style={inputStyle} value={form.activityCode} onChange={e => setForm({ ...form, activityCode: e.target.value })} placeholder="ex: RESEARCH" /></div>
-            <div><label style={labelStyle}>Tarif/ora (optional)</label><input type="number" step="0.01" style={inputStyle} value={form.hourlyRateOverride} onChange={e => setForm({ ...form, hourlyRateOverride: e.target.value })} /></div>
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem' }}>
-            <input type="checkbox" checked={form.isBillable} onChange={e => setForm({ ...form, isBillable: e.target.checked })} />
-            Facturabil
-          </label>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.caseId || !form.description}>
-            {submitting ? 'Se salveaza...' : 'Salveaza'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+interface TimeEntryForm {
+  caseId: string;
+  workDate: string;
+  startTime: string;
+  endTime: string;
+  durationHours: number | '';
+  description: string;
+  activityCode: string;
+  isBillable: boolean;
+  hourlyRateOverride: number | '';
+  currency: number;
 }
 
-function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ caseId: '', expenseDate: new Date().toISOString().slice(0, 10), category: 1, description: '', amount: '', currency: 1, markupPercent: '0', isBillable: true, vendor: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+const emptyTimeForm = (): TimeEntryForm => ({
+  caseId: '',
+  workDate: new Date().toISOString().slice(0, 10),
+  startTime: '',
+  endTime: '',
+  durationHours: '',
+  description: '',
+  activityCode: '',
+  isBillable: true,
+  hourlyRateOverride: '',
+  currency: 1,
+});
 
-  const handleSubmit = async () => {
-    setSubmitting(true); setError('');
-    try {
-      await billingService.createExpense({
-        caseId: form.caseId, expenseDate: form.expenseDate, category: form.category,
-        description: form.description, amount: parseFloat(form.amount),
-        currency: form.currency, markupPercent: parseFloat(form.markupPercent),
-        isBillable: form.isBillable, vendor: form.vendor || undefined,
-      });
-      onCreated(); onClose();
-    } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
-  };
-
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 1rem', color: '#1a237e', fontSize: '1.1rem' }}>Adauga cheltuiala</h2>
-        {error && <div style={{ color: '#c62828', marginBottom: '0.75rem', fontSize: '0.85rem' }}>{error}</div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div><label style={labelStyle}>ID Dosar *</label><input style={inputStyle} value={form.caseId} onChange={e => setForm({ ...form, caseId: e.target.value })} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Data *</label><input type="date" style={inputStyle} value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} /></div>
-            <div><label style={labelStyle}>Categorie *</label>
-              <select style={selectStyle} value={form.category} onChange={e => setForm({ ...form, category: +e.target.value })}>
-                {EXPENSE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
-            </div>
-          </div>
-          <div><label style={labelStyle}>Descriere *</label><input style={inputStyle} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Suma *</label><input type="number" step="0.01" style={inputStyle} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-            <div><label style={labelStyle}>Markup %</label><input type="number" step="0.5" style={inputStyle} value={form.markupPercent} onChange={e => setForm({ ...form, markupPercent: e.target.value })} /></div>
-            <div><label style={labelStyle}>Furnizor</label><input style={inputStyle} value={form.vendor} onChange={e => setForm({ ...form, vendor: e.target.value })} /></div>
-          </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem' }}>
-            <input type="checkbox" checked={form.isBillable} onChange={e => setForm({ ...form, isBillable: e.target.checked })} /> Facturabil
-          </label>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.caseId || !form.description || !form.amount}>
-            {submitting ? 'Se salveaza...' : 'Salveaza'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+/** Compute decimal hours from HH:MM strings; returns '' when either is missing */
+function computeHours(start: string, end: string): number | '' {
+  if (!start || !end) return '';
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const diff = (eh * 60 + em) - (sh * 60 + sm);
+  return diff > 0 ? Math.round(diff / 60 * 100) / 100 : '';
 }
 
-function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ clientId: '', caseId: '', dueDate: '', vatPercent: '19', notes: '', currency: 1 });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    setSubmitting(true); setError('');
-    try {
-      await billingService.createInvoice({
-        clientId: form.clientId, caseId: form.caseId || undefined,
-        dueDate: form.dueDate, vatPercent: parseFloat(form.vatPercent),
-        notes: form.notes || undefined, currency: form.currency,
-      });
-      onCreated(); onClose();
-    } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
-  };
-
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 1rem', color: '#1a237e', fontSize: '1.1rem' }}>Creeaza factura</h2>
-        {error && <div style={{ color: '#c62828', marginBottom: '0.75rem', fontSize: '0.85rem' }}>{error}</div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div><label style={labelStyle}>ID Client *</label><input style={inputStyle} value={form.clientId} onChange={e => setForm({ ...form, clientId: e.target.value })} placeholder="GUID client" /></div>
-          <div><label style={labelStyle}>ID Dosar (optional)</label><input style={inputStyle} value={form.caseId} onChange={e => setForm({ ...form, caseId: e.target.value })} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Scadenta *</label><input type="date" style={inputStyle} value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
-            <div><label style={labelStyle}>TVA %</label><input type="number" style={inputStyle} value={form.vatPercent} onChange={e => setForm({ ...form, vatPercent: e.target.value })} /></div>
-          </div>
-          <div><label style={labelStyle}>Note</label><textarea style={{ ...inputStyle, minHeight: '50px' }} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.clientId || !form.dueDate}>
-            {submitting ? 'Se creeaza...' : 'Creeaza factura'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InvoiceDetailModal({ invoiceId, onClose }: { invoiceId: string; onClose: () => void }) {
-  const [inv, setInv] = useState<InvoiceDto | null>(null);
-  const [loading, setLoading] = useState(true);
+function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
+  const [form, setForm] = useState<TimeEntryForm>(emptyTimeForm);
+  const [loading, setLoading] = useState(false);
+  const [leads, setLeads] = useState<LeadItem[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    (async () => {
-      try { setInv(await billingService.getInvoice(invoiceId)); }
-      catch (e: any) { setError(e.message); }
-      finally { setLoading(false); }
-    })();
-  }, [invoiceId]);
+    leadService.getLeads({ page: 1, pageSize: 500 })
+      .then(res => setLeads(res.data))
+      .catch(() => setLeads([]))
+      .finally(() => setLeadsLoading(false));
+  }, []);
 
-  const handleSend = async () => {
-    try { setInv(await billingService.sendInvoice(invoiceId)); } catch (e: any) { setError(e.message); }
-  };
-  const handleCancel = async () => {
-    if (!confirm('Anulati factura?')) return;
-    try { setInv(await billingService.cancelInvoice(invoiceId)); } catch (e: any) { setError(e.message); }
-  };
+  const patch = (fields: Partial<TimeEntryForm>) =>
+    setForm(prev => {
+      const next = { ...prev, ...fields };
+      // Auto-compute duration when start or end changes
+      if ('startTime' in fields || 'endTime' in fields) {
+        next.durationHours = computeHours(next.startTime, next.endTime);
+      }
+      return next;
+    });
 
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, maxWidth: '700px' }} onClick={e => e.stopPropagation()}>
-        {loading ? <Spinner /> : error ? <ErrorBanner message={error} /> : inv && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <div>
-                <h2 style={{ margin: 0, color: '#1a237e', fontSize: '1.1rem' }}>Factura {inv.invoiceNumber}</h2>
-                <div style={{ fontSize: '0.82rem', color: '#555', marginTop: '0.2rem' }}>{inv.clientName} - {fmtDate(inv.invoiceDate)}</div>
-              </div>
-              <Badge label={INVOICE_STATUS[inv.status] ?? '-'} color={INVOICE_STATUS_COLORS[inv.status] ?? '#999'} />
-            </div>
+  const buildRequest = () => ({
+    leadId: form.caseId,
+    workDate: form.workDate,
+    durationHours: form.durationHours || 0,
+    description: form.description,
+    activityCode: form.activityCode || undefined,
+    isBillable: form.isBillable,
+    hourlyRateOverride: form.hourlyRateOverride !== '' ? form.hourlyRateOverride : undefined,
+    currency: form.currency,
+  });
 
-            {/* Totals */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
-              {([['Subtotal', inv.subTotal], ['TVA', inv.vatAmount], ['Total', inv.totalAmount], ['Platit', inv.paidAmount], ['Sold', inv.balanceDue]] as [string, number][]).map(([l, v]) => (
-                <div key={l} style={{ textAlign: 'center', padding: '0.5rem', background: '#f8f9fa', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 700, textTransform: 'uppercase' }}>{l}</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: l === 'Sold' && v > 0 ? '#c62828' : '#1a237e' }}>{fmtMoney(v, inv.currency)}</div>
-                </div>
-              ))}
-            </div>
+  const isValid = () =>
+    !!form.caseId && !!form.workDate && !!form.durationHours && !!form.description.trim();
 
-            {/* Line Items */}
-            {inv.lineItems.length > 0 && (
-              <div style={{ marginBottom: '1rem' }}>
-                <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.88rem', color: '#333' }}>Linii factura</h4>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                  <thead>
-                    <tr style={{ background: '#f8f9fa' }}>
-                      {['#', 'Descriere', 'Tip', 'Cantitate', 'Pret', 'Total'].map(h => <th key={h} style={{ ...thStyle, fontSize: '0.78rem' }}>{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inv.lineItems.map(li => (
-                      <tr key={li.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                        <td style={tdStyle}>{li.lineNumber}</td>
-                        <td style={{ ...tdStyle, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{li.description}</td>
-                        <td style={tdStyle}><Badge label={li.lineType} color={li.lineType === 'Time' ? '#1976d2' : li.lineType === 'Expense' ? '#f57c00' : '#6a1b9a'} /></td>
-                        <td style={tdStyle}>{li.quantity}</td>
-                        <td style={tdStyle}>{fmtMoney(li.unitPrice, inv.currency)}</td>
-                        <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(li.amount, inv.currency)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              {inv.status === 1 && <button style={{ ...btnStyle, background: '#2e7d32' }} onClick={handleSend}>Trimite</button>}
-              {(inv.status === 1 || inv.status === 2) && <button style={{ ...btnOutline, color: '#c62828', borderColor: '#c62828' }} onClick={handleCancel}>Anuleaza</button>}
-              <button style={btnOutline} onClick={onClose}>Inchide</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function RecordPaymentModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ invoiceId: '', paymentDate: new Date().toISOString().slice(0, 10), amount: '', currency: 1, method: 1, transactionReference: '', notes: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    setSubmitting(true); setError('');
+  /** Save as Draft — creates with status=Draft (backend default) */
+  const handleSaveDraft = async () => {
+    if (!isValid()) { setError('Completeaza dosarul, data, durata si descrierea.'); return; }
+    setLoading(true); setError('');
     try {
-      await billingService.recordPayment({
-        invoiceId: form.invoiceId, paymentDate: form.paymentDate,
-        amount: parseFloat(form.amount), currency: form.currency,
-        method: form.method, transactionReference: form.transactionReference || undefined,
-        notes: form.notes || undefined,
-      });
+      await billingService.createTimeEntry(buildRequest());
       onCreated(); onClose();
     } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
+    finally { setLoading(false); }
+  };
+
+  /** Save + submit for approval — creates then immediately approves */
+  const handleSubmit = async () => {
+    if (!isValid()) { setError('Completeaza dosarul, data, durata si descrierea.'); return; }
+    setLoading(true); setError('');
+    try {
+      const entry = await billingService.createTimeEntry(buildRequest());
+      await billingService.approveTimeEntries([entry.id]);
+      onCreated(); onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
   };
 
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 1rem', color: '#1a237e', fontSize: '1.1rem' }}>Inregistreaza plata</h2>
-        {error && <div style={{ color: '#c62828', marginBottom: '0.75rem', fontSize: '0.85rem' }}>{error}</div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div><label style={labelStyle}>ID Factura *</label><input style={inputStyle} value={form.invoiceId} onChange={e => setForm({ ...form, invoiceId: e.target.value })} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Data *</label><input type="date" style={inputStyle} value={form.paymentDate} onChange={e => setForm({ ...form, paymentDate: e.target.value })} /></div>
-            <div><label style={labelStyle}>Suma *</label><input type="number" step="0.01" style={inputStyle} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Metoda *</label>
-              <select style={selectStyle} value={form.method} onChange={e => setForm({ ...form, method: +e.target.value })}>
-                {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
-            </div>
-            <div><label style={labelStyle}>Referinta tranzactie</label><input style={inputStyle} value={form.transactionReference} onChange={e => setForm({ ...form, transactionReference: e.target.value })} /></div>
-          </div>
-          <div><label style={labelStyle}>Note</label><input style={inputStyle} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga pontaj nou</h2>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide">✕</button>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.invoiceId || !form.amount}>
-            {submitting ? 'Se salveaza...' : 'Salveaza plata'}
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #f44336' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          {/* Dosar */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Dosar *</label>
+            {leadsLoading ? (
+              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca dosarele...</div>
+            ) : leads.length === 0 ? (
+              <div style={{ fontSize: '0.82rem', color: '#f57c00', padding: '0.4rem 0' }}>Nu exista dosare. Creati un lead din pagina Leads inainte de a adauga pontaj.</div>
+            ) : (
+              <select style={selectStyle} value={form.caseId} onChange={e => patch({ caseId: e.target.value })}>
+                <option value="">— Selecteaza dosarul —</option>
+                {leads.map(l => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}{l.phone ? ` · ${l.phone}` : ''}{l.email ? ` · ${l.email}` : ''}
+                  </option>
+                ))}
+              </select>
+            ) }
+          </div>
+
+          {/* Data */}
+          <div>
+            <label style={labelStyle}>Data lucrata *</label>
+            <input type="date" style={inputStyle}
+              value={form.workDate}
+              onChange={e => patch({ workDate: e.target.value })} />
+          </div>
+
+          {/* Facturabil */}
+          <div>
+            <label style={labelStyle}>Facturabil</label>
+            <select style={selectStyle} value={form.isBillable ? '1' : '0'}
+              onChange={e => patch({ isBillable: e.target.value === '1' })}>
+              <option value="1">Da</option>
+              <option value="0">Nu</option>
+            </select>
+          </div>
+
+          {/* Ora inceput */}
+          <div>
+            <label style={labelStyle}>Ora inceput</label>
+            <input type="time" style={inputStyle}
+              value={form.startTime}
+              onChange={e => patch({ startTime: e.target.value })} />
+          </div>
+
+          {/* Ora sfarsit */}
+          <div>
+            <label style={labelStyle}>Ora sfarsit</label>
+            <input type="time" style={inputStyle}
+              value={form.endTime}
+              onChange={e => patch({ endTime: e.target.value })} />
+          </div>
+
+          {/* Durata */}
+          <div>
+            <label style={labelStyle}>Durata (ore) *</label>
+            <input type="number" step="0.01" min="0.01" max="24" style={inputStyle}
+              value={form.durationHours}
+              onChange={e => patch({ durationHours: e.target.value ? parseFloat(e.target.value) : '' })} />
+          </div>
+
+          {/* Tarif ora override */}
+          <div>
+            <label style={labelStyle}>Tarif/ora (optional — gol = tarif automat)</label>
+            <input type="number" step="0.01" style={inputStyle}
+              value={form.hourlyRateOverride}
+              onChange={e => patch({ hourlyRateOverride: e.target.value ? parseFloat(e.target.value) : '' })} />
+          </div>
+
+          {/* Cod activitate */}
+          <div>
+            <label style={labelStyle}>Cod activitate</label>
+            <input type="text" style={inputStyle} placeholder="ex: RESEARCH, DRAFTING, COURT"
+              value={form.activityCode}
+              onChange={e => patch({ activityCode: e.target.value })} />
+          </div>
+
+          {/* Moneda */}
+          <div>
+            <label style={labelStyle}>Moneda</label>
+            <select style={selectStyle} value={form.currency}
+              onChange={e => patch({ currency: +e.target.value })}>
+              {Object.entries(CURRENCY_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Descriere — full width */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Descriere *</label>
+            <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+              value={form.description}
+              onChange={e => patch({ description: e.target.value })}
+              placeholder="Descrieti activitatea desfasurata..." />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={handleSaveDraft} disabled={loading}>
+            {loading ? '...' : 'Salveaza ca draft'}
+          </button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Salveaza si trimite spre aprobat'}
           </button>
         </div>
       </div>
@@ -942,212 +1283,143 @@ function RecordPaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
   );
 }
 
-function CreateTrustAccountModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ clientId: '', currency: 1, minimumBalance: '0', notes: '' });
-  const [submitting, setSubmitting] = useState(false);
+// =====================================================================
+//  CREATE EXPENSE MODAL
+// =====================================================================
+
+function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
+  const [form, setForm] = useState<Partial<ExpenseDto>>({});
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [leads, setLeads] = useState<LeadItem[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+
+  const loadLeads = useCallback(async () => {
+    setLeadsLoading(true);
+    try {
+      const res = await leadService.getLeads({ page: 1, pageSize: 999 });
+      setLeads(res.data);
+    } catch (e: any) { setError(e.message); }
+    finally { setLeadsLoading(false); }
+  }, []);
+
+  useEffect(() => { loadLeads(); }, [loadLeads]);
 
   const handleSubmit = async () => {
-    setSubmitting(true); setError('');
-    try {
-      await billingService.createTrustAccount({
-        clientId: form.clientId, currency: form.currency,
-        minimumBalance: parseFloat(form.minimumBalance), notes: form.notes || undefined,
-      });
-      onCreated(); onClose();
-    } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
-  };
-
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 1rem', color: '#1a237e', fontSize: '1.1rem' }}>Cont client nou</h2>
-        {error && <div style={{ color: '#c62828', marginBottom: '0.75rem', fontSize: '0.85rem' }}>{error}</div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div><label style={labelStyle}>ID Client *</label><input style={inputStyle} value={form.clientId} onChange={e => setForm({ ...form, clientId: e.target.value })} /></div>
-          <div><label style={labelStyle}>Sold minim alerta</label><input type="number" step="0.01" style={inputStyle} value={form.minimumBalance} onChange={e => setForm({ ...form, minimumBalance: e.target.value })} /></div>
-          <div><label style={labelStyle}>Note</label><input style={inputStyle} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.clientId}>{submitting ? 'Se creeaza...' : 'Creeaza cont'}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TrustTransactionsModal({ accountId, onClose }: { accountId: string; onClose: () => void }) {
-  const [account, setAccount] = useState<TrustAccountDto | null>(null);
-  const [txs, setTxs] = useState<TrustTransactionDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const [a, t] = await Promise.all([
-        billingService.getTrustAccount(accountId),
-        billingService.getTrustTransactions(accountId, { page, pageSize: 15 }),
-      ]);
-      setAccount(a); setTxs(t.data); setTotalPages(t.pagination.totalPages);
+      await billingService.createExpense(form as ExpenseDto);
+      onCreated();
+      onClose();
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, [accountId, page]);
-
-  useEffect(() => { load(); }, [load]);
-
-  return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={{ ...modalStyle, maxWidth: '750px' }} onClick={e => e.stopPropagation()}>
-        {loading ? <Spinner /> : error ? <ErrorBanner message={error} /> : account && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <div>
-                <h2 style={{ margin: 0, color: '#1a237e', fontSize: '1.1rem' }}>{account.accountReference}</h2>
-                <div style={{ fontSize: '0.82rem', color: '#555' }}>{account.clientName}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: account.balance < account.minimumBalance ? '#c62828' : '#2e7d32' }}>
-                  {fmtMoney(account.balance, account.currency)}
-                </div>
-              </div>
-            </div>
-
-            <button style={{ ...btnStyle, marginBottom: '1rem' }} onClick={() => setShowAdd(true)}>+ Adauga tranzactie</button>
-
-            {txs.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: '#aaa' }}>Nicio tranzactie</div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-                  <thead>
-                    <tr style={{ background: '#f8f9fa' }}>
-                      {['Data', 'Tip', 'Suma', 'Sold', 'Descriere', 'Ref.'].map(h => <th key={h} style={{ ...thStyle, fontSize: '0.78rem' }}>{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {txs.map(tx => (
-                      <tr key={tx.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                        <td style={tdStyle}>{fmtDate(tx.transactionDate)}</td>
-                        <td style={tdStyle}>{TRUST_TX_TYPES[tx.transactionType] ?? '-'}</td>
-                        <td style={{ ...tdStyle, fontWeight: 700, color: tx.amount >= 0 ? '#2e7d32' : '#c62828' }}>
-                          {tx.amount >= 0 ? '+' : ''}{fmtMoney(tx.amount, account.currency)}
-                        </td>
-                        <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtMoney(tx.runningBalance, account.currency)}</td>
-                        <td style={{ ...tdStyle, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</td>
-                        <td style={tdStyle}>{tx.reference ?? '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button style={btnOutline} onClick={onClose}>Inchide</button>
-            </div>
-          </>
-        )}
-
-        {showAdd && (
-          <AddTrustTransactionInline accountId={accountId}
-            onDone={() => { setShowAdd(false); load(); }}
-            onCancel={() => setShowAdd(false)} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AddTrustTransactionInline({ accountId, onDone, onCancel }: { accountId: string; onDone: () => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ transactionType: 1, transactionDate: new Date().toISOString().slice(0, 10), amount: '', description: '', reference: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    setSubmitting(true); setError('');
-    try {
-      await billingService.createTrustTransaction({
-        trustAccountId: accountId, transactionType: form.transactionType,
-        transactionDate: form.transactionDate, amount: parseFloat(form.amount),
-        description: form.description, reference: form.reference || undefined,
-      });
-      onDone();
-    } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
-  };
-
-  return (
-    <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8f9fa', borderRadius: '8px' }}>
-      <h4 style={{ margin: '0 0 0.75rem', color: '#1a237e', fontSize: '0.9rem' }}>Tranzactie noua</h4>
-      {error && <div style={{ color: '#c62828', marginBottom: '0.5rem', fontSize: '0.82rem' }}>{error}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <div><label style={labelStyle}>Tip</label>
-          <select style={selectStyle} value={form.transactionType} onChange={e => setForm({ ...form, transactionType: +e.target.value })}>
-            {Object.entries(TRUST_TX_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </div>
-        <div><label style={labelStyle}>Data</label><input type="date" style={inputStyle} value={form.transactionDate} onChange={e => setForm({ ...form, transactionDate: e.target.value })} /></div>
-        <div><label style={labelStyle}>Suma</label><input type="number" step="0.01" style={inputStyle} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} /></div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
-        <div><label style={labelStyle}>Descriere</label><input style={inputStyle} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-        <div><label style={labelStyle}>Referinta</label><input style={inputStyle} value={form.reference} onChange={e => setForm({ ...form, reference: e.target.value })} /></div>
-      </div>
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-        <button style={btnOutline} onClick={onCancel}>Anuleaza</button>
-        <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.amount || !form.description}>{submitting ? '...' : 'Salveaza'}</button>
-      </div>
-    </div>
-  );
-}
-
-function CreateBillingRateModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ userId: '', clientId: '', caseId: '', rate: '', currency: 1, effectiveFrom: new Date().toISOString().slice(0, 10), effectiveTo: '', description: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async () => {
-    setSubmitting(true); setError('');
-    try {
-      await billingService.createBillingRate({
-        userId: form.userId || undefined, clientId: form.clientId || undefined,
-        caseId: form.caseId || undefined, rate: parseFloat(form.rate),
-        currency: form.currency, effectiveFrom: form.effectiveFrom,
-        effectiveTo: form.effectiveTo || undefined, description: form.description || undefined,
-      });
-      onCreated(); onClose();
-    } catch (e: any) { setError(e.message); }
-    finally { setSubmitting(false); }
   };
 
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2 style={{ margin: '0 0 1rem', color: '#1a237e', fontSize: '1.1rem' }}>Adauga tarif</h2>
-        {error && <div style={{ color: '#c62828', marginBottom: '0.75rem', fontSize: '0.85rem' }}>{error}</div>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div><label style={labelStyle}>ID Avocat (optional)</label><input style={inputStyle} value={form.userId} onChange={e => setForm({ ...form, userId: e.target.value })} placeholder="Gol = tarif implicit firma" /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>ID Client (optional)</label><input style={inputStyle} value={form.clientId} onChange={e => setForm({ ...form, clientId: e.target.value })} /></div>
-            <div><label style={labelStyle}>ID Dosar (optional)</label><input style={inputStyle} value={form.caseId} onChange={e => setForm({ ...form, caseId: e.target.value })} /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-            <div><label style={labelStyle}>Tarif/ora *</label><input type="number" step="0.01" style={inputStyle} value={form.rate} onChange={e => setForm({ ...form, rate: e.target.value })} /></div>
-            <div><label style={labelStyle}>De la *</label><input type="date" style={inputStyle} value={form.effectiveFrom} onChange={e => setForm({ ...form, effectiveFrom: e.target.value })} /></div>
-            <div><label style={labelStyle}>Pana la</label><input type="date" style={inputStyle} value={form.effectiveTo} onChange={e => setForm({ ...form, effectiveTo: e.target.value })} /></div>
-          </div>
-          <div><label style={labelStyle}>Descriere</label><input style={inputStyle} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga cheltuiala noua</h2>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide"
+          >
+            ✕
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
-          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={submitting || !form.rate}>{submitting ? 'Se salveaza...' : 'Salveaza tarif'}</button>
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Data cheltuielii *</label>
+            <input type="date" style={inputStyle}
+              value={form.expenseDate?.toString().substring(0, 10) || ''}
+              onChange={e => setForm({ ...form, expenseDate: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Dosar *</label>
+            {leadsLoading ? (
+              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca dosarele...</div>
+            ) : (
+              <select
+                style={selectStyle}
+                value={form.caseId}
+                onChange={e => setForm({ ...form, caseId: e.target.value })}
+              >
+                <option value="">— Selecteaza dosarul —</option>
+                {leads.map(l => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}{l.phone ? ` · ${l.phone}` : ''}{l.email ? ` · ${l.email}` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Categorie *</label>
+            <select style={selectStyle}
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+            >
+              <option value="">— Selecteaza categoria —</option>
+              {EXPENSE_CATEGORIES.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Suma *</label>
+            <input type="number" step="0.01" style={inputStyle}
+              value={form.amount || ''}
+              onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Facturabil</label>
+            <select style={selectStyle}
+              value={form.billable ? '1' : '0'}
+              onChange={e => setForm({ ...form, billable: e.target.value === '1' })}
+            >
+              <option value="0">Nu</option>
+              <option value="1">Da</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Status</label>
+            <select style={selectStyle}
+              value={form.status}
+              onChange={e => setForm({ ...form, status: parseInt(e.target.value) })}
+            >
+              {Object.entries(EXPENSE_STATUS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Descriere</label>
+            <textarea style={{ ...inputStyle, minHeight: '120px' }}
+              value={form.description || ''}
+              onChange={e => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose} disabled={loading}>
+            Anuleaza
+          </button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Salveaza'}
+          </button>
         </div>
       </div>
     </div>
@@ -1155,18 +1427,236 @@ function CreateBillingRateModal({ onClose, onCreated }: { onClose: () => void; o
 }
 
 // =====================================================================
-//  PAGINATION COMPONENT
+//  CREATE INVOICE MODAL
 // =====================================================================
 
-function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
-  if (totalPages <= 1) return null;
+function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
+  const [form, setForm] = useState<Partial<InvoiceDto>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [leads, setLeads] = useState<LeadItem[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+
+  const loadLeads = useCallback(async () => {
+    setLeadsLoading(true);
+    try {
+      const res = await leadService.getLeads({ page: 1, pageSize: 999 });
+      setLeads(res.data);
+    } catch (e: any) { setError(e.message); }
+    finally { setLeadsLoading(false); }
+  }, []);
+
+  useEffect(() => { loadLeads(); }, [loadLeads]);
+
+  const handleSubmit = async () => {
+    setLoading(true); setError('');
+    try {
+      await billingService.createInvoice(form as InvoiceDto);
+      onCreated();
+      onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.35rem', padding: '0.75rem' }}>
-      <button disabled={page <= 1} onClick={() => onChange(page - 1)}
-        style={{ ...btnOutline, padding: '0.3rem 0.6rem', fontSize: '0.8rem', opacity: page <= 1 ? 0.4 : 1 }}>&laquo; Ant.</button>
-      <span style={{ padding: '0.3rem 0.75rem', fontSize: '0.82rem', color: '#555' }}>Pagina {page} din {totalPages}</span>
-      <button disabled={page >= totalPages} onClick={() => onChange(page + 1)}
-        style={{ ...btnOutline, padding: '0.3rem 0.6rem', fontSize: '0.8rem', opacity: page >= totalPages ? 0.4 : 1 }}>Urm. &raquo;</button>
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Creaza factura noua</h2>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide"
+          >
+            ✕
+          </button>
+        </div>
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Data emiterii *</label>
+            <input type="date" style={inputStyle}
+              value={form.issueDate?.toString().substring(0, 10) || ''}
+              onChange={e => setForm({ ...form, issueDate: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Data scadenta *</label>
+            <input type="date" style={inputStyle}
+              value={form.dueDate?.toString().substring(0, 10) || ''}
+              onChange={e => setForm({ ...form, dueDate: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Dosar *</label>
+            {leadsLoading ? (
+              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca dosarele...</div>
+            ) : (
+              <select
+                style={selectStyle}
+                value={form.caseId}
+                onChange={e => setForm({ ...form, caseId: e.target.value })}
+              >
+                <option value="">— Selecteaza dosarul —</option>
+                {leads.map(l => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}{l.phone ? ` · ${l.phone}` : ''}{l.email ? ` · ${l.email}` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Descriere</label>
+            <textarea style={{ ...inputStyle, minHeight: '120px' }}
+              value={form.description || ''}
+              onChange={e => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose} disabled={loading}>
+            Anuleaza
+          </button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Salveaza'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+//  CREATE PAYMENT MODAL
+// =====================================================================
+
+function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
+  const [invoiceId, setInvoiceId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
+  const [amount, setAmount] = useState<number | ''>('');
+  const [currency, setCurrency] = useState(1);
+  const [method, setMethod] = useState<number | ''>('');
+  const [transactionReference, setTransactionReference] = useState('');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [invoices, setInvoices] = useState<InvoiceListItemDto[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(true);
+
+  useEffect(() => {
+    billingService.getInvoices({ page: 1, pageSize: 999 })
+      .then(res => setInvoices(res.data))
+      .catch(() => setInvoices([]))
+      .finally(() => setInvoicesLoading(false));
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!invoiceId) { setError('Selectati factura.'); return; }
+    if (!amount) { setError('Introduceti suma.'); return; }
+    if (!method) { setError('Selectati metoda de plata.'); return; }
+    setLoading(true); setError('');
+    try {
+      await billingService.recordPayment({
+        invoiceId,
+        paymentDate,
+        amount: amount || 0,
+        currency,
+        method,
+        transactionReference: transactionReference || undefined,
+        notes: notes || undefined,
+      });
+      onCreated();
+      onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Inregistreaza plata</h2>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide">✕</button>
+        </div>
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #f44336' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Factura asociata *</label>
+            {invoicesLoading ? (
+              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca facturile...</div>
+            ) : invoices.length === 0 ? (
+              <div style={{ fontSize: '0.82rem', color: '#f57c00', padding: '0.4rem 0' }}>Nu exista facturi.</div>
+            ) : (
+              <select style={selectStyle} value={invoiceId} onChange={e => setInvoiceId(e.target.value)}>
+                <option value="">— Selecteaza factura —</option>
+                {invoices.map(i => (
+                  <option key={i.id} value={i.id}>
+                    {i.invoiceNumber} · {i.clientName || '-'} · {fmtMoney(i.balanceDue, i.currency)} rest
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Data platii *</label>
+            <input type="date" style={inputStyle} value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Suma *</label>
+            <input type="number" step="0.01" min="0.01" style={inputStyle}
+              value={amount} onChange={e => setAmount(e.target.value ? parseFloat(e.target.value) : '')} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Metoda de plata *</label>
+            <select style={selectStyle} value={method} onChange={e => setMethod(e.target.value ? +e.target.value : '')}>
+              <option value="">— Selecteaza metoda —</option>
+              {Object.entries(PAYMENT_METHODS).map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Moneda</label>
+            <select style={selectStyle} value={currency} onChange={e => setCurrency(+e.target.value)}>
+              {Object.entries(CURRENCY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Referinta tranzactie</label>
+            <input type="text" style={inputStyle} value={transactionReference}
+              onChange={e => setTransactionReference(e.target.value)} placeholder="ex: OP-12345" />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Notite</label>
+            <input type="text" style={inputStyle} value={notes}
+              onChange={e => setNotes(e.target.value)} placeholder="Informatii suplimentare..." />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose} disabled={loading}>Anuleaza</button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Inregistreaza plata'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

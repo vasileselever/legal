@@ -33,6 +33,7 @@ public class BillingService : IBillingService
             FirmId = firmId,
             UserId = userId,
             CaseId = request.CaseId,
+            LeadId = request.LeadId,
             WorkDate = request.WorkDate,
             DurationHours = request.DurationHours,
             Description = request.Description,
@@ -46,7 +47,7 @@ public class BillingService : IBillingService
 
         _db.TimeEntries.Add(entry);
         await _db.SaveChangesAsync();
-        _logger.LogInformation("TimeEntry {Id} created by {UserId} for case {CaseId}", entry.Id, userId, request.CaseId);
+        _logger.LogInformation("TimeEntry {Id} created by {UserId} for case {CaseId} / lead {LeadId}", entry.Id, userId, request.CaseId, request.LeadId);
 
         return await GetTimeEntryAsync(firmId, entry.Id);
     }
@@ -90,6 +91,7 @@ public class BillingService : IBillingService
         var e = await _db.TimeEntries
             .Include(t => t.User)
             .Include(t => t.Case)
+            .Include(t => t.Lead)
             .FirstOrDefaultAsync(t => t.Id == id && t.FirmId == firmId)
             ?? throw new KeyNotFoundException("Time entry not found");
 
@@ -104,6 +106,7 @@ public class BillingService : IBillingService
             .Where(t => t.FirmId == firmId)
             .Include(t => t.User)
             .Include(t => t.Case)
+            .Include(t => t.Lead)
             .AsQueryable();
 
         if (userId.HasValue) q = q.Where(t => t.UserId == userId.Value);
@@ -139,6 +142,7 @@ public class BillingService : IBillingService
             FirmId = firmId,
             UserId = userId,
             CaseId = request.CaseId,
+            LeadId = request.LeadId,
             WorkDate = DateTime.UtcNow.Date,
             DurationHours = 0,
             Description = request.Description ?? string.Empty,
@@ -938,6 +942,8 @@ public class BillingService : IBillingService
         CaseId = e.CaseId,
         CaseNumber = e.Case?.CaseNumber,
         CaseTitle = e.Case?.Title,
+        LeadId = e.LeadId,
+        LeadName = e.Lead?.Name,
         UserId = e.UserId,
         UserFullName = e.User?.FullName,
         WorkDate = e.WorkDate,
@@ -967,7 +973,7 @@ public class BillingService : IBillingService
         Description = e.Description,
         Amount = e.Amount,
         Currency = e.Currency,
-        MarkupPercent = e.MarkupPercent,
+        MarkupPercent = e.BillableAmount,
         BillableAmount = e.BillableAmount,
         IsBillable = e.IsBillable,
         Status = e.Status,

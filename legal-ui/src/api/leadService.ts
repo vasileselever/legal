@@ -59,11 +59,15 @@ export interface CreateLeadResult {
 }
 
 export const PRACTICE_AREAS = [
-  { value: 1, label: 'Drept Civil' },       { value: 2, label: 'Drept Comercial' },
-  { value: 3, label: 'Drept Penal' },        { value: 4, label: 'Dreptul Familiei' },
-  { value: 5, label: 'Drept Imobiliar' },    { value: 6, label: 'Dreptul Muncii' },
-  { value: 7, label: 'Drept Corporativ' },   { value: 8, label: 'Drept Administrativ' },
-  { value: 9, label: 'Altul' },
+  { value: 1, label: 'Drept Civil',         badge: 'CV', color: '#1976d2', link: '/servicii/drept-civil',         desc: 'Asistenta juridica in litigii civile, contracte si recuperari de creante' },
+  { value: 2, label: 'Drept Comercial',     badge: 'CO', color: '#1565c0', link: '/servicii/drept-comercial',     desc: 'Consultanta juridica specializata pentru companii si antreprenori' },
+  { value: 3, label: 'Drept Penal',         badge: 'PN', color: '#c62828', link: '/servicii/drept-penal',         desc: 'Aparare penala profesionista in orice faza a procesului' },
+  { value: 4, label: 'Dreptul Familiei',    badge: 'FA', color: '#6a1b9a', link: '/servicii/dreptul-familiei',    desc: 'Divort, partaj, custodie copii si pensie alimentara' },
+  { value: 5, label: 'Drept Imobiliar',     badge: 'IM', color: '#2e7d32', link: '/servicii/drept-imobiliar',     desc: 'Tranzactii imobiliare sigure si fara riscuri juridice' },
+  { value: 6, label: 'Dreptul Muncii',      badge: 'MU', color: '#e65100', link: '/servicii/dreptul-muncii',      desc: 'Contestatie concediere, recuperare salarii si drepturi' },
+  { value: 7, label: 'Drept Corporativ',    badge: 'CR', color: '#00695c', link: '/servicii/drept-corporativ',    desc: 'Constituire societati, guvernanta corporativa si fuziuni' },
+  { value: 8, label: 'Drept Administrativ', badge: 'AD', color: '#4527a0', link: '/servicii/drept-administrativ', desc: 'Contestarea actelor administrative si litigii cu autoritatile publice' },
+  { value: 9, label: 'Altul',               badge: '?',  color: '#546e7a', link: '/servicii/alte-servicii',       desc: 'Drept fiscal, GDPR, drept medical, mediu si alte domenii de nisa' },
 ];
 
 export const LEAD_SOURCES = [
