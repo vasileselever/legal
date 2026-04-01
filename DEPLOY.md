@@ -69,6 +69,7 @@ cp .env.example .env
 nano .env
 ```
 
+
 Fill in:
 - `DOMAIN` = your actual domain (e.g., `app.legalro.ro`)
 - `DB_PASSWORD` = a strong SQL Server password

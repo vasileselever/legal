@@ -172,7 +172,7 @@ export interface PagedResponse<T> {
 const B = '/v1/billing';
 
 export const billingService = {
-  // Cases (for dropdowns) — uses a standalone axios call so a 401 from
+  // Cases (for dropdowns) â€” uses a standalone axios call so a 401 from
   // CasesController does NOT trigger the global auth:unauthorized redirect.
   getCases: async (): Promise<CaseItem[]> => {
     const token = localStorage.getItem('jwt_token');

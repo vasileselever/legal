@@ -4,7 +4,7 @@ export interface TestNotificationRequest {
   to: string;
   name: string;
   /** Local datetime string as typed in the picker: "2026-04-02T17:50"
-   *  No UTC conversion — already Romania local time. */
+   *  No UTC conversion â€” already Romania local time. */
   scheduledAt?: string;
 }
 

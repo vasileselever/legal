@@ -1,25 +1,25 @@
 export function DreptAdministrativ() {
   const services = [
-    { icon: '???', title: 'Contencios Administrativ', desc: 'Contestarea actelor administrative ilegale în fa?a instan?elor de contencios administrativ.' },
-    { icon: '??', title: 'Autoriza?ii ?i Avize', desc: 'Asisten?? în ob?inerea autoriza?iilor de construire, avizelor de mediu ?i altor permise administrative.' },
-    { icon: '???', title: 'Urbanism ?i Amenajarea Teritoriului', desc: 'Consultan?? în proceduri de urbanism, PUZ, PUD ?i litigii privind documenta?iile de urbanism.' },
-    { icon: '??', title: 'Achizi?ii Publice', desc: 'Asisten?? în proceduri de licita?ie, contesta?ii CNSC ?i litigii privind contractele de achizi?ie public?.' },
-    { icon: '??', title: 'Control ?i Inspec?ii', desc: 'Reprezentare în fa?a autorit??ilor de control — ANAF, ITM, DSP, ISC — ?i contestarea sanc?iunilor.' },
-    { icon: '??', title: 'Expropriere ?i Desp?gubiri', desc: 'Ap?rarea drepturilor proprietarilor în proceduri de expropriere pentru cauze de utilitate public?.' },
+    { icon: '???', title: 'Contencios Administrativ', desc: 'Contestarea actelor administrative ilegale Ã®n fa?a instan?elor de contencios administrativ.' },
+    { icon: '??', title: 'Autoriza?ii ?i Avize', desc: 'Asisten?? Ã®n ob?inerea autoriza?iilor de construire, avizelor de mediu ?i altor permise administrative.' },
+    { icon: '???', title: 'Urbanism ?i Amenajarea Teritoriului', desc: 'Consultan?? Ã®n proceduri de urbanism, PUZ, PUD ?i litigii privind documenta?iile de urbanism.' },
+    { icon: '??', title: 'Achizi?ii Publice', desc: 'Asisten?? Ã®n proceduri de licita?ie, contesta?ii CNSC ?i litigii privind contractele de achizi?ie public?.' },
+    { icon: '??', title: 'Control ?i Inspec?ii', desc: 'Reprezentare Ã®n fa?a autorit??ilor de control â€” ANAF, ITM, DSP, ISC â€” ?i contestarea sanc?iunilor.' },
+    { icon: '??', title: 'Expropriere ?i Desp?gubiri', desc: 'Ap?rarea drepturilor proprietarilor Ã®n proceduri de expropriere pentru cauze de utilitate public?.' },
   ];
   const stats = [['200+', 'Acte Contestate'], ['90%', 'Rata Succes'], ['15+', 'Ani Experien??'], ['48h', 'Timp R?spuns']];
   const steps = [
     ['1', '#4527a0', 'Analiza Actului', 'Verific?m legalitatea actului administrativ ?i identific?m temeiurile de contestare.'],
-    ['2', '#512da8', 'Strategia Juridic?', 'Stabilim cea mai bun? cale — contesta?ie administrativ? sau ac?iune în instan??.'],
-    ['3', '#5e35b1', 'Reprezentare', 'V? reprezent?m în fa?a autorit??ilor ?i a instan?elor de contencios administrativ.'],
-    ['4', '#7e57c2', 'Executarea Hot?rârii', 'Asigur?m punerea în executare a hot?rârilor favorabile ob?inute.'],
+    ['2', '#512da8', 'Strategia Juridic?', 'Stabilim cea mai bun? cale â€” contesta?ie administrativ? sau ac?iune Ã®n instan??.'],
+    ['3', '#5e35b1', 'Reprezentare', 'V? reprezent?m Ã®n fa?a autorit??ilor ?i a instan?elor de contencios administrativ.'],
+    ['4', '#7e57c2', 'Executarea Hot?rÃ¢rii', 'Asigur?m punerea Ã®n executare a hot?rÃ¢rilor favorabile ob?inute.'],
   ];
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', fontFamily: 'sans-serif' }}>
       <div style={{ background: 'linear-gradient(135deg,#311b92,#4527a0)', color: 'white', padding: '3rem 2rem', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
         <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>???</div>
         <h1 style={{ margin: '0 0 1rem', fontSize: '2.5rem' }}>Drept Administrativ</h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Ap?rarea drepturilor cet??enilor ?i companiilor în rela?ia cu autorit??ile publice</p>
+        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Ap?rarea drepturilor cet??enilor ?i companiilor Ã®n rela?ia cu autorit??ile publice</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {services.map((s, i) => (
@@ -57,7 +57,7 @@ export function DreptAdministrativ() {
       </div>
       <div style={{ background: '#4527a0', color: 'white', padding: '2.5rem', borderRadius: '8px', textAlign: 'center' }}>
         <h2 style={{ marginBottom: '1rem' }}>Contesta?i un Act Administrativ?</h2>
-        <p style={{ marginBottom: '1.5rem', opacity: 0.9, fontSize: '1.1rem' }}>Nu a?tepta?i — termenele de contestare sunt scurte. Contacta?i-ne acum!</p>
+        <p style={{ marginBottom: '1.5rem', opacity: 0.9, fontSize: '1.1rem' }}>Nu a?tepta?i â€” termenele de contestare sunt scurte. Contacta?i-ne acum!</p>
         <a href="/contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', background: 'white', color: '#4527a0', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.1rem' }}>Consulta?ie Gratuit?</a>
       </div>
     </div>

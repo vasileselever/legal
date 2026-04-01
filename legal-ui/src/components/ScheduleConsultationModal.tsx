@@ -204,7 +204,7 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
               </div>
             )}
 
-            {/* Notify client checkbox — placed before notes so it's visible without scrolling */}
+            {/* Notify client checkbox â€” placed before notes so it's visible without scrolling */}
             <label style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem',
               padding: '0.7rem 1rem',

@@ -137,7 +137,7 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
               Pas {step + 1} din {STEPS.length}: <strong style={{ color: 'white' }}>{STEPS[step]}</strong>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Ã—</button>
         </div>
 
         {/* Progress bar */}
@@ -167,11 +167,11 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
         {postSubmitPrior.length > 0 && (
           <div style={{ margin: '0.75rem 1.5rem 0', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '0.75rem 1rem' }}>
             <div style={{ fontWeight: 700, color: '#f57f17', fontSize: '0.88rem', marginBottom: '0.4rem' }}>
-              ?? Contact cunoscut — {postSubmitPrior.length} lead{postSubmitPrior.length > 1 ? '-uri' : ''} anterioare
+              ?? Contact cunoscut â€” {postSubmitPrior.length} lead{postSubmitPrior.length > 1 ? '-uri' : ''} anterioare
             </div>
             {postSubmitPrior.map(pl => (
               <div key={pl.id} style={{ fontSize: '0.82rem', color: '#555', paddingLeft: '0.25rem', marginTop: '0.2rem' }}>
-                • {PRACTICE_AREA_LABELS[pl.practiceArea] ?? pl.practiceArea} — {STATUS_LABELS[pl.status] ?? pl.status} — {new Date(pl.createdAt).toLocaleDateString('ro-RO')}
+                â€¢ {PRACTICE_AREA_LABELS[pl.practiceArea] ?? pl.practiceArea} â€” {STATUS_LABELS[pl.status] ?? pl.status} â€” {new Date(pl.createdAt).toLocaleDateString('ro-RO')}
                 {pl.assignedToName ? ` (${pl.assignedToName})` : ''}
               </div>
             ))}
@@ -201,7 +201,7 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
                 </div>
               </div>
 
-              {/* Prior-leads banner — shown while looking up or when results found */}
+              {/* Prior-leads banner â€” shown while looking up or when results found */}
               {lookingUp && (
                 <div style={{ background: '#f5f5f5', borderRadius: '8px', padding: '0.6rem 0.85rem', fontSize: '0.82rem', color: '#888' }}>
                   ?? Se cauta lead-uri existente...
@@ -211,7 +211,7 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
               {!lookingUp && priorLeads.length > 0 && (
                 <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '0.85rem 1rem' }}>
                   <div style={{ fontWeight: 700, color: '#f57f17', fontSize: '0.88rem', marginBottom: '0.5rem' }}>
-                    ?? Contact cunoscut — {priorLeads.length} lead{priorLeads.length > 1 ? '-uri' : ''} anterioare pentru acest email/telefon
+                    ?? Contact cunoscut â€” {priorLeads.length} lead{priorLeads.length > 1 ? '-uri' : ''} anterioare pentru acest email/telefon
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#666', marginBottom: '0.6rem', lineHeight: 1.5 }}>
                     Aceeasi persoana poate deschide mai multe dosare (domenii diferite). Continua daca este un caz nou.
@@ -238,7 +238,7 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
                           {new Date(pl.createdAt).toLocaleDateString('ro-RO')}
                         </span>
                         {pl.assignedToName && (
-                          <span style={{ color: '#666', fontSize: '0.78rem' }}>· {pl.assignedToName}</span>
+                          <span style={{ color: '#666', fontSize: '0.78rem' }}>Â· {pl.assignedToName}</span>
                         )}
                       </div>
                     ))}

@@ -1,9 +1,9 @@
 /**
- * DateTimePicker — cross-browser guaranteed 24-hour date+time picker.
+ * DateTimePicker â€” cross-browser guaranteed 24-hour date+time picker.
  *
  * Uses <input type="date"> for the date and two <select> dropdowns for
- * hours (00-23) and minutes (00, 05, 10 … 55).
- * Selects are pure numbers — they are 100% immune to the OS 12h/24h
+ * hours (00-23) and minutes (00, 05, 10 â€¦ 55).
+ * Selects are pure numbers â€” they are 100% immune to the OS 12h/24h
  * locale setting, unlike type="time" or type="datetime-local".
  *
  * Value contract (same as datetime-local): "yyyy-MM-ddTHH:mm"

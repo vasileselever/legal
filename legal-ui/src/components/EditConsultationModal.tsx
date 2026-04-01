@@ -28,7 +28,7 @@ function parseApiDate(s: string): Date {
     return new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z');
 }
 
-// Shared formatter — same locale/timezone as ConsultationsPage dashboard
+// Shared formatter â€” same locale/timezone as ConsultationsPage dashboard
 const fmtDateTime = (d: string) =>
     parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 

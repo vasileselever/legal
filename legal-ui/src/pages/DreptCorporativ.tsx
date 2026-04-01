@@ -1,17 +1,17 @@
 export function DreptCorporativ() {
   const services = [
-    { icon: '??', title: 'Constituire Societ??i', desc: 'Œnfiin?are SRL, SA, SNC, asocia?ii ?i funda?ii. Redactarea actelor constitutive ?i Ónregistrarea la ONRC.' },
-    { icon: '??', title: 'Guvernan?? Corporativ?', desc: 'Regulamente interne, hot?r‚ri AGA ?i CA, politici de conformitate ?i structuri de conducere.' },
-    { icon: '??', title: 'Fuziuni ?i Diviz?ri', desc: 'Asisten?? juridic? complet? Ón opera?iuni de fuziune, divizare ?i restructurare corporativ?.' },
-    { icon: '??', title: 'Due Diligence', desc: 'Audit juridic al companiilor Ón vederea tranzac?iilor de v‚nzare-cump?rare de ac?iuni sau active.' },
-    { icon: '??', title: 'Contracte Óntre Asocia?i', desc: 'Pacte de ac?ionari, acorduri de tag-along, drag-along ?i alte mecanisme de protec?ie a investitorilor.' },
+    { icon: '??', title: 'Constituire Societ??i', desc: '√énfiin?are SRL, SA, SNC, asocia?ii ?i funda?ii. Redactarea actelor constitutive ?i √Ænregistrarea la ONRC.' },
+    { icon: '??', title: 'Guvernan?? Corporativ?', desc: 'Regulamente interne, hot?r√¢ri AGA ?i CA, politici de conformitate ?i structuri de conducere.' },
+    { icon: '??', title: 'Fuziuni ?i Diviz?ri', desc: 'Asisten?? juridic? complet? √Æn opera?iuni de fuziune, divizare ?i restructurare corporativ?.' },
+    { icon: '??', title: 'Due Diligence', desc: 'Audit juridic al companiilor √Æn vederea tranzac?iilor de v√¢nzare-cump?rare de ac?iuni sau active.' },
+    { icon: '??', title: 'Contracte √Æntre Asocia?i', desc: 'Pacte de ac?ionari, acorduri de tag-along, drag-along ?i alte mecanisme de protec?ie a investitorilor.' },
     { icon: '??', title: 'Drept Corporativ Interna?ional', desc: 'Structuri holding, subsidiare interna?ionale ?i conformitate cu reglement?rile UE.' },
   ];
   const stats = [['50+', 'Companii Constituite'], ['30+', 'Fuziuni Asistate'], ['100%', 'Conformitate'], ['24h', 'Timp R?spuns']];
   const steps = [
     ['1', '#00695c', 'Analiza Structurii', 'Evalu?m cea mai potrivit? form? juridic? pentru obiectivele dumneavoastr? de business.'],
-    ['2', '#00796b', 'Redactare Acte', 'Preg?tim toate documentele necesare ó act constitutiv, regulamente, procuri.'],
-    ['3', '#00897b', 'Œnregistrare', 'Reprezent?m societatea Ón fa?a ONRC, ANAF ?i oric?ror alte autorit??i competente.'],
+    ['2', '#00796b', 'Redactare Acte', 'Preg?tim toate documentele necesare ‚Äî act constitutiv, regulamente, procuri.'],
+    ['3', '#00897b', '√énregistrare', 'Reprezent?m societatea √Æn fa?a ONRC, ANAF ?i oric?ror alte autorit??i competente.'],
     ['4', '#4caf50', 'Suport Continuu', 'Asigur?m conformitatea juridic? permanent? pe tot parcursul vie?ii companiei.'],
   ];
   return (

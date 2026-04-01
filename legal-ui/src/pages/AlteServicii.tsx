@@ -1,11 +1,11 @@
 export function AlteServicii() {
   const services = [
-    { icon: '??', title: 'Drept Fiscal', desc: 'Contesta?ii decizii ANAF, optimizare fiscal?, litigii cu organele fiscale ?i asisten?? Ón inspec?ii fiscale.' },
-    { icon: '??', title: 'Drept Interna?ional Privat', desc: 'Recunoa?terea hot?r‚rilor str?ine, conflicte de legi, divor?uri interna?ionale ?i adop?ii transfrontaliere.' },
+    { icon: '??', title: 'Drept Fiscal', desc: 'Contesta?ii decizii ANAF, optimizare fiscal?, litigii cu organele fiscale ?i asisten?? √Æn inspec?ii fiscale.' },
+    { icon: '??', title: 'Drept Interna?ional Privat', desc: 'Recunoa?terea hot?r√¢rilor str?ine, conflicte de legi, divor?uri interna?ionale ?i adop?ii transfrontaliere.' },
     { icon: '??', title: 'Drept IT ?i GDPR', desc: 'Conformitate GDPR, politici de confiden?ialitate, contracte software ?i protec?ia datelor cu caracter personal.' },
-    { icon: '??', title: 'Drept Medical', desc: 'Malpraxis medical, r?spunderea spitalelor ?i medicilor, contracte Ón domeniul s?n?t??ii.' },
+    { icon: '??', title: 'Drept Medical', desc: 'Malpraxis medical, r?spunderea spitalelor ?i medicilor, contracte √Æn domeniul s?n?t??ii.' },
     { icon: '??', title: 'Drept Mediu', desc: 'Litigii de mediu, autoriza?ii de mediu, r?spundere pentru poluare ?i consultan?? pentru proiecte verzi.' },
-    { icon: '??', title: 'Dreptul Transporturilor', desc: 'Litigii Ón transporturi rutiere, aeriene ?i maritime, r?spundere transportatori, asigur?ri cargo.' },
+    { icon: '??', title: 'Dreptul Transporturilor', desc: 'Litigii √Æn transporturi rutiere, aeriene ?i maritime, r?spundere transportatori, asigur?ri cargo.' },
   ];
   const stats = [['15+', 'Ani Experien??'], ['300+', 'Cazuri Solu?ionate'], ['98%', 'Clien?i Mul?umi?i'], ['24h', 'Timp R?spuns']];
   return (
@@ -13,14 +13,14 @@ export function AlteServicii() {
       <div style={{ background: 'linear-gradient(135deg,#37474f,#546e7a)', color: 'white', padding: '3rem 2rem', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
         <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>??</div>
         <h1 style={{ margin: '0 0 1rem', fontSize: '2.5rem' }}>Alte Servicii Juridice</h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Consultan?? specializat? Ón domenii juridice de ni?? ?i interdisciplinare</p>
+        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Consultan?? specializat? √Æn domenii juridice de ni?? ?i interdisciplinare</p>
       </div>
 
       <div style={{ background: '#fff8e1', border: '2px solid #ffcc02', padding: '1.25rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
         <div style={{ fontSize: '2rem', flexShrink: 0 }}>??</div>
         <div>
           <h3 style={{ color: '#f57f17', margin: '0 0 0.5rem' }}>Nu g?si?i domeniul potrivit?</h3>
-          <p style={{ color: '#795548', margin: 0 }}>Dac? problema dumneavoastr? juridic? nu se Óncadreaz? Ón categoriile principale, contacta?i-ne oricum. Cabinetul nostru acoper? o gam? larg? de domenii sau v? poate Óndruma c?tre speciali?ti din re?eaua noastr?.</p>
+          <p style={{ color: '#795548', margin: 0 }}>Dac? problema dumneavoastr? juridic? nu se √Æncadreaz? √Æn categoriile principale, contacta?i-ne oricum. Cabinetul nostru acoper? o gam? larg? de domenii sau v? poate √Ændruma c?tre speciali?ti din re?eaua noastr?.</p>
         </div>
       </div>
 
