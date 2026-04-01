@@ -10,8 +10,8 @@ import { apiClient } from '../../api/apiClient';
 import { userService } from '../../api/userService';
 import type { UserInfo, UserStats, UpdateUserDto } from '../../api/userService';
 
-const ROLE_LABELS: Record<number, string> = { 0: 'Avocat', 1: 'Admin', 2: 'Paralegal', 3: 'Asistent' };
-const ROLE_COLORS: Record<number, string> = { 0: '#1976d2', 1: '#c62828', 2: '#2e7d32', 3: '#7b1fa2' };
+const ROLE_LABELS: Record<number, string> = { 0: 'Admin', 1: 'Admin', 2: 'Avocat', 3: 'Asociat', 4: 'Secretar Juridic', 5: 'Client' };
+const ROLE_COLORS: Record<number, string> = { 0: '#c62828', 1: '#c62828', 2: '#1976d2', 3: '#2e7d32', 4: '#7b1fa2', 5: '#f57c00' };
 
 // ?? Styles ?????????????????????????????????????????????????????????????????????
 const inp: React.CSSProperties = {
@@ -121,7 +121,7 @@ export function UsersPage() {
 
   // Invite state
   const [showInvite, setShowInvite] = useState(false);
-  const [invite, setInvite] = useState({ firstName: '', lastName: '', email: '', role: 0 });
+  const [invite, setInvite] = useState({ firstName: '', lastName: '', email: '', role: 2 });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
@@ -155,7 +155,7 @@ export function UsersPage() {
     try {
       await apiClient.post('/auth/invite', invite);
       setInviteSuccess(`Utilizatorul ${invite.email} a fost invitat!`);
-      setInvite({ firstName: '', lastName: '', email: '', role: 0 });
+      setInvite({ firstName: '', lastName: '', email: '', role: 2 });
       setShowInvite(false);
       await load();
     } catch (e: any) {
@@ -276,7 +276,7 @@ export function UsersPage() {
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.3rem', color: '#333' }}>Rol *</label>
                 <select style={inp} value={invite.role} onChange={e => setInvite(f => ({ ...f, role: Number(e.target.value) }))}>
                   {Object.entries(ROLE_LABELS)
-                    .filter(([v]) => Number(v) !== 1) // Cannot invite with Admin role
+                    .filter(([v]) => Number(v) !== 1 && Number(v) !== 5) // Cannot invite Admin or Client
                     .map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
@@ -581,7 +581,7 @@ function EditUserModal({ user, isCurrentUser, onClose, onSaved, onError }: {
               disabled={isAdmin}
               onChange={e => setForm(f => ({ ...f, role: Number(e.target.value) }))}>
               {Object.entries(ROLE_LABELS)
-                .filter(([v]) => isAdmin ? true : Number(v) !== 1) // Non-admin users cannot be promoted to Admin
+                .filter(([v]) => isAdmin ? true : Number(v) !== 1 && Number(v) !== 5) // Non-admin users cannot be promoted to Admin; exclude Client
                 .map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             {isAdmin && (

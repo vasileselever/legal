@@ -8,10 +8,15 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
-// Attach JWT token to every request
+// Attach JWT token to every request; for public (unauthenticated) calls send X-Firm-Id instead
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('jwt_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    const firmId = import.meta.env.VITE_FIRM_ID;
+    if (firmId) config.headers['X-Firm-Id'] = firmId;
+  }
   return config;
 });
 

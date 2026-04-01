@@ -71,10 +71,12 @@ export const PRACTICE_AREAS = [
 ];
 
 export const LEAD_SOURCES = [
-  { value: 1, label: 'Website' },   { value: 2, label: 'WhatsApp' },
-  { value: 3, label: 'Facebook' },  { value: 5, label: 'Telefon' },
-  { value: 6, label: 'Email' },     { value: 7, label: 'Recomandare' },
-  { value: 9, label: 'Google Ads' },{ value: 11, label: 'Altul' },
+  { value: 1, label: 'Website' },    { value: 2, label: 'WhatsApp' },
+  { value: 3, label: 'Facebook' },   { value: 4, label: 'Instagram' },
+  { value: 5, label: 'Telefon' },    { value: 6, label: 'Email' },
+  { value: 7, label: 'Recomandare' },{ value: 8, label: 'Walk-In' },
+  { value: 9, label: 'Google Ads' }, { value: 10, label: 'LinkedIn' },
+  { value: 11, label: 'Altul' },
 ];
 
 export const LEAD_STATUS_LABELS: Record<number, string> = {

@@ -98,7 +98,7 @@ public class LeadsController : ControllerBase
                         : null,
                     CreatedAt = l.CreatedAt,
                     NextConsultation = l.Consultations
-                        .Where(c => c.ScheduledAt > DateTime.UtcNow && c.Status == ConsultationStatus.Scheduled)
+                        .Where(c => c.ScheduledAt > DateTime.UtcNow && (c.Status == ConsultationStatus.Scheduled || c.Status == ConsultationStatus.Confirmed))
                         .OrderBy(c => c.ScheduledAt)
                         .Select(c => c.ScheduledAt)
                         .FirstOrDefault(),
@@ -175,6 +175,7 @@ public class LeadsController : ControllerBase
                 ConsultationCount = lead.Consultations.Count,
                 CreatedAt = lead.CreatedAt,
                 UpdatedAt = lead.UpdatedAt,
+                LastActivityAt = lead.Activities.OrderByDescending(a => a.CreatedAt).Select(a => (DateTime?)a.CreatedAt).FirstOrDefault(),
                 RecentConversations = lead.Conversations
                     .OrderByDescending(c => c.MessageTimestamp).Take(10)
                     .Select(c => new LeadConversationDto

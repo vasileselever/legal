@@ -81,7 +81,7 @@ public class LegalResearchService : ILegalResearchService
         var rawJson    = completion.Value.Content[0].Text;
 
         sw.Stop();
-        return ParseAiResponse(query, rawJson, area, sw.Elapsed.Milliseconds, deployment);
+        return ParseAiResponse(query, rawJson, area, (int)sw.Elapsed.TotalMilliseconds, deployment);
     }
 
     // >> Prompt helpers >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -197,7 +197,7 @@ public class LegalResearchService : ILegalResearchService
             Answer          = answer,
             Sources         = sources,
             ConfidenceScore = 72,
-            ProcessingMs    = sw.Elapsed.Milliseconds + 400,
+            ProcessingMs    = (int)sw.Elapsed.TotalMilliseconds + 400,
             ModelUsed       = "mock-ro-legal-v1",
             CreatedAt       = DateTime.UtcNow,
         };

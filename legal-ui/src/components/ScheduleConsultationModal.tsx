@@ -190,7 +190,7 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
               </div>
             )}
 
-            {form.type === 3 && (
+            {form.type === 1 && (
               <div>
                 <label style={LBL}>Locatie</label>
                 <input style={mkInp()} placeholder="Str. Exemplu nr. 1, Bucuresti" value={form.location ?? ''}
@@ -198,7 +198,7 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
               </div>
             )}
 
-            {form.type === 2 && (
+            {form.type === 3 && (
               <div style={{ background:'#e8f5e9', border:'1px solid #a5d6a7', borderRadius:'6px', padding:'0.65rem 0.85rem', fontSize:'0.82rem', color:'#2e7d32' }}>
                 Un link video va fi generat automat dupa programare.
               </div>

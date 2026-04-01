@@ -28,7 +28,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <div style={{ padding: '1.5rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>⚖️</div>
           <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>LegalRO</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.65, marginTop: '0.15rem' }}>Panel Administrare</div>
+          <div style={{ fontSize: '0.75rem', opacity: 0.65, marginTop: '0.15rem' }}>Panou de administrare</div>
         </div>
 
         <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>

@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { consultationService, CONSULTATION_TYPE_LABELS, CONSULTATION_STATUS_LABELS, CONSULTATION_STATUS_COLORS } from '../api/consultationService';
+import { consultationService, CONSULTATION_TYPE_LABELS, CONSULTATION_TYPE_COLORS, CONSULTATION_STATUS_LABELS, CONSULTATION_STATUS_COLORS } from '../api/consultationService';
 import type { ConsultationItem } from '../api/consultationService';
 import { Badge } from './ui/Badge';
 
 interface Props { consultation: ConsultationItem; onClose: () => void; onSaved: () => void; }
 const mkInp = (): React.CSSProperties => ({ width:'100%', padding:'0.55rem 0.75rem', border:'1px solid #ddd', borderRadius:'6px', fontSize:'0.9rem', boxSizing:'border-box' as const });
 const LBL: React.CSSProperties = { display:'block', fontSize:'0.82rem', fontWeight:600, color:'#333', marginBottom:'0.3rem' };
-const TC: Record<number,string> = { 1:'#7b1fa2', 2:'#1976d2', 3:'#e65100' };
 
 export function ConsultationNotesModal({ consultation: c, onClose, onSaved }: Props) {
   const [notes, setNotes]     = useState(c.consultationNotes ?? '');
@@ -38,7 +37,7 @@ export function ConsultationNotesModal({ consultation: c, onClose, onSaved }: Pr
 
         <div style={{ padding:'1.5rem', display:'flex', flexDirection:'column', gap:'1rem' }}>
           <div style={{ display:'flex', gap:'0.5rem', flexWrap:'wrap', alignItems:'center' }}>
-            <Badge label={CONSULTATION_TYPE_LABELS[c.type]} color={TC[c.type] ?? '#555'} />
+            <Badge label={CONSULTATION_TYPE_LABELS[c.type]} color={CONSULTATION_TYPE_COLORS[c.type] ?? '#555'} />
             <Badge label={CONSULTATION_STATUS_LABELS[c.status] ?? '-'} color={CONSULTATION_STATUS_COLORS[c.status] ?? '#999'} />
             <span style={{ fontSize:'0.82rem', color:'#666' }}>{c.durationMinutes} min</span>
             {c.videoMeetingLink && <a href={c.videoMeetingLink} target="_blank" rel="noopener noreferrer" style={{ fontSize:'0.82rem', color:'#1976d2', textDecoration:'underline' }}>Link video</a>}

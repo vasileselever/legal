@@ -52,6 +52,7 @@ public static class DatabaseSeeder
             FirstName = "Ion",
             LastName = "Popescu",
             FirmId = testFirm.Id,
+            Role = UserRole.Admin,
             EmailConfirmed = true,
             PhoneNumber = "+40721111111",
             CreatedAt = DateTime.UtcNow
@@ -65,6 +66,7 @@ public static class DatabaseSeeder
             FirstName = "Maria",
             LastName = "Ionescu",
             FirmId = testFirm.Id,
+            Role = UserRole.Lawyer,
             EmailConfirmed = true,
             PhoneNumber = "+40722222222",
             CreatedAt = DateTime.UtcNow

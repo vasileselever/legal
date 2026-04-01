@@ -57,3 +57,8 @@ samp {
 .overflow-y-auto {
   overflow-y: auto;
 }
+
+/* Spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

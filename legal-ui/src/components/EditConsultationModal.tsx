@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { consultationService, CONSULTATION_TYPE_LABELS, DURATION_OPTIONS } from '../api/consultationService';
 import type { ConsultationItem, UpdateConsultationDto } from '../api/consultationService';
-import { notificationService } from '../api/notificationService';
 import { apiClient } from '../api/apiClient';
 import { DateTimePicker } from './ui/DateTimePicker';
 
@@ -31,7 +30,7 @@ function parseApiDate(s: string): Date {
 
 // Shared formatter — same locale/timezone as ConsultationsPage dashboard
 const fmtDateTime = (d: string) =>
-    new Date(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+    parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
 export function EditConsultationModal({ consultation: c, onClose, onUpdated }: Props) {
     const [form, setForm] = useState<UpdateConsultationDto>({
@@ -180,7 +179,7 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
                             </div>
                         )}
 
-                        {form.type === 3 && (
+                        {form.type === 1 && (
                             <div>
                                 <label style={LBL}>Locatie</label>
                                 <input style={mkInp()} placeholder="Str. Exemplu nr. 1, Bucuresti" value={form.location ?? ''}
@@ -188,7 +187,7 @@ export function EditConsultationModal({ consultation: c, onClose, onUpdated }: P
                             </div>
                         )}
 
-                        {form.type === 2 && (
+                        {form.type === 3 && (
                             <div style={{ background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '6px', padding: '0.65rem 0.85rem', fontSize: '0.82rem', color: '#2e7d32' }}>
                                 Linkul video existent va ramane activ.
                             </div>

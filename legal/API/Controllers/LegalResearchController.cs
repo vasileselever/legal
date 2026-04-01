@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json;
 using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Application.DTOs.LegalResearch;
@@ -121,21 +122,39 @@ public class LegalResearchController : ControllerBase
             .Where(r => !bookmarkedOnly || r.IsBookmarked)
             .OrderByDescending(r => r.CreatedAt);
 
-        var items = await q
+        var rows = await q
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(r => new LegalResearchHistoryItemDto
+            .Select(r => new
+            {
+                r.Id, r.Query, r.Title, r.PracticeArea,
+                r.ConfidenceScore, r.SourcesJson, r.IsBookmarked, r.CreatedAt,
+            })
+            .ToListAsync(ct);
+
+        var items = rows.Select(r =>
+        {
+            int sourceCount = 0;
+            try
+            {
+                using var doc = JsonDocument.Parse(r.SourcesJson);
+                if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                    sourceCount = doc.RootElement.GetArrayLength();
+            }
+            catch { /* malformed JSON – default to 0 */ }
+
+            return new LegalResearchHistoryItemDto
             {
                 Id              = r.Id,
                 Query           = r.Query,
                 Title           = r.Title,
                 PracticeArea    = r.PracticeArea,
                 ConfidenceScore = r.ConfidenceScore,
-                SourceCount     = r.SourcesJson.Length > 2 ? 3 : 0, // rough estimate
+                SourceCount     = sourceCount,
                 IsBookmarked    = r.IsBookmarked,
                 CreatedAt       = r.CreatedAt,
-            })
-            .ToListAsync(ct);
+            };
+        }).ToList();
 
         return Ok(new ApiResponse<List<LegalResearchHistoryItemDto>>
         {

@@ -49,7 +49,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
   const [sendingMsg, setSendingMsg]     = useState(false);
   const [error, setError]               = useState('');
   const [showConsForm, setShowConsForm] = useState(false);
-  const [consForm, setConsForm]         = useState({ lawyerId: '', scheduledAt: '', durationMinutes: 30, type: 3, location: '' });
+  const [consForm, setConsForm]         = useState({ lawyerId: '', scheduledAt: '', durationMinutes: 30, type: 1, location: '' });
   const [notifyClientCons, setNotifyClientCons] = useState(true);
 
   const inp: React.CSSProperties = {

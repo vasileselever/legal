@@ -73,6 +73,7 @@ public class LeadDetailDto
     // Timestamps
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? LastActivityAt { get; set; }
     
     // Related data
     public List<LeadConversationDto> RecentConversations { get; set; } = new();

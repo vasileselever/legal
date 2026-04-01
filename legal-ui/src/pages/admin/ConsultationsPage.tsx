@@ -19,9 +19,6 @@ const parseApiDate = (s: string): Date =>
   new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z');
 
 // Shared time/date formatters — always use ro-RO locale, browser local timezone, 24-hour clock
-const fmtTime = (d: string) =>
-  parseApiDate(d).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false });
-
 const fmtDateTime = (d: string) =>
   parseApiDate(d).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
@@ -272,14 +269,14 @@ export function ConsultationsPage() {
                     )}
                     
                     {c.status < 4 && (
-                      <button onClick={() => handleStatusUpdate(c.id, 5)} style={{ padding:'0.35rem 0.75rem', background:'#fafafa', color:'#757575', border:'1px solid #ddd', borderRadius:'5px', cursor:'pointer', fontSize:'0.82rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <button onClick={() => handleStatusUpdate(c.id, 4)} style={{ padding:'0.35rem 0.75rem', background:'#fafafa', color:'#757575', border:'1px solid #ddd', borderRadius:'5px', cursor:'pointer', fontSize:'0.82rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <Icon type="absent" />
                         <span>Absent</span>
                       </button>
                     )}
-                    
+
                     {c.status < 4 && (
-                      <button onClick={() => handleStatusUpdate(c.id, 4)} style={{ padding:'0.35rem 0.75rem', background:'#ffebee', color:'#c62828', border:'1px solid #ef9a9a', borderRadius:'5px', cursor:'pointer', fontSize:'0.82rem', fontWeight:600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <button onClick={() => handleStatusUpdate(c.id, 5)} style={{ padding:'0.35rem 0.75rem', background:'#ffebee', color:'#c62828', border:'1px solid #ef9a9a', borderRadius:'5px', cursor:'pointer', fontSize:'0.82rem', fontWeight:600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <Icon type="cancel" />
                         <span>Anuleaza</span>
                       </button>

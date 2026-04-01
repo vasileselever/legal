@@ -843,13 +843,15 @@ public class BillingService : IBillingService
             .Where(t => t.FirmId == firmId && t.IsActive)
             .SumAsync(t => t.Balance);
 
+        var totalBillableValue = wip + billed;
+
         return new BillingSummaryDto
         {
             TotalWip = wip,
             TotalBilled = billed,
             TotalCollected = collected,
             TotalOutstanding = outstanding,
-            RealizationRate = billed > 0 ? Math.Round(collected / billed * 100, 1) : 0,
+            RealizationRate = totalBillableValue > 0 ? Math.Round(billed / totalBillableValue * 100, 1) : 0,
             CollectionRate = billed > 0 ? Math.Round(collected / billed * 100, 1) : 0,
             OverdueInvoiceCount = overdue,
             TrustAccountsBalance = trustBalance
@@ -880,9 +882,59 @@ public class BillingService : IBillingService
                 .Count(d => ((int)from.AddDays(d).DayOfWeek) is >= 1 and <= 5));
         var targetHours = businessDays * 8;
 
+        // Compute collected amounts per lawyer by attributing each payment
+        // proportionally across the time-entry owners on its invoice.
+        var collectedByUser = new Dictionary<Guid, decimal>();
+
+        var paidInvoiceIds = await _db.Payments
+            .Where(p => p.FirmId == firmId && p.PaymentDate >= from && p.PaymentDate <= to)
+            .Select(p => p.InvoiceId)
+            .Distinct()
+            .ToListAsync();
+
+        if (paidInvoiceIds.Count > 0)
+        {
+            // For each paid invoice, find each lawyer's share of the line items
+            var lawyerShares = await _db.InvoiceLineItems
+                .Where(li => paidInvoiceIds.Contains(li.InvoiceId)
+                    && li.TimeEntryId != null)
+                .Join(_db.TimeEntries, li => li.TimeEntryId, te => te.Id,
+                    (li, te) => new { li.InvoiceId, te.UserId, li.Amount })
+                .GroupBy(x => new { x.InvoiceId, x.UserId })
+                .Select(g => new { g.Key.InvoiceId, g.Key.UserId, Total = g.Sum(x => x.Amount) })
+                .ToListAsync();
+
+            var invoiceTotals = lawyerShares
+                .GroupBy(x => x.InvoiceId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Total));
+
+            var paymentsByInvoice = await _db.Payments
+                .Where(p => p.FirmId == firmId && p.PaymentDate >= from && p.PaymentDate <= to)
+                .GroupBy(p => p.InvoiceId)
+                .Select(g => new { InvoiceId = g.Key, Paid = g.Sum(p => p.Amount) })
+                .ToListAsync();
+
+            foreach (var pi in paymentsByInvoice)
+            {
+                if (!invoiceTotals.TryGetValue(pi.InvoiceId, out var invTotal) || invTotal == 0)
+                    continue;
+
+                var shares = lawyerShares.Where(s => s.InvoiceId == pi.InvoiceId);
+                foreach (var share in shares)
+                {
+                    var portion = pi.Paid * (share.Total / invTotal);
+                    if (!collectedByUser.ContainsKey(share.UserId))
+                        collectedByUser[share.UserId] = 0;
+                    collectedByUser[share.UserId] += portion;
+                }
+            }
+        }
+
         foreach (var e in entries)
         {
             e.UtilizationRate = targetHours > 0 ? Math.Round(e.BillableHours / targetHours * 100, 1) : 0;
+            if (collectedByUser.TryGetValue(e.UserId, out var collected))
+                e.CollectedAmount = Math.Round(collected, 2);
         }
 
         return entries.OrderByDescending(e => e.BillableHours).ToList();

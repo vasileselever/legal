@@ -32,13 +32,13 @@ export interface UpdateConsultationDto {
   sendNotification?: boolean;  // backend sends the email when true
 }
 
-export const CONSULTATION_TYPE_LABELS: Record<number, string> = { 1: 'Telefon', 2: 'Video', 3: 'Fizic' };
-export const CONSULTATION_TYPE_COLORS: Record<number, string> = { 1: '#7b1fa2', 2: '#1976d2', 3: '#e65100' };
+export const CONSULTATION_TYPE_LABELS: Record<number, string> = { 1: 'Fizic', 2: 'Telefon', 3: 'Video' };
+export const CONSULTATION_TYPE_COLORS: Record<number, string> = { 1: '#e65100', 2: '#7b1fa2', 3: '#1976d2' };
 export const CONSULTATION_STATUS_LABELS: Record<number, string> = {
-  1: 'Programata', 2: 'Confirmata', 3: 'Finalizata', 4: 'Anulata', 5: 'Absent',
+  1: 'Programata', 2: 'Confirmata', 3: 'Finalizata', 4: 'Absent', 5: 'Anulata', 6: 'Reprogramata',
 };
 export const CONSULTATION_STATUS_COLORS: Record<number, string> = {
-  1: '#1976d2', 2: '#2e7d32', 3: '#00838f', 4: '#c62828', 5: '#757575',
+  1: '#1976d2', 2: '#2e7d32', 3: '#00838f', 4: '#757575', 5: '#c62828', 6: '#f57c00',
 };
 export const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120];
 

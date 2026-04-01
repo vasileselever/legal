@@ -208,7 +208,7 @@ function TimeEntriesTab() {
   const handleApprove = async () => {
     if (selected.size === 0) return;
     try {
-      await billingService.approveTimeEntries([...selected]);
+      await billingService.approveTimeEntries(Array.from(selected));
       setSelected(new Set());
       load();
     } catch (e: any) { setError(e.message); }
@@ -371,7 +371,7 @@ function InvoicesTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
-                  {['Nr. factura', 'Data', 'Dosar', 'Descriere', 'Suma', 'Status'].map(h =>
+                  {['Nr. factura', 'Data', 'Scadenta', 'Client', 'Dosar', 'Suma', 'Rest de plata', 'Status'].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
@@ -379,10 +379,12 @@ function InvoicesTab() {
                 {items.map(e => (
                   <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{e.invoiceNumber}</td>
-                    <td style={tdStyle}>{fmtDate(e.issueDate)}</td>
-                    <td style={tdStyle}>{e.caseNumber || e.caseId?.slice(0, 8) || '-'}</td>
-                    <td style={tdStyle}><div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</div></td>
+                    <td style={tdStyle}>{fmtDate(e.invoiceDate)}</td>
+                    <td style={tdStyle}>{fmtDate(e.dueDate)}</td>
+                    <td style={tdStyle}>{e.clientName || '-'}</td>
+                    <td style={tdStyle}>{e.caseNumber || '-'}</td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.totalAmount, e.currency)}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: e.balanceDue > 0 ? '#c62828' : '#2e7d32' }}>{fmtMoney(e.balanceDue, e.currency)}</td>
                     <td style={tdStyle}><Badge label={INVOICE_STATUS[e.status] ?? '-'} color={INVOICE_STATUS_COLORS[e.status] ?? '#999'} /></td>
                   </tr>
                 ))}
@@ -436,7 +438,7 @@ function PaymentsTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
-                  {['Data', 'Dosar', 'Factura', 'Suma', 'Metoda de plata', 'Status'].map(h =>
+                  {['Data', 'Client', 'Factura', 'Suma', 'Metoda de plata', 'Referinta'].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
@@ -444,11 +446,11 @@ function PaymentsTab() {
                 {items.map(e => (
                   <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtDate(e.paymentDate)}</td>
-                    <td style={tdStyle}>{e.caseNumber || e.caseId?.slice(0, 8) || '-'}</td>
+                    <td style={tdStyle}>{e.clientName || '-'}</td>
                     <td style={tdStyle}>{e.invoiceNumber || e.invoiceId?.slice(0, 8) || '-'}</td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.amount, e.currency)}</td>
                     <td style={tdStyle}>{PAYMENT_METHODS[e.method] ?? '-'}</td>
-                    <td style={tdStyle}><Badge label={e.status === 1 ? 'Finalizata' : 'Anulata'} color={e.status === 1 ? '#4caf50' : '#f44336'} /></td>
+                    <td style={{ ...tdStyle, color: '#888' }}>{e.transactionReference || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1364,7 +1366,7 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
             <label style={labelStyle}>Categorie *</label>
             <select style={selectStyle}
               value={form.category}
-              onChange={e => setForm({ ...form, category: e.target.value })}
+              onChange={e => setForm({ ...form, category: parseInt(e.target.value) })}
             >
               <option value="">— Selecteaza categoria —</option>
               {EXPENSE_CATEGORIES.map(c => (
@@ -1384,8 +1386,8 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
           <div>
             <label style={labelStyle}>Facturabil</label>
             <select style={selectStyle}
-              value={form.billable ? '1' : '0'}
-              onChange={e => setForm({ ...form, billable: e.target.value === '1' })}
+              value={form.isBillable ? '1' : '0'}
+              onChange={e => setForm({ ...form, isBillable: e.target.value === '1' })}
             >
               <option value="0">Nu</option>
               <option value="1">Da</option>
@@ -1478,8 +1480,8 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
           <div>
             <label style={labelStyle}>Data emiterii *</label>
             <input type="date" style={inputStyle}
-              value={form.issueDate?.toString().substring(0, 10) || ''}
-              onChange={e => setForm({ ...form, issueDate: e.target.value })}
+              value={form.invoiceDate?.toString().substring(0, 10) || ''}
+              onChange={e => setForm({ ...form, invoiceDate: e.target.value })}
             />
           </div>
 
@@ -1512,10 +1514,10 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
           </div>
 
           <div>
-            <label style={labelStyle}>Descriere</label>
+            <label style={labelStyle}>Notite</label>
             <textarea style={{ ...inputStyle, minHeight: '120px' }}
-              value={form.description || ''}
-              onChange={e => setForm({ ...form, description: e.target.value })}
+              value={form.notes || ''}
+              onChange={e => setForm({ ...form, notes: e.target.value })}
             />
           </div>
         </div>
@@ -1525,7 +1527,124 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
             Anuleaza
           </button>
           <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
-            {loading ? <Spinner size={18} /> : 'Salveaza'}
+            {loading ? '...' : 'Salveaza'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+//  CREATE PAYMENT MODAL
+// =====================================================================
+
+// =====================================================================
+//  PAGINATION COMPONENT
+// =====================================================================
+
+function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', borderTop: '1px solid #f0f0f0' }}>
+      <button
+        style={{ ...btnOutline, padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}
+        disabled={page <= 1}
+        onClick={() => onChange(page - 1)}
+      >
+        ← Inapoi
+      </button>
+      <span style={{ fontSize: '0.82rem', color: '#555' }}>
+        Pagina {page} din {totalPages}
+      </span>
+      <button
+        style={{ ...btnOutline, padding: '0.3rem 0.6rem', fontSize: '0.78rem' }}
+        disabled={page >= totalPages}
+        onClick={() => onChange(page + 1)}
+      >
+        Inainte →
+      </button>
+    </div>
+  );
+}
+
+// =====================================================================
+//  CREATE BILLING RATE MODAL
+// =====================================================================
+
+function CreateBillingRateModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
+  const [rate, setRate] = useState<number | ''>('');
+  const [currency, setCurrency] = useState(1);
+  const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [effectiveTo, setEffectiveTo] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!rate) { setError('Introduceti tariful orar.'); return; }
+    setLoading(true); setError('');
+    try {
+      await billingService.createBillingRate({
+        rate: rate || 0,
+        currency,
+        effectiveFrom,
+        effectiveTo: effectiveTo || undefined,
+        description: description || undefined,
+      });
+      onCreated();
+      onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga tarif nou</h2>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide">✕</button>
+        </div>
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #f44336' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Tarif orar *</label>
+            <input type="number" step="0.01" min="0.01" style={inputStyle}
+              value={rate} onChange={e => setRate(e.target.value ? parseFloat(e.target.value) : '')} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Moneda</label>
+            <select style={selectStyle} value={currency} onChange={e => setCurrency(+e.target.value)}>
+              {Object.entries(CURRENCY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Valabil de la *</label>
+            <input type="date" style={inputStyle} value={effectiveFrom} onChange={e => setEffectiveFrom(e.target.value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Valabil pana la</label>
+            <input type="date" style={inputStyle} value={effectiveTo} onChange={e => setEffectiveTo(e.target.value)} />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Descriere</label>
+            <input type="text" style={inputStyle} value={description}
+              onChange={e => setDescription(e.target.value)} placeholder="ex: Tarif standard avocat senior" />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose} disabled={loading}>Anuleaza</button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Salveaza tarif'}
           </button>
         </div>
       </div>
