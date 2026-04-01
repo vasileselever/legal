@@ -10,6 +10,13 @@ RUN npm ci
 
 # Copy source and build
 COPY legal-ui/ ./
+
+# Build args for env vars baked into the frontend at build time
+ARG VITE_API_URL=/api
+ARG VITE_FIRM_ID
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_FIRM_ID=$VITE_FIRM_ID
+
 RUN npm run build
 
 # ============================================================

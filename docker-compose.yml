@@ -37,6 +37,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_FIRM_ID: ${VITE_FIRM_ID:-}
     container_name: legalro-app
     restart: unless-stopped
     depends_on:
