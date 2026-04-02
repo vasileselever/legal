@@ -57,6 +57,17 @@ services:
       Ai__AzureOpenAI__ApiKey: ${AZURE_OPENAI_KEY:-}
       Ai__AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
       SeedDatabase: ${SeedDatabase:-false}
+      Notifications__FirmName: ${FIRM_NAME:-Cabinet Avocat LegalRO}
+      Notifications__FirmEmail: ${FIRM_EMAIL:-contact@legalro.ro}
+      Notifications__Smtp__IsEnabled: ${SMTP_ENABLED:-false}
+      Notifications__Smtp__Host: ${SMTP_HOST:-}
+      Notifications__Smtp__Port: ${SMTP_PORT:-587}
+      Notifications__Smtp__Username: ${SMTP_USERNAME:-}
+      Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
+      Notifications__SendGrid__IsEnabled: ${SENDGRID_ENABLED:-false}
+      Notifications__SendGrid__ApiKey: ${SENDGRID_API_KEY:-}
+      Notifications__SendGrid__FromEmail: ${SENDGRID_FROM_EMAIL:-}
+      Notifications__SendGrid__FromName: ${SENDGRID_FROM_NAME:-Cabinet Avocat LegalRO}
     ports:
       - "8080:8080"
     volumes:

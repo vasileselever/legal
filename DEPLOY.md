@@ -148,6 +148,56 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
+---
+
+## 5. Email Notifications Setup
+
+Emails are sent from the **Consultations ? Edit** modal (reminders, confirmations, etc.).
+On the server, email is **disabled by default** — you must configure either SMTP or SendGrid in `.env`.
+
+### Option A — SMTP (Gmail recommended)
+
+1. Enable 2FA on your Google account ? generate an **App Password** at https://myaccount.google.com/apppasswords
+
+2. Edit `/opt/legalro/.env`:
+```env
+SMTP_ENABLED=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your@gmail.com
+SMTP_PASSWORD=your-16-char-app-password
+FIRM_EMAIL=your@gmail.com
+FIRM_NAME=Cabinet Avocat LegalRO
+```
+
+3. Apply:
+```bash
+docker compose up -d app
+```
+
+4. Verify in logs:
+```bash
+docker compose logs app | grep -i "smtp\|email"
+# Success: [SMTP] Email sent to ...
+# Failure: [SMTP] Failed to send email ...
+```
+
+### Option B — SendGrid (better deliverability)
+
+```env
+SENDGRID_ENABLED=true
+SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxx
+SENDGRID_FROM_EMAIL=contact@yourdomain.ro
+SENDGRID_FROM_NAME=Cabinet Avocat LegalRO
+FIRM_EMAIL=contact@yourdomain.ro
+FIRM_NAME=Cabinet Avocat LegalRO
+```
+
+> **Note:** If both `SMTP_ENABLED=true` and `SENDGRID_ENABLED=true`, SMTP takes priority.
+> If both are `false`, emails are only logged (no actual sending).
+
+---
+
 ### Database Backup
 
 ```bash
