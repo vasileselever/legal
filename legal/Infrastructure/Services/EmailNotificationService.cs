@@ -70,6 +70,7 @@ public class EmailNotificationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "[SMTP] Failed to send email to {Email}", toEmail);
+            throw;
         }
     }
 
@@ -88,6 +89,7 @@ public class EmailNotificationService
             {
                 var body = await response.Body.ReadAsStringAsync(ct);
                 _logger.LogError("[SendGrid] Error {Status}: {Body}", response.StatusCode, body);
+                throw new InvalidOperationException($"SendGrid returned {response.StatusCode}: {body}");
             }
             else
             {
@@ -97,6 +99,7 @@ public class EmailNotificationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "[SendGrid] Failed to send email to {Email}", toEmail);
+            throw;
         }
     }
 

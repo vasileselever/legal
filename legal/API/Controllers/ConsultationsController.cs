@@ -590,6 +590,10 @@ public class ConsultationsController : ControllerBase
             await _context.SaveChangesAsync();
 
             // Send notification email to the lead if requested
+            _logger.LogInformation(
+                "UpdateConsultation: SendNotification={SendNotification} LeadEmail={LeadEmail}",
+                dto.SendNotification, consultation.Lead?.Email ?? "(null)");
+
             if (dto.SendNotification && !string.IsNullOrWhiteSpace(consultation.Lead?.Email))
             {
                 try
