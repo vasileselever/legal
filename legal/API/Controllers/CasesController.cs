@@ -94,6 +94,7 @@ public class CasesController : ControllerBase
                 Title = c.Title,
                 Status = c.Status,
                 PracticeArea = c.PracticeArea,
+                ClientId = c.ClientId,
                 ClientName = c.Client.Name,
                 ResponsibleLawyerName = c.ResponsibleLawyer.FullName,
                 OpeningDate = c.OpeningDate,

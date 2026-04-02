@@ -190,7 +190,7 @@ export function LegalResearchPage() {
           <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f0f0f0' }}>
             <h3 style={{ margin: 0, fontSize: '0.92rem', color: '#1a237e', fontWeight: 700 }}>Intrebare juridica</h3>
           </div>
-          <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+          <div className="lro-page-body" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
             <textarea
               value={query}
               onChange={e => setQuery(e.target.value)}
@@ -301,7 +301,7 @@ export function LegalResearchPage() {
                     </div>
 
                     {/* Answer */}
-                    <div style={{ padding: '1.25rem 1.5rem' }}>
+                    <div className="lro-page-body" style={{ padding: '1.25rem 1.5rem' }}>
                       <MarkdownAnswer text={result.answer} />
                     </div>
                   </Card>

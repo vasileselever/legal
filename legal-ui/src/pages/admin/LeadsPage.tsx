@@ -67,9 +67,9 @@ export function LeadsPage() {
         }
       />
       {error && <ErrorBanner message={error} onRetry={load} />}
-      <div style={{ padding: '1.25rem 1.5rem' }}>
+      <div className="lro-page-body" style={{ padding: '1.25rem 1.5rem' }}>
         <Card>
-          <div style={{ padding: '1rem', borderBottom: '1px solid #f0f0f0', display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="lro-filterbar" style={{ padding: '1rem', borderBottom: '1px solid #f0f0f0', display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <input placeholder="?? Cauta dupa nume, email..." value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ ...si, width: '240px' }} />
             <select value={statusFilter ?? ''} onChange={e => { setStatus(e.target.value ? Number(e.target.value) : undefined); setPage(1); }} style={si}>
@@ -94,7 +94,7 @@ export function LeadsPage() {
               <div style={{ fontSize: '3rem' }}>??</div><p>Nu exista lead-uri.</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.87rem' }}>
                 <thead><tr style={{ background: '#f8f9fa' }}>
                   {['Nume', 'Contact', 'Domeniu', 'Status', 'Score', 'Urgenta', 'Avocat', 'Data'].map(h =>

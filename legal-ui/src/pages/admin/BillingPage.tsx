@@ -14,9 +14,9 @@ import {
   INVOICE_STATUS, INVOICE_STATUS_COLORS,
   CURRENCY_LABELS, PAYMENT_METHODS, TRUST_TX_TYPES,
   type TimeEntryDto, type ExpenseDto, type InvoiceListItemDto,
-  type InvoiceDto, type TrustAccountDto, type TrustTransactionDto,
+  type TrustAccountDto, type TrustTransactionDto,
   type BillingRateDto, type BillingSummaryDto, type LawyerProductivityDto,
-  type ArAgingDto, type PaymentDto,
+  type ArAgingDto, type PaymentDto, type CaseItem,
 } from '../../api/billingService';
 
 // -- Helpers ----------------------------------------------------------
@@ -66,6 +66,9 @@ const modalStyle: React.CSSProperties = {
   background: '#fff', borderRadius: '12px', padding: '1.5rem', width: '90%', maxWidth: '560px',
   maxHeight: '85vh', overflow: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
 };
+// Mobile CSS classes applied alongside these styles:
+// overlay element → className="lro-overlay"
+// modal element   → className="lro-modal"
 
 // =====================================================================
 //  MAIN BILLING PAGE
@@ -79,7 +82,7 @@ export default function BillingPage() {
       <PageHeader title="Facturare & Management Financiar" subtitle="Pontaj, facturi, cheltuieli, conturi client, rapoarte" />
 
       {/* Tab bar */}
-      <div style={{ display: 'flex', gap: '0.25rem', padding: '1rem 1.5rem 0', flexWrap: 'wrap' }}>
+      <div className="lro-tabbar" style={{ display: 'flex', gap: '0.25rem', padding: '1rem 1.5rem 0', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             padding: '0.5rem 1rem', borderRadius: '8px 8px 0 0', fontSize: '0.85rem', fontWeight: 600,
@@ -91,7 +94,7 @@ export default function BillingPage() {
         ))}
       </div>
 
-      <div style={{ padding: '0 1.5rem 2rem' }}>
+      <div className="lro-page-body" style={{ padding: '0 1.5rem 2rem' }}>
         {tab === 'dashboard' && <DashboardTab />}
         {tab === 'time'      && <TimeEntriesTab />}
         {tab === 'expenses'  && <ExpensesTab />}
@@ -216,7 +219,7 @@ function TimeEntriesTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga pontaj</button>
         {selected.size > 0 && (
           <button style={{ ...btnOutline, color: '#2e7d32', borderColor: '#2e7d32' }} onClick={handleApprove}>
@@ -230,7 +233,7 @@ function TimeEntriesTab() {
         <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>Niciun pontaj gasit</Card>
       ) : (
         <Card>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
@@ -301,7 +304,7 @@ function ExpensesTab() {
         <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>Nicio cheltuiala gasita</Card>
       ) : (
         <Card style={{ marginTop: '1rem' }}>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
@@ -358,7 +361,7 @@ function InvoicesTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Creaza factura</button>
       </div>
 
@@ -367,7 +370,7 @@ function InvoicesTab() {
         <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>Niciun factura gasita</Card>
       ) : (
         <Card>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
@@ -425,7 +428,7 @@ function PaymentsTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga plata</button>
       </div>
 
@@ -434,7 +437,7 @@ function PaymentsTab() {
         <Card style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>Niciun plata gasita</Card>
       ) : (
         <Card>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
@@ -518,7 +521,7 @@ function TrustAccountsTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga cont client</button>
       </div>
 
@@ -581,7 +584,7 @@ function TrustAccountsTab() {
                   {txLoading ? <div style={{ padding: '1rem', textAlign: 'center' }}><Spinner /></div> : transactions.length === 0 ? (
                     <div style={{ padding: '1.5rem', textAlign: 'center', color: '#aaa', fontSize: '0.85rem' }}>Nicio tranzactie</div>
                   ) : (
-                    <div style={{ overflowX: 'auto' }}>
+                    <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                           <tr style={{ background: '#f0f0f0' }}>
@@ -696,8 +699,8 @@ function CreateTrustAccountModal({ onClose, onCreated }: { onClose: () => void, 
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga cont client (trust)</h2>
           <button onClick={onClose}
@@ -799,7 +802,7 @@ function RatesTab() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga tarif</button>
         <span style={{ fontSize: '0.78rem', color: '#888', marginLeft: '0.5rem' }}>
           Tarifele se aplica in ordine de prioritate: dosar &gt; client &gt; avocat &gt; firma
@@ -817,7 +820,7 @@ function RatesTab() {
         </Card>
       ) : (
         <Card>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
@@ -969,7 +972,7 @@ function ReportsTab() {
                 Niciun pontaj inregistrat in perioada selectata.
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8f9fa' }}>
@@ -1162,8 +1165,8 @@ function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void, onC
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga pontaj nou</h2>
           <button onClick={onClose}
@@ -1290,27 +1293,45 @@ function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void, onC
 // =====================================================================
 
 function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
-  const [form, setForm] = useState<Partial<ExpenseDto>>({});
+  const [form, setForm] = useState({
+    caseId: '', expenseDate: '', category: 0, description: '',
+    amount: 0, currency: 1, markupPercent: 0, isBillable: true,
+    vendor: '', status: 1,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [leads, setLeads] = useState<LeadItem[]>([]);
-  const [leadsLoading, setLeadsLoading] = useState(false);
+  const [cases, setCases] = useState<CaseItem[]>([]);
+  const [casesLoading, setCasesLoading] = useState(false);
 
-  const loadLeads = useCallback(async () => {
-    setLeadsLoading(true);
+  const loadCases = useCallback(async () => {
+    setCasesLoading(true);
     try {
-      const res = await leadService.getLeads({ page: 1, pageSize: 999 });
-      setLeads(res.data);
+      const res = await billingService.getCases();
+      setCases(res);
     } catch (e: any) { setError(e.message); }
-    finally { setLeadsLoading(false); }
+    finally { setCasesLoading(false); }
   }, []);
 
-  useEffect(() => { loadLeads(); }, [loadLeads]);
+  useEffect(() => { loadCases(); }, [loadCases]);
 
   const handleSubmit = async () => {
+    if (!form.caseId) { setError('Selectati un dosar'); return; }
+    if (!form.expenseDate) { setError('Introduceti data cheltuielii'); return; }
+    if (!form.category) { setError('Selectati categoria'); return; }
+    if (!form.amount || form.amount <= 0) { setError('Introduceti o suma valida'); return; }
     setLoading(true); setError('');
     try {
-      await billingService.createExpense(form as ExpenseDto);
+      await billingService.createExpense({
+        caseId: form.caseId,
+        expenseDate: form.expenseDate,
+        category: form.category,
+        description: form.description || '',
+        amount: form.amount,
+        currency: form.currency,
+        markupPercent: form.markupPercent,
+        isBillable: form.isBillable,
+        vendor: form.vendor || undefined,
+      });
       onCreated();
       onClose();
     } catch (e: any) { setError(e.message); }
@@ -1318,8 +1339,8 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga cheltuiala noua</h2>
           <button
@@ -1344,7 +1365,7 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
 
           <div>
             <label style={labelStyle}>Dosar *</label>
-            {leadsLoading ? (
+            {casesLoading ? (
               <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca dosarele...</div>
             ) : (
               <select
@@ -1353,9 +1374,9 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
                 onChange={e => setForm({ ...form, caseId: e.target.value })}
               >
                 <option value="">— Selecteaza dosarul —</option>
-                {leads.map(l => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}{l.phone ? ` · ${l.phone}` : ''}{l.email ? ` · ${l.email}` : ''}
+                {cases.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.caseNumber} · {c.title}{c.clientName ? ` · ${c.clientName}` : ''}
                   </option>
                 ))}
               </select>
@@ -1433,103 +1454,310 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
 // =====================================================================
 
 function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
-  const [form, setForm] = useState<Partial<InvoiceDto>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [leads, setLeads] = useState<LeadItem[]>([]);
-  const [leadsLoading, setLeadsLoading] = useState(false);
+  // ── form state ──────────────────────────────────────────────────────
+  const [clientId,     setClientId]     = useState('');
+  const [caseId,       setCaseId]       = useState('');
+  const [dueDate,      setDueDate]      = useState('');
+  const [currency,     setCurrency]     = useState(1);
+  const [vatPercent,   setVatPercent]   = useState(19);
+  const [periodStart,  setPeriodStart]  = useState('');
+  const [periodEnd,    setPeriodEnd]    = useState('');
+  const [notes,        setNotes]        = useState('');
 
-  const loadLeads = useCallback(async () => {
-    setLeadsLoading(true);
-    try {
-      const res = await leadService.getLeads({ page: 1, pageSize: 999 });
-      setLeads(res.data);
-    } catch (e: any) { setError(e.message); }
-    finally { setLeadsLoading(false); }
+  // multi-select IDs
+  const [selectedExpenses,   setSelectedExpenses]   = useState<string[]>([]);
+  const [selectedTimeEntries,setSelectedTimeEntries]= useState<string[]>([]);
+
+  // manual line items
+  const [manualLines, setManualLines] = useState<{ description: string; quantity: number; unitPrice: number; lineType: string }[]>([]);
+
+  // ── data ────────────────────────────────────────────────────────────
+  const [clients,       setClients]       = useState<{ id: string; name: string }[]>([]);
+  const [cases,         setCases]         = useState<CaseItem[]>([]);
+  const [expenses,      setExpenses]      = useState<ExpenseDto[]>([]);
+  const [timeEntries,   setTimeEntries]   = useState<TimeEntryDto[]>([]);
+  const [dataLoading,   setDataLoading]   = useState(true);
+
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+
+  // ── load data on open ───────────────────────────────────────────────
+  useEffect(() => {
+    Promise.all([
+      billingService.getClients(),
+      billingService.getCases(),
+      billingService.getExpenses({ pageSize: 500, status: 2 }),
+      billingService.getTimeEntries({ pageSize: 500, status: 3 }),
+    ]).then(([cls, c, exp, te]) => {
+      setClients(cls);
+      setCases(c);
+      setExpenses(exp.data.filter((e: ExpenseDto) => e.isBillable));
+      setTimeEntries(te.data.filter((t: TimeEntryDto) => t.isBillable));
+    }).catch((e: any) => setError(e.message))
+      .finally(() => setDataLoading(false));
   }, []);
 
-  useEffect(() => { loadLeads(); }, [loadLeads]);
+  // ── filter cases/expenses/time by selected client ──────────────────
+  const filteredCases = clientId
+    ? cases.filter(c => c.clientId === clientId)
+    : cases;
 
+  const filteredExpenses = caseId
+    ? expenses.filter(e => e.caseId === caseId)
+    : expenses;
+
+  const filteredTimeEntries = caseId
+    ? timeEntries.filter(t => t.caseId === caseId)
+    : timeEntries;
+
+  // ── totals preview ──────────────────────────────────────────────────
+  const expenseTotal    = filteredExpenses.filter(e => selectedExpenses.includes(e.id)).reduce((s, e) => s + e.amount, 0);
+  const timeTotal       = filteredTimeEntries.filter(t => selectedTimeEntries.includes(t.id)).reduce((s, t) => s + t.totalAmount, 0);
+  const manualTotal     = manualLines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+  const subTotal        = expenseTotal + timeTotal + manualTotal;
+  const vatAmount       = Math.round(subTotal * vatPercent) / 100;
+  const total           = subTotal + vatAmount;
+
+  // ── toggle helpers ──────────────────────────────────────────────────
+  const toggleExpense = (id: string) =>
+    setSelectedExpenses(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const toggleTimeEntry = (id: string) =>
+    setSelectedTimeEntries(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+
+  const addManualLine = () =>
+    setManualLines(p => [...p, { description: '', quantity: 1, unitPrice: 0, lineType: 'FlatFee' }]);
+  const removeManualLine = (i: number) =>
+    setManualLines(p => p.filter((_, idx) => idx !== i));
+  const patchManualLine = (i: number, patch: Partial<typeof manualLines[0]>) =>
+    setManualLines(p => p.map((l, idx) => idx === i ? { ...l, ...patch } : l));
+
+  // ── submit ──────────────────────────────────────────────────────────
   const handleSubmit = async () => {
+    if (!clientId)                     { setError('Selectati clientul.');            return; }
+    if (!dueDate)                      { setError('Introduceti data scadenta.');     return; }
+    const hasLines = selectedExpenses.length > 0 || selectedTimeEntries.length > 0 || manualLines.length > 0;
+    if (!hasLines)                     { setError('Adaugati cel putin o linie (cheltuiala, pontaj sau linie manuala).'); return; }
+    const invalidManual = manualLines.find(l => !l.description || l.unitPrice <= 0);
+    if (invalidManual)                 { setError('Completati descrierea si pretul pentru toate liniile manuale.'); return; }
+
     setLoading(true); setError('');
     try {
-      await billingService.createInvoice(form as InvoiceDto);
+      await billingService.createInvoice({
+        clientId,
+        caseId:       caseId || undefined,
+        dueDate,
+        currency,
+        vatPercent,
+        periodStart:  periodStart || undefined,
+        periodEnd:    periodEnd   || undefined,
+        notes:        notes       || undefined,
+        expenseIds:   selectedExpenses.length   > 0 ? selectedExpenses   : undefined,
+        timeEntryIds: selectedTimeEntries.length > 0 ? selectedTimeEntries : undefined,
+        manualLineItems: manualLines.length > 0 ? manualLines.map(l => ({
+          description: l.description,
+          quantity:    l.quantity,
+          unitPrice:   l.unitPrice,
+          lineType:    l.lineType,
+        })) : undefined,
+      });
       onCreated();
       onClose();
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
   };
 
+  const sectionTitle: React.CSSProperties = {
+    fontSize: '0.78rem', fontWeight: 700, color: '#1a237e',
+    textTransform: 'uppercase', letterSpacing: '0.05em',
+    margin: '1.25rem 0 0.5rem', borderBottom: '1px solid #e8eaf6', paddingBottom: '0.35rem',
+  };
+  const checkRow: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: '0.6rem',
+    padding: '0.45rem 0.6rem', borderRadius: '6px', cursor: 'pointer',
+    fontSize: '0.85rem', color: '#333',
+  };
+
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={{ ...modalStyle, maxWidth: 760, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Creaza factura noua</h2>
-          <button
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
-            title="Inchide"
-          >
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1 }}>
             ✕
           </button>
         </div>
 
-        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div style={{ color: '#f44336', fontSize: '0.88rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #ffcdd2' }}>{error}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-          <div>
-            <label style={labelStyle}>Data emiterii *</label>
-            <input type="date" style={inputStyle}
-              value={form.invoiceDate?.toString().substring(0, 10) || ''}
-              onChange={e => setForm({ ...form, invoiceDate: e.target.value })}
-            />
-          </div>
+        {dataLoading ? <div style={{ textAlign: 'center', padding: '2rem' }}><Spinner /></div> : <>
 
-          <div>
-            <label style={labelStyle}>Data scadenta *</label>
-            <input type="date" style={inputStyle}
-              value={form.dueDate?.toString().substring(0, 10) || ''}
-              onChange={e => setForm({ ...form, dueDate: e.target.value })}
-            />
-          </div>
+          {/* ── Section 1: Header fields ── */}
+          <div style={sectionTitle}>Date factura</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.875rem' }}>
 
-          <div>
-            <label style={labelStyle}>Dosar *</label>
-            {leadsLoading ? (
-              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca dosarele...</div>
-            ) : (
-              <select
-                style={selectStyle}
-                value={form.caseId}
-                onChange={e => setForm({ ...form, caseId: e.target.value })}
-              >
-                <option value="">— Selecteaza dosarul —</option>
-                {leads.map(l => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}{l.phone ? ` · ${l.phone}` : ''}{l.email ? ` · ${l.email}` : ''}
-                  </option>
-                ))}
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Client *</label>
+              <select style={selectStyle} value={clientId} onChange={e => { setClientId(e.target.value); setCaseId(''); setSelectedExpenses([]); setSelectedTimeEntries([]); }}>
+                <option value="">— Selecteaza clientul —</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-            )}
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Dosar (optional)</label>
+              <select style={selectStyle} value={caseId} onChange={e => { setCaseId(e.target.value); setSelectedExpenses([]); setSelectedTimeEntries([]); }}>
+                <option value="">— Toate dosarele clientului —</option>
+                {filteredCases.map(c => <option key={c.id} value={c.id}>{c.caseNumber} · {c.title}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Data scadenta *</label>
+              <input type="date" style={inputStyle} value={dueDate} onChange={e => setDueDate(e.target.value)} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Moneda</label>
+              <select style={selectStyle} value={currency} onChange={e => setCurrency(+e.target.value)}>
+                {Object.entries(CURRENCY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>TVA %</label>
+              <input type="number" min="0" max="100" step="1" style={inputStyle}
+                value={vatPercent} onChange={e => setVatPercent(+e.target.value)} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Perioada de la</label>
+              <input type="date" style={inputStyle} value={periodStart} onChange={e => setPeriodStart(e.target.value)} />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Perioada pana la</label>
+              <input type="date" style={inputStyle} value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Notite</label>
+              <textarea style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }}
+                value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notite optionale pe factura..." />
+            </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Notite</label>
-            <textarea style={{ ...inputStyle, minHeight: '120px' }}
-              value={form.notes || ''}
-              onChange={e => setForm({ ...form, notes: e.target.value })}
-            />
-          </div>
-        </div>
+          {/* ── Section 2: Cheltuieli ── */}
+          <div style={sectionTitle}>Cheltuieli facturabile ({filteredExpenses.length})</div>
+          {filteredExpenses.length === 0 ? (
+            <div style={{ fontSize: '0.82rem', color: '#aaa', padding: '0.5rem 0' }}>
+              Nu exista cheltuieli aprobate{caseId ? ' pentru dosarul selectat' : ''}. Aprobati cheltuielile din tab-ul Cheltuieli.
+            </div>
+          ) : (
+            <div style={{ border: '1px solid #e8eaf6', borderRadius: '8px', overflow: 'hidden' }}>
+              {filteredExpenses.map((exp, idx) => {
+                const checked = selectedExpenses.includes(exp.id);
+                return (
+                  <div key={exp.id}
+                    onClick={() => toggleExpense(exp.id)}
+                    style={{ ...checkRow, background: checked ? '#f0f4ff' : idx % 2 === 0 ? '#fafafa' : 'white', borderBottom: idx < filteredExpenses.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                    <input type="checkbox" checked={checked} onChange={() => toggleExpense(exp.id)} onClick={e => e.stopPropagation()} />
+                    <span style={{ flex: 1 }}>
+                      <strong>{EXPENSE_CATEGORIES.find(c => c.value === exp.category)?.label ?? exp.category}</strong>
+                      {exp.description ? ` — ${exp.description}` : ''}
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: '#666', whiteSpace: 'nowrap' }}>
+                      {fmtDate(exp.expenseDate)}
+                    </span>
+                    <span style={{ fontWeight: 700, color: '#1a237e', whiteSpace: 'nowrap', minWidth: 80, textAlign: 'right' }}>
+                      {fmtMoney(exp.amount, exp.currency)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
+          {/* ── Section 3: Pontaj ── */}
+          <div style={sectionTitle}>Pontaj facturat ({filteredTimeEntries.length})</div>
+          {filteredTimeEntries.length === 0 ? (
+            <div style={{ fontSize: '0.82rem', color: '#aaa', padding: '0.5rem 0' }}>
+              Nu exista inregistrari de pontaj aprobate{caseId ? ' pentru dosarul selectat' : ''}.
+            </div>
+          ) : (
+            <div style={{ border: '1px solid #e8eaf6', borderRadius: '8px', overflow: 'hidden' }}>
+              {filteredTimeEntries.map((te, idx) => {
+                const checked = selectedTimeEntries.includes(te.id);
+                return (
+                  <div key={te.id}
+                    onClick={() => toggleTimeEntry(te.id)}
+                    style={{ ...checkRow, background: checked ? '#f0f4ff' : idx % 2 === 0 ? '#fafafa' : 'white', borderBottom: idx < filteredTimeEntries.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                    <input type="checkbox" checked={checked} onChange={() => toggleTimeEntry(te.id)} onClick={e => e.stopPropagation()} />
+                    <span style={{ flex: 1 }}>
+                      <strong>{fmtHours(te.durationHours)}</strong>
+                      {te.description ? ` — ${te.description}` : ''}
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: '#666', whiteSpace: 'nowrap' }}>
+                      {fmtDate(te.workDate)}
+                    </span>
+                    <span style={{ fontWeight: 700, color: '#1a237e', whiteSpace: 'nowrap', minWidth: 80, textAlign: 'right' }}>
+                      {fmtMoney(te.totalAmount, te.currency)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Section 4: Manual lines ── */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={sectionTitle}>Linii manuale</div>
+            <button style={{ ...btnOutline, padding: '0.25rem 0.75rem', fontSize: '0.8rem' }} onClick={addManualLine}>+ Adauga linie</button>
+          </div>
+          {manualLines.map((l, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 100px 100px 32px', gap: '0.5rem', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <input style={inputStyle} placeholder="Descriere *" value={l.description}
+                onChange={e => patchManualLine(i, { description: e.target.value })} />
+              <input type="number" style={inputStyle} placeholder="Cant." min="0.01" step="0.01" value={l.quantity}
+                onChange={e => patchManualLine(i, { quantity: parseFloat(e.target.value) || 0 })} />
+              <input type="number" style={inputStyle} placeholder="Pret unit." min="0" step="0.01" value={l.unitPrice}
+                onChange={e => patchManualLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} />
+              <select style={selectStyle} value={l.lineType} onChange={e => patchManualLine(i, { lineType: e.target.value })}>
+                <option value="FlatFee">Onorariu fix</option>
+                <option value="Discount">Discount</option>
+                <option value="Other">Altul</option>
+              </select>
+              <button onClick={() => removeManualLine(i)}
+                style={{ border: '1px solid #ffcdd2', borderRadius: '5px', background: '#fff5f5', color: '#c62828', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, padding: '0.3rem 0.4rem' }}>
+                ×
+              </button>
+            </div>
+          ))}
+
+          {/* ── Totals preview ── */}
+          {(selectedExpenses.length > 0 || selectedTimeEntries.length > 0 || manualLines.length > 0) && (
+            <div style={{ marginTop: '1rem', background: '#f8f9ff', border: '1px solid #e8eaf6', borderRadius: '8px', padding: '0.875rem 1rem', fontSize: '0.88rem' }}>
+              {expenseTotal > 0    && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>Cheltuieli</span><span>{fmtMoney(expenseTotal, currency)}</span></div>}
+              {timeTotal > 0       && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>Pontaj</span><span>{fmtMoney(timeTotal, currency)}</span></div>}
+              {manualTotal > 0     && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>Linii manuale</span><span>{fmtMoney(manualTotal, currency)}</span></div>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', borderTop: '1px solid #e0e0e0', paddingTop: '0.35rem' }}><span>Subtotal</span><span>{fmtMoney(subTotal, currency)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>TVA {vatPercent}%</span><span>{fmtMoney(vatAmount, currency)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '0.95rem', color: '#1a237e' }}><span>Total</span><span>{fmtMoney(total, currency)}</span></div>
+            </div>
+          )}
+
+        </>}
+
+        {/* Footer */}
         <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-          <button style={btnOutline} onClick={onClose} disabled={loading}>
-            Anuleaza
-          </button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
-            {loading ? '...' : 'Salveaza'}
+          <button style={btnOutline} onClick={onClose} disabled={loading}>Anuleaza</button>
+          <button style={btnStyle} onClick={handleSubmit} disabled={loading || dataLoading}>
+            {loading ? <Spinner size={18} /> : 'Creaza factura'}
           </button>
         </div>
+
       </div>
     </div>
   );
@@ -1599,8 +1827,8 @@ function CreateBillingRateModal({ onClose, onCreated }: { onClose: () => void, o
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga tarif nou</h2>
           <button onClick={onClose}
@@ -1698,8 +1926,8 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void, onCre
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Inregistreaza plata</h2>
           <button onClick={onClose}

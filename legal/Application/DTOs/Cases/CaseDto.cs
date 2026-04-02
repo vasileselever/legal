@@ -74,6 +74,7 @@ public class CaseListItem
     public string Title { get; set; } = string.Empty;
     public CaseStatus Status { get; set; }
     public PracticeArea PracticeArea { get; set; }
+    public Guid ClientId { get; set; }
     public string ClientName { get; set; } = string.Empty;
     public string ResponsibleLawyerName { get; set; } = string.Empty;
     public DateTime? NextDeadline { get; set; }

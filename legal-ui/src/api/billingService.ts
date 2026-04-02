@@ -157,6 +157,7 @@ export interface ArAgingDto {
 // Lightweight case item for dropdowns
 export interface CaseItem {
   id: string;
+  clientId: string;
   caseNumber: string;
   title: string;
   clientName: string;
@@ -184,6 +185,7 @@ export const billingService = {
     // CasesController returns PagedResponse<CaseListItem>
     return (data.data ?? data).map((c: any) => ({
       id: c.id,
+      clientId: c.clientId,
       caseNumber: c.caseNumber,
       title: c.title,
       clientName: c.clientName ?? '',
@@ -242,7 +244,11 @@ export const billingService = {
     await apiClient.post(`${B}/expenses/approve`, ids);
   },
 
-  // Invoices
+  // Clients
+  getClients: async (): Promise<{ id: string; name: string }[]> => {
+    const { data } = await apiClient.get('/v1/clients');
+    return (data as any[]).map(c => ({ id: c.id, name: c.name }));
+  },
   getInvoices: async (params?: Record<string, any>): Promise<PagedResponse<InvoiceListItemDto>> => {
     const { data } = await apiClient.get(`${B}/invoices`, { params });
     return data;

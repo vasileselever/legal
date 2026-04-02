@@ -62,3 +62,81 @@ samp {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Mobile-only responsive rules (@media only — desktop unchanged) ── */
+@media (max-width: 768px) {
+
+  /* Tables: horizontal scroll */
+  .lro-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Tab bars: scroll horizontally instead of wrapping */
+  .lro-tabbar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .lro-tabbar::-webkit-scrollbar { display: none; }
+  .lro-tabbar > button { flex-shrink: 0 !important; white-space: nowrap !important; }
+
+  /* Filter/action rows: scroll horizontally, no wrap */
+  .lro-filterbar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+  .lro-filterbar::-webkit-scrollbar { display: none; }
+  .lro-filterbar > * { flex-shrink: 0 !important; }
+
+  /* Page body: tighter horizontal padding */
+  .lro-page-body {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Toolbars: stack buttons vertically, full width */
+  .lro-toolbar {
+    flex-direction: column !important;
+  }
+  .lro-toolbar > button,
+  .lro-toolbar > a {
+    width: 100% !important;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  /* Grid 2-col → 1-col on mobile */
+  .lro-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modals: full screen */
+  .lro-overlay { align-items: flex-start !important; }
+  .lro-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Action button rows inside cards: wrap on mobile */
+  .lro-action-row {
+    flex-wrap: wrap !important;
+  }
+  .lro-action-row > button { flex-shrink: 0; }
+
+  /* Stats row: 2-col on mobile instead of 3+ */
+  .lro-stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+

@@ -232,7 +232,7 @@ export function UsersPage() {
         </div>
       )}
 
-      <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div className="lro-page-body" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {inviteSuccess && (
           <div style={{
             background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '8px',
@@ -256,7 +256,7 @@ export function UsersPage() {
                 &#x26A0; {inviteError}
               </div>
             )}
-            <form onSubmit={handleInvite} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+            <form onSubmit={handleInvite} className="lro-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.3rem', color: '#333' }}>Prenume *</label>
                 <input style={inp} required placeholder="Ion" value={invite.firstName}
@@ -297,7 +297,7 @@ export function UsersPage() {
 
         {/* Toolbar */}
         <Card>
-          <div style={{
+          <div className="lro-filterbar" style={{
             padding: '0.75rem 1rem', borderBottom: '1px solid #f0f0f0',
             display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center',
           }}>
@@ -335,7 +335,7 @@ export function UsersPage() {
               <p>Nu exist&#x103; utilizatori{search ? ' care corespund c&#x103;ut&#x103;rii' : ''}.</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ background: '#f8f9fa' }}>
@@ -539,8 +539,8 @@ function EditUserModal({ user, isCurrentUser, onClose, onSaved, onError }: {
   };
 
   return (
-    <div style={modalOverlay} onClick={onClose}>
-      <div style={modalBox} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={modalOverlay} onClick={onClose}>
+      <div className="lro-modal" style={modalBox} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h3 style={{ margin: 0, color: '#1a237e', fontSize: '1.1rem' }}>
             &#x270F;&#xFE0F; Editeaz&#x103; Utilizator
@@ -652,8 +652,8 @@ function StatsModal({ user, onClose }: { user: UserInfo; onClose: () => void }) 
     };
 
     return (
-        <div style={modalOverlay} onClick={onClose}>
-            <div style={modalBox} onClick={e => e.stopPropagation()}>
+        <div className="lro-overlay" style={modalOverlay} onClick={onClose}>
+            <div className="lro-modal" style={modalBox} onClick={e => e.stopPropagation()}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                     <h3 style={{ margin: 0, color: '#1a237e', fontSize: '1.1rem' }}>
                         &#x1F4CA; Statistici &mdash; {user.firstName} {user.lastName}
@@ -756,8 +756,8 @@ function ResetPasswordModal({ user, onClose, onSuccess, onError }: {
   };
 
   return (
-    <div style={modalOverlay} onClick={onClose}>
-      <div style={modalBox} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={modalOverlay} onClick={onClose}>
+      <div className="lro-modal" style={modalBox} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h3 style={{ margin: 0, color: '#7b1fa2', fontSize: '1.1rem' }}>
             &#x1F511; Resetare Parol&#x103;
@@ -853,8 +853,8 @@ function DeleteUserModal({ user, onClose, onDeleted, onError }: {
   };
 
   return (
-    <div style={modalOverlay} onClick={onClose}>
-      <div style={modalBox} onClick={e => e.stopPropagation()}>
+    <div className="lro-overlay" style={modalOverlay} onClick={onClose}>
+      <div className="lro-modal" style={modalBox} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h3 style={{ margin: 0, color: '#c62828', fontSize: '1.1rem' }}>
             &#x1F5D1;&#xFE0F; &#x218;terge Utilizator

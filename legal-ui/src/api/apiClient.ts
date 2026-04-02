@@ -56,7 +56,13 @@ apiClient.interceptors.response.use(
     } else if (error.code === 'ECONNABORTED') {
       friendlyMessage = 'Cererea a expirat (timeout). Verificati conexiunea si starea serverului.';
     } else {
-      friendlyMessage = error.response?.data?.message || error.message || 'Eroare necunoscuta.';
+      const d = error.response?.data;
+      if (d?.errors) {
+        // ASP.NET ValidationProblemDetails: { errors: { Field: ["msg"] } }
+        friendlyMessage = Object.values(d.errors as Record<string, string[]>).flat().join('; ');
+      } else {
+        friendlyMessage = d?.message || d?.title || error.message || 'Eroare necunoscuta.';
+      }
     }
 
     error.message = friendlyMessage;

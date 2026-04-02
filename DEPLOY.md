@@ -240,3 +240,50 @@ docker volume ls
 - [ ] Regular backups configured
 - [ ] Domain DNS pointing to server
 - [ ] Remove port 1433 from docker-compose.yml `db.ports` if external DB access not needed
+
+---
+
+## 9. Caddy Configuration
+
+Caddyfile is generated automatically. To customize:
+
+```bash
+# Create or edit Caddyfile
+nano Caddyfile
+```
+
+Example content:
+
+```
+DOMAIN {
+    reverse_proxy app:8080
+
+    encode gzip zstd
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+
+    log {
+        output file /data/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+```
+
+Regenerate Caddy config:
+
+```bash
+# From PowerShell or CLI with .NET SDK
+[System.IO.File]::WriteAllText("Caddyfile", "{`$DOMAIN} {`n    reverse_proxy app:8080`n`n    encode gzip zstd`n`n    header {`n        X-Content-Type-Options nosniff`n        X-Frame-Options DENY`n        Referrer-Policy strict-origin-when-cross-origin`n        X-XSS-Protection `"1; mode=block`"`n        Strict-Transport-Security `"max-age=31536000; includeSubDomains`"`n        -Server`n    }`n`n    log {`n        output file /data/access.log {`n            roll_size 10mb`n            roll_keep 5`n        }`n    }`n}`n", [System.Text.UTF8Encoding]::new($false))
+
+git add Caddyfile
+git commit -m "fix: remove leading whitespace from Caddyfile site address"
+git push

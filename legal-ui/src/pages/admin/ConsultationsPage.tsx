@@ -148,10 +148,10 @@ export function ConsultationsPage() {
       />
       {error && <ErrorBanner message={error} onRetry={load} />}
 
-      <div style={{ padding:'1.25rem 1.5rem' }}>
+      <div className="lro-page-body" style={{ padding:'1.25rem 1.5rem' }}>
 
         {/* Stats row */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'1rem', marginBottom:'1.5rem' }}>
+        <div className="lro-stats-row" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'1rem', marginBottom:'1.5rem' }}>
           {[
             { label:'Total',      value:items.length, color:'#1a237e', icon:'calendar' },
             { label:'Confirmate', value:items.filter(c => c.status===2).length, color:'#2e7d32', icon:'confirm' },
@@ -168,7 +168,7 @@ export function ConsultationsPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ display:'flex', gap:'0.65rem', flexWrap:'wrap', marginBottom:'1.25rem', alignItems:'center' }}>
+        <div className="lro-filterbar" style={{ display:'flex', gap:'0.65rem', flexWrap:'wrap', marginBottom:'1.25rem', alignItems:'center' }}>
           {(['today','week','month','all'] as Range[]).map(r => (
             <button key={r} onClick={() => setRange(r)} style={btn(range===r)}>
               {r==='today'?'Azi':r==='week'?'Sapt.':r==='month'?'Luna':'Toate'}
@@ -243,7 +243,7 @@ export function ConsultationsPage() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display:'flex', gap:'0.4rem', flexWrap:'wrap', alignItems:'flex-start' }}>
+                  <div className="lro-action-row" style={{ display:'flex', gap:'0.4rem', flexWrap:'wrap', alignItems:'flex-start' }}>
                     {/* Edit button */}
                     {(c.status === 1 || c.status === 2) && (
                       <button

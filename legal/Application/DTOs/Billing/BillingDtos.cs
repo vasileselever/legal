@@ -95,7 +95,7 @@ public class CreateExpenseRequest
     [Required] public Guid CaseId { get; set; }
     [Required] public DateTime ExpenseDate { get; set; }
     [Required] public ExpenseCategory Category { get; set; }
-    [Required][MaxLength(1000)] public string Description { get; set; } = string.Empty;
+    [MaxLength(1000)] public string Description { get; set; } = string.Empty;
     [Required][Range(0.01, double.MaxValue)] public decimal Amount { get; set; }
     public Currency Currency { get; set; } = Currency.RON;
     [Range(0, 100)] public decimal MarkupPercent { get; set; }
@@ -108,7 +108,7 @@ public class UpdateExpenseRequest
 {
     [Required] public DateTime ExpenseDate { get; set; }
     [Required] public ExpenseCategory Category { get; set; }
-    [Required][MaxLength(1000)] public string Description { get; set; } = string.Empty;
+    [MaxLength(1000)] public string Description { get; set; } = string.Empty;
     [Required][Range(0.01, double.MaxValue)] public decimal Amount { get; set; }
     [Range(0, 100)] public decimal MarkupPercent { get; set; }
     public bool IsBillable { get; set; } = true;

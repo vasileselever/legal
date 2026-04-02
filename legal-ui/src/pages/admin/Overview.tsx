@@ -56,7 +56,7 @@ export function Overview() {
 
       {error && <ErrorBanner message={error} onRetry={load} />}
 
-      <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="lro-page-body" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Stats */}
         {loading && !stats ? <Spinner /> : stats && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '1rem' }}>
@@ -69,7 +69,7 @@ export function Overview() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="lro-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
           {/* Source breakdown */}
           {stats && Object.keys(stats.leadsBySource ?? {}).length > 0 && (
             <Card style={{ padding: '1.25rem' }}>
@@ -109,7 +109,7 @@ export function Overview() {
               Nicio consultatie programata in urmatoarele 7 zile
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ background: '#f8f9fa' }}>
