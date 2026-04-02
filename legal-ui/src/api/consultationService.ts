@@ -20,6 +20,7 @@ export interface CreateConsultationDto {
   leadId: string; lawyerId: string; scheduledAt: string;
   durationMinutes: number; type: number;
   location?: string; preparationNotes?: string;
+  sendNotification?: boolean;
 }
 
 export interface UpdateConsultationDto {
