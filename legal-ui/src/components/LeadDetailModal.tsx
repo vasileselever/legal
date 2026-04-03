@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { leadService } from '../api/leadService';
 import { authService } from '../api/authService';
-import { notificationService } from '../api/notificationService';
 import type { LeadDetailItem, ConversationItem } from '../api/leadService';
 import type { UserInfo } from '../api/authService';
 import { Badge } from './ui/Badge';
@@ -109,18 +108,8 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
         durationMinutes: consForm.durationMinutes,
         type: consForm.type,
         location: consForm.location || undefined,
+        sendNotification: notifyClientCons,
       });
-
-      // Send notification email if checkbox is checked
-      if (notifyClientCons && lead?.email) {
-        try {
-          await notificationService.testConsultationReminder({
-            to: lead.email,
-            name: lead.name,
-            scheduledAt: consForm.scheduledAt, // raw local datetime string from picker
-          });
-        } catch { /* non-fatal — consultation already saved */ }
-      }
 
       await handleStatusChange(4);
       setShowConsForm(false);
