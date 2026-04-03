@@ -72,13 +72,14 @@ export function ScheduleConsultationModal({ onClose, onCreated, prefillLeadId }:
     if (!validate()) return;
     setLoading(true);
     try {
-      await consultationService.create({
+      const payload = {
         ...form,
         scheduledAt: new Date(form.scheduledAt).toISOString(),
         location: form.location || undefined,
         preparationNotes: form.preparationNotes || undefined,
         sendNotification: notifyClient,
-      });
+      };
+      await consultationService.create(payload);
       onCreated();
     } catch (er: any) {
       setErrors(e => ({ ...e, general: er.response?.data?.message ?? er.message ?? 'Eroare la salvare' }));

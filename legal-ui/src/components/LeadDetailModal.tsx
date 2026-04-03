@@ -100,16 +100,17 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
 
   const handleScheduleConsultation = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      leadId,
+      lawyerId: consForm.lawyerId,
+      scheduledAt: new Date(consForm.scheduledAt).toISOString(),
+      durationMinutes: consForm.durationMinutes,
+      type: consForm.type,
+      location: consForm.location || undefined,
+      sendNotification: notifyClientCons,
+    };
     try {
-      await consultationService.create({
-        leadId,
-        lawyerId: consForm.lawyerId,
-        scheduledAt: new Date(consForm.scheduledAt).toISOString(),
-        durationMinutes: consForm.durationMinutes,
-        type: consForm.type,
-        location: consForm.location || undefined,
-        sendNotification: notifyClientCons,
-      });
+      await consultationService.create(payload);
 
       await handleStatusChange(4);
       setShowConsForm(false);
