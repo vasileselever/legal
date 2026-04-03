@@ -72,6 +72,7 @@ services:
       - "8080:8080"
     volumes:
       - app-logs:/app/logs
+      - app-uploads:/app/uploads
     healthcheck:
       test: curl -f http://localhost:8080/health || exit 1
       interval: 30s
@@ -103,5 +104,6 @@ services:
 volumes:
   sqldata:
   app-logs:
+  app-uploads:
   caddy-data:
   caddy-config:

@@ -53,7 +53,7 @@ git clone https://your-repo-url.git /opt/legalro
 cd /opt/legalro
 
 # Option B: rsync from local machine
-rsync -avz --exclude='node_modules' --exclude='bin' --exclude='obj' --exclude='.git' \
+rsync -avz --exclude='node_modules' --exclude='bin' --exclude='obj' --exclude='.git' --exclude='uploads' \
   C:/Users/vasileselever/Desktop/projects/Juridic/legal/ user@your-server:/opt/legalro/
 ```
 
@@ -195,6 +195,60 @@ FIRM_NAME=Cabinet Avocat LegalRO
 
 > **Note:** If both `SMTP_ENABLED=true` and `SENDGRID_ENABLED=true`, SMTP takes priority.
 > If both are `false`, emails are only logged (no actual sending).
+
+---
+
+## 6. Lead Document Attachments
+
+### How it works
+
+Files uploaded via the **?? Documente** tab in the Lead detail panel are stored in the
+`app-uploads` Docker named volume, which is mounted at `/app/uploads` inside the container.
+The path on disk is: `/app/uploads/leads/<leadId>/<uuid>_<filename>`.
+
+Because the volume is **persistent**, uploaded files survive:
+- `docker compose up -d --build` (code updates)
+- Container restarts / crashes
+- Server reboots
+
+### File size limit
+
+The API enforces a **20 MB per-file** limit. To increase it, change the `[RequestSizeLimit]`
+attribute in `LeadsController.cs` and set Kestrel's `MaxRequestBodySize` in `appsettings.json`:
+
+```json
+"Kestrel": {
+  "Limits": {
+    "MaxRequestBodySize": 52428800
+  }
+}
+```
+
+### Backup uploaded files
+
+```bash
+# Backup the uploads volume to a tar archive on the host
+docker run --rm \
+  -v legalro_app-uploads:/data:ro \
+  -v $(pwd):/backup \
+  alpine tar czf /backup/uploads-$(date +%Y%m%d).tar.gz -C /data .
+```
+
+### Restore uploaded files
+
+```bash
+# Restore from a tar archive (WARNING: overwrites existing files)
+docker run --rm \
+  -v legalro_app-uploads:/data \
+  -v $(pwd):/backup \
+  alpine sh -c "cd /data && tar xzf /backup/uploads-YYYYMMDD.tar.gz"
+```
+
+### List / inspect uploads inside the container
+
+```bash
+docker compose exec app find /app/uploads -type f | sort
+```
 
 ---
 

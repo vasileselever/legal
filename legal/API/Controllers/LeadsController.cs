@@ -22,16 +22,23 @@ public class LeadsController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogger<LeadsController> _logger;
     private readonly INotificationService _notifications;
+    private readonly IWebHostEnvironment _env;
 
     public LeadsController(
         ApplicationDbContext context,
         ILogger<LeadsController> logger,
-        INotificationService notifications)
+        INotificationService notifications,
+        IWebHostEnvironment env)
     {
         _context = context;
         _logger = logger;
         _notifications = notifications;
+        _env = env;
     }
+
+    // Absolute base directory for lead document uploads.
+    // Inside Docker this resolves to /app/uploads (the mounted volume).
+    private string UploadsRoot => Path.Combine(_env.ContentRootPath, "uploads");
 
     /// <summary>
     /// Get all leads for the firm with filtering and pagination
@@ -884,7 +891,7 @@ public class LeadsController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(new ApiResponse<LeadDocumentDto> { Success = false, Message = "No file provided" });
 
-        var uploadsDir = Path.Combine("uploads", "leads", id.ToString());
+        var uploadsDir = Path.Combine(UploadsRoot, "leads", id.ToString());
         Directory.CreateDirectory(uploadsDir);
 
         var safeFileName = Path.GetFileName(file.FileName);

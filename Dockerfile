@@ -50,6 +50,9 @@ COPY --from=backend-build /app/publish .
 # Copy React build output into wwwroot
 COPY --from=frontend-build /app/frontend/dist ./wwwroot/
 
+# Create uploads directory (will be overlaid by the Docker volume at runtime)
+RUN mkdir -p /app/uploads
+
 # Environment
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
