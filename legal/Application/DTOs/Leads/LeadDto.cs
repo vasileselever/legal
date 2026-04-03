@@ -308,6 +308,20 @@ public class ConflictCheckDto
 }
 
 /// <summary>
+/// DTO for a document attached to a lead
+/// </summary>
+public class LeadDocumentDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+    public string? FileType { get; set; }
+    public string? Description { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
 /// DTO for lead statistics
 /// </summary>
 public class LeadStatisticsDto

@@ -27,6 +27,16 @@ export interface ConversationItem {
   attachmentUrl?: string; isRead: boolean;
 }
 
+export interface LeadDocumentItem {
+  id: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  fileType?: string;
+  description?: string;
+  createdAt: string;
+}
+
 export interface CreateLeadDto {
   name: string; email: string; phone: string; source: number;
   practiceArea: number; description: string; urgency: number;
@@ -173,4 +183,29 @@ export const leadService = {
     if (!data.success) return [];
     return data.data as PriorLead[];
   },
+
+  getDocuments: async (leadId: string): Promise<LeadDocumentItem[]> => {
+    const { data } = await apiClient.get(`/leads/${leadId}/documents`);
+    if (!data.success) throw new Error(data.message);
+    return data.data as LeadDocumentItem[];
+  },
+
+  uploadDocument: async (leadId: string, file: File, description?: string): Promise<LeadDocumentItem> => {
+    const form = new FormData();
+    form.append('file', file);
+    if (description) form.append('description', description);
+    const { data } = await apiClient.post(`/leads/${leadId}/documents`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    if (!data.success) throw new Error(data.message);
+    return data.data as LeadDocumentItem;
+  },
+
+  deleteDocument: async (leadId: string, docId: string): Promise<void> => {
+    const { data } = await apiClient.delete(`/leads/${leadId}/documents/${docId}`);
+    if (!data.success) throw new Error(data.message);
+  },
+
+  getDocumentDownloadUrl: (leadId: string, docId: string): string =>
+    `/api/leads/${leadId}/documents/${docId}/download`,
 };

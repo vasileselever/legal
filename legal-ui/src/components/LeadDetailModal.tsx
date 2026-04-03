@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { leadService } from '../api/leadService';
 import { authService } from '../api/authService';
-import type { LeadDetailItem, ConversationItem } from '../api/leadService';
+import type { LeadDetailItem, ConversationItem, LeadDocumentItem } from '../api/leadService';
 import type { UserInfo } from '../api/authService';
 import { Badge } from './ui/Badge';
 import { Spinner } from './ui/Spinner';
@@ -43,11 +43,13 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
   const [convs, setConvs]               = useState<ConversationItem[]>([]);
   const [users, setUsers]               = useState<UserInfo[]>([]);
   const [loading, setLoading]           = useState(true);
-  const [tab, setTab]                   = useState<'info'|'messages'|'consultations'>('info');
+  const [tab, setTab]                   = useState<'info'|'messages'|'consultations'|'documents'>('info');
   const [msg, setMsg]                   = useState('');
   const [sendingMsg, setSendingMsg]     = useState(false);
   const [error, setError]               = useState('');
   const [showConsForm, setShowConsForm] = useState(false);
+  const [documents, setDocuments]       = useState<LeadDocumentItem[]>([]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [consForm, setConsForm]         = useState({ lawyerId: '', scheduledAt: '', durationMinutes: 30, type: 1, location: '' });
   const [notifyClientCons, setNotifyClientCons] = useState(true);
 
@@ -59,12 +61,13 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
   const load = async () => {
     setLoading(true);
     try {
-      const [l, c, u] = await Promise.all([
+      const [l, c, u, docs] = await Promise.all([
         leadService.getLead(leadId),
         leadService.getConversations(leadId),
         authService.getUsers(),
+        leadService.getDocuments(leadId),
       ]);
-      setLead(l); setConvs(c); setUsers(u);
+      setLead(l); setConvs(c); setUsers(u); setDocuments(docs);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
   };
@@ -175,7 +178,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '2px solid #e8eaf6', background: 'white' }}>
-          {(['info', 'messages', 'consultations'] as const).map(t => (
+          {(['info', 'messages', 'consultations', 'documents'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '0.75rem 1.25rem', border: 'none', cursor: 'pointer',
               background: tab === t ? 'white' : 'transparent',
@@ -183,7 +186,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
               color: tab === t ? '#1a237e' : '#888', fontWeight: tab === t ? 700 : 400,
               fontSize: '0.88rem', marginBottom: '-2px',
             }}>
-              {t === 'info' ? '📋 Informatii' : t === 'messages' ? '💬 Mesaje' : '📅 Consultatii'}
+              {t === 'info' ? '📋 Informatii' : t === 'messages' ? '💬 Mesaje' : t === 'consultations' ? '📅 Consultatii' : `📎 Documente${documents.length > 0 ? ` (${documents.length})` : ''}`}
             </button>
           ))}
         </div>
@@ -366,6 +369,84 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
                       </div>
                     </div>
                     <Badge label={CONSULTATION_STATUS_LABELS[c.status] ?? '-'} color={CONSULTATION_STATUS_COLORS[c.status] ?? '#999'} />
+                  </div>
+                ))
+              }
+            </div>
+          )}
+
+          {/* ── Documents tab ── */}
+          {tab === 'documents' && (
+            <div>
+              {/* Upload button */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.55rem 1.25rem', background: '#1a237e', color: 'white',
+                  borderRadius: '6px', cursor: uploadingDoc ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem', fontWeight: 600, opacity: uploadingDoc ? 0.6 : 1,
+                }}>
+                  {uploadingDoc ? '⏳ Se incarca...' : '📎 Adauga document'}
+                  <input type="file" style={{ display: 'none' }} disabled={uploadingDoc}
+                    onChange={async e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingDoc(true);
+                      try {
+                        const doc = await leadService.uploadDocument(leadId, file);
+                        setDocuments(d => [doc, ...d]);
+                      } catch (err: any) {
+                        setError(err.message ?? 'Upload failed');
+                      } finally {
+                        setUploadingDoc(false);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              {documents.length === 0
+                ? <div style={{ textAlign: 'center', color: '#aaa', padding: '2rem' }}>📭 Niciun document atasat</div>
+                : documents.map(doc => (
+                  <div key={doc.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'white', border: '1px solid #e8eaf6', borderRadius: '8px',
+                    padding: '0.75rem 1rem', marginBottom: '0.5rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                      <span style={{ fontSize: '1.4rem' }}>📄</span>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, color: '#1a237e', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {doc.fileName}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#888', marginTop: '0.1rem' }}>
+                          {(doc.fileSize / 1024).toFixed(1)} KB · {new Date(doc.createdAt).toLocaleDateString('ro-RO')}
+                          {doc.description && ` · ${doc.description}`}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                      <a
+                        href={leadService.getDocumentDownloadUrl(leadId, doc.id)}
+                        download={doc.fileName}
+                        style={{ padding: '0.35rem 0.75rem', background: '#e8f5e9', color: '#2e7d32', borderRadius: '5px', fontSize: '0.82rem', fontWeight: 600, textDecoration: 'none' }}
+                      >
+                        ⬇ Descarca
+                      </a>
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`Sterge ${doc.fileName}?`)) return;
+                          try {
+                            await leadService.deleteDocument(leadId, doc.id);
+                            setDocuments(d => d.filter(x => x.id !== doc.id));
+                          } catch (err: any) { setError(err.message ?? 'Delete failed'); }
+                        }}
+                        style={{ padding: '0.35rem 0.75rem', background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '5px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        🗑 Sterge
+                      </button>
+                    </div>
                   </div>
                 ))
               }

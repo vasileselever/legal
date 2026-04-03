@@ -838,4 +838,129 @@ public class LeadsController : ControllerBase
     }
 
     #endregion
+
+    #region Documents
+
+    /// <summary>
+    /// List all documents attached to a lead
+    /// </summary>
+    [HttpGet("{id}/documents")]
+    public async Task<ActionResult<ApiResponse<List<LeadDocumentDto>>>> GetDocuments(Guid id)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var lead = await _context.Leads.FirstOrDefaultAsync(l => l.Id == id && l.FirmId == firmId);
+        if (lead == null) return NotFound(new ApiResponse<List<LeadDocumentDto>> { Success = false, Message = "Lead not found" });
+
+        var docs = await _context.LeadDocuments
+            .Where(d => d.LeadId == id)
+            .OrderByDescending(d => d.CreatedAt)
+            .Select(d => new LeadDocumentDto
+            {
+                Id = d.Id,
+                FileName = d.FileName,
+                FilePath = d.FilePath,
+                FileSize = d.FileSize,
+                FileType = d.FileType,
+                Description = d.Description,
+                CreatedAt = d.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(new ApiResponse<List<LeadDocumentDto>> { Success = true, Data = docs });
+    }
+
+    /// <summary>
+    /// Upload a document and attach it to a lead
+    /// </summary>
+    [HttpPost("{id}/documents")]
+    [RequestSizeLimit(20 * 1024 * 1024)] // 20 MB
+    public async Task<ActionResult<ApiResponse<LeadDocumentDto>>> UploadDocument(
+        Guid id, IFormFile file, [FromForm] string? description = null)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var lead = await _context.Leads.FirstOrDefaultAsync(l => l.Id == id && l.FirmId == firmId);
+        if (lead == null) return NotFound(new ApiResponse<LeadDocumentDto> { Success = false, Message = "Lead not found" });
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new ApiResponse<LeadDocumentDto> { Success = false, Message = "No file provided" });
+
+        var uploadsDir = Path.Combine("uploads", "leads", id.ToString());
+        Directory.CreateDirectory(uploadsDir);
+
+        var safeFileName = Path.GetFileName(file.FileName);
+        var uniqueName = $"{Guid.NewGuid()}_{safeFileName}";
+        var filePath = Path.Combine(uploadsDir, uniqueName);
+
+        using (var stream = System.IO.File.Create(filePath))
+            await file.CopyToAsync(stream);
+
+        var doc = new LeadDocument
+        {
+            LeadId = id,
+            FileName = safeFileName,
+            FilePath = filePath,
+            FileSize = file.Length,
+            FileType = file.ContentType,
+            Description = description
+        };
+
+        _context.LeadDocuments.Add(doc);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Document uploaded for lead {LeadId}: {FileName}", id, safeFileName);
+
+        return Ok(new ApiResponse<LeadDocumentDto>
+        {
+            Success = true,
+            Data = new LeadDocumentDto
+            {
+                Id = doc.Id, FileName = doc.FileName, FilePath = doc.FilePath,
+                FileSize = doc.FileSize, FileType = doc.FileType,
+                Description = doc.Description, CreatedAt = doc.CreatedAt
+            }
+        });
+    }
+
+    /// <summary>
+    /// Download a lead document
+    /// </summary>
+    [HttpGet("{id}/documents/{docId}/download")]
+    public async Task<IActionResult> DownloadDocument(Guid id, Guid docId)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var lead = await _context.Leads.FirstOrDefaultAsync(l => l.Id == id && l.FirmId == firmId);
+        if (lead == null) return NotFound();
+
+        var doc = await _context.LeadDocuments.FirstOrDefaultAsync(d => d.Id == docId && d.LeadId == id);
+        if (doc == null) return NotFound();
+
+        if (!System.IO.File.Exists(doc.FilePath)) return NotFound("File not found on disk");
+
+        var bytes = await System.IO.File.ReadAllBytesAsync(doc.FilePath);
+        return File(bytes, doc.FileType ?? "application/octet-stream", doc.FileName);
+    }
+
+    /// <summary>
+    /// Delete a document from a lead
+    /// </summary>
+    [HttpDelete("{id}/documents/{docId}")]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteDocument(Guid id, Guid docId)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var lead = await _context.Leads.FirstOrDefaultAsync(l => l.Id == id && l.FirmId == firmId);
+        if (lead == null) return NotFound(new ApiResponse<bool> { Success = false, Message = "Lead not found" });
+
+        var doc = await _context.LeadDocuments.FirstOrDefaultAsync(d => d.Id == docId && d.LeadId == id);
+        if (doc == null) return NotFound(new ApiResponse<bool> { Success = false, Message = "Document not found" });
+
+        if (System.IO.File.Exists(doc.FilePath))
+            System.IO.File.Delete(doc.FilePath);
+
+        _context.LeadDocuments.Remove(doc);
+        await _context.SaveChangesAsync();
+
+        return Ok(new ApiResponse<bool> { Success = true, Data = true });
+    }
+
+    #endregion
 }
