@@ -71,9 +71,11 @@ public class StopTimerRequest
 public class ExpenseDto
 {
     public Guid Id { get; set; }
-    public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
     public string? CaseNumber { get; set; }
     public string? CaseTitle { get; set; }
+    public Guid? LeadId { get; set; }
+    public string? LeadName { get; set; }
     public Guid UserId { get; set; }
     public string? UserFullName { get; set; }
     public DateTime ExpenseDate { get; set; }
@@ -92,7 +94,8 @@ public class ExpenseDto
 
 public class CreateExpenseRequest
 {
-    [Required] public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
+    public Guid? LeadId { get; set; }
     [Required] public DateTime ExpenseDate { get; set; }
     [Required] public ExpenseCategory Category { get; set; }
     [MaxLength(1000)] public string Description { get; set; } = string.Empty;

@@ -163,6 +163,12 @@ export interface CaseItem {
   clientName: string;
 }
 
+export interface LeadDropdownItem {
+  id: string;
+  name: string;
+  practiceArea: number;
+}
+
 export interface PagedResponse<T> {
   data: T[];
   pagination: { page: number; pageSize: number; totalCount: number; totalPages: number };
@@ -189,6 +195,15 @@ export const billingService = {
       caseNumber: c.caseNumber,
       title: c.title,
       clientName: c.clientName ?? '',
+    }));
+  },
+
+  getLeadsForDropdown: async (): Promise<LeadDropdownItem[]> => {
+    const { data } = await apiClient.get('/leads', { params: { pageSize: 500 } });
+    return (data.data ?? []).map((l: any) => ({
+      id: l.id,
+      name: l.name,
+      practiceArea: l.practiceArea,
     }));
   },
 

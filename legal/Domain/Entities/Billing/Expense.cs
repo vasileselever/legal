@@ -1,4 +1,5 @@
 using LegalRO.CaseManagement.Domain.Common;
+using LegalRO.CaseManagement.Domain.Common;
 using LegalRO.CaseManagement.Domain.Enums;
 
 namespace LegalRO.CaseManagement.Domain.Entities.Billing;
@@ -9,7 +10,8 @@ namespace LegalRO.CaseManagement.Domain.Entities.Billing;
 public class Expense : BaseEntity
 {
     public Guid FirmId { get; set; }
-    public Guid CaseId { get; set; }
+    public Guid? CaseId { get; set; }
+    public Guid? LeadId { get; set; }
     public Guid UserId { get; set; }
 
     public DateTime ExpenseDate { get; set; }
@@ -48,7 +50,8 @@ public class Expense : BaseEntity
 
     // Navigation
     public Firm Firm { get; set; } = null!;
-    public Case Case { get; set; } = null!;
+    public Case? Case { get; set; }
+    public Lead? Lead { get; set; }
     public User User { get; set; } = null!;
     public InvoiceLineItem? InvoiceLineItem { get; set; }
 }

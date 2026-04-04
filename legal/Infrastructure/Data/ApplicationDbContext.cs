@@ -897,6 +897,13 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.HasOne(e => e.Case)
                 .WithMany()
                 .HasForeignKey(e => e.CaseId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Lead)
+                .WithMany()
+                .HasForeignKey(e => e.LeadId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.User)
@@ -911,10 +918,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
 
             entity.HasIndex(e => e.FirmId);
             entity.HasIndex(e => e.CaseId);
+            entity.HasIndex(e => e.LeadId);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.ExpenseDate);
-            entity.HasIndex(e => new { e.FirmId, e.CaseId, e.Status });
+            entity.HasIndex(e => new { e.FirmId, e.Status });
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
 

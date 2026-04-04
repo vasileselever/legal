@@ -204,6 +204,7 @@ public class BillingService : IBillingService
             FirmId = firmId,
             UserId = userId,
             CaseId = request.CaseId,
+            LeadId = request.LeadId,
             ExpenseDate = request.ExpenseDate,
             Category = request.Category,
             Description = request.Description,
@@ -262,7 +263,7 @@ public class BillingService : IBillingService
     public async Task<ExpenseDto> GetExpenseAsync(Guid firmId, Guid id)
     {
         var e = await _db.Expenses
-            .Include(x => x.User).Include(x => x.Case)
+            .Include(x => x.User).Include(x => x.Case).Include(x => x.Lead)
             .FirstOrDefaultAsync(x => x.Id == id && x.FirmId == firmId)
             ?? throw new KeyNotFoundException("Expense not found");
 
@@ -274,7 +275,7 @@ public class BillingService : IBillingService
         int page = 1, int pageSize = 25)
     {
         var q = _db.Expenses.Where(e => e.FirmId == firmId)
-            .Include(e => e.User).Include(e => e.Case).AsQueryable();
+            .Include(e => e.User).Include(e => e.Case).Include(e => e.Lead).AsQueryable();
 
         if (userId.HasValue) q = q.Where(e => e.UserId == userId.Value);
         if (caseId.HasValue) q = q.Where(e => e.CaseId == caseId.Value);
@@ -1020,6 +1021,8 @@ public class BillingService : IBillingService
         CaseId = e.CaseId,
         CaseNumber = e.Case?.CaseNumber,
         CaseTitle = e.Case?.Title,
+        LeadId = e.LeadId,
+        LeadName = e.Lead?.Name,
         UserId = e.UserId,
         UserFullName = e.User?.FullName,
         ExpenseDate = e.ExpenseDate,

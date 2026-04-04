@@ -8,6 +8,7 @@ import { Overview } from './pages/admin/Overview';
 import { LeadsPage } from './pages/admin/LeadsPage';
 import { ConsultationsPage } from './pages/admin/ConsultationsPage';
 import { UsersPage } from './pages/admin/UsersPage';
+import { CasesPage } from './pages/admin/CasesPage';
 import { LegalResearchPage } from './pages/admin/LegalResearchPage';
 import DocumentAutomationPage from './pages/admin/DocumentAutomationPage';
 import BillingPage from './pages/admin/BillingPage';
@@ -89,6 +90,7 @@ function App() {
           {/* Protected admin pages (each has its own AdminLayout/sidebar) */}
           <Route path="/admin/dashboard"     element={<PR><Overview /></PR>} />
           <Route path="/admin/leads"         element={<PR><LeadsPage /></PR>} />
+          <Route path="/admin/cases"         element={<PR><CasesPage /></PR>} />
           <Route path="/admin/consultations" element={<PR><ConsultationsPage /></PR>} />
           <Route path="/admin/billing"       element={<PR><BillingPage /></PR>} />
           <Route path="/admin/research"      element={<PR><LegalResearchPage /></PR>} />

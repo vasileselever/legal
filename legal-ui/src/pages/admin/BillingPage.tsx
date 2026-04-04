@@ -16,7 +16,7 @@ import {
   type TimeEntryDto, type ExpenseDto, type InvoiceListItemDto,
   type TrustAccountDto, type TrustTransactionDto,
   type BillingRateDto, type BillingSummaryDto, type LawyerProductivityDto,
-  type ArAgingDto, type PaymentDto, type CaseItem,
+  type ArAgingDto, type PaymentDto, type CaseItem, type LeadDropdownItem,
 } from '../../api/billingService';
 
 // -- Helpers ----------------------------------------------------------
@@ -1334,35 +1334,41 @@ function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void, onC
 
 function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
   const [form, setForm] = useState({
-    caseId: '', expenseDate: '', category: 0, description: '',
+    caseId: '', leadId: '', expenseDate: '', category: 0, description: '',
     amount: 0, currency: 1, markupPercent: 0, isBillable: true,
     vendor: '', status: 1,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [cases, setCases] = useState<CaseItem[]>([]);
-  const [casesLoading, setCasesLoading] = useState(false);
+  const [leads, setLeads] = useState<LeadDropdownItem[]>([]);
+  const [dosarLoading, setDosarLoading] = useState(false);
 
-  const loadCases = useCallback(async () => {
-    setCasesLoading(true);
+  const loadDosare = useCallback(async () => {
+    setDosarLoading(true);
     try {
-      const res = await billingService.getCases();
-      setCases(res);
+      const [c, l] = await Promise.all([
+        billingService.getCases().catch(() => [] as CaseItem[]),
+        billingService.getLeadsForDropdown(),
+      ]);
+      setCases(c);
+      setLeads(l);
     } catch (e: any) { setError(e.message); }
-    finally { setCasesLoading(false); }
+    finally { setDosarLoading(false); }
   }, []);
 
-  useEffect(() => { loadCases(); }, [loadCases]);
+  useEffect(() => { loadDosare(); }, [loadDosare]);
 
   const handleSubmit = async () => {
-    if (!form.caseId) { setError('Selectati un dosar'); return; }
+    if (!form.leadId && !form.caseId) { setError('Selectati un dosar sau un lead'); return; }
     if (!form.expenseDate) { setError('Introduceti data cheltuielii'); return; }
     if (!form.category) { setError('Selectati categoria'); return; }
     if (!form.amount || form.amount <= 0) { setError('Introduceti o suma valida'); return; }
     setLoading(true); setError('');
     try {
       await billingService.createExpense({
-        caseId: form.caseId,
+        caseId: form.caseId || undefined,
+        leadId: form.leadId || undefined,
         expenseDate: form.expenseDate,
         category: form.category,
         description: form.description || '',
@@ -1405,20 +1411,33 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
 
           <div>
             <label style={labelStyle}>Dosar *</label>
-            {casesLoading ? (
-              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca dosarele...</div>
+            {dosarLoading ? (
+              <div style={{ fontSize: '0.82rem', color: '#888', padding: '0.4rem 0' }}>Se incarca...</div>
             ) : (
               <select
                 style={selectStyle}
-                value={form.caseId}
-                onChange={e => setForm({ ...form, caseId: e.target.value })}
+                value={form.leadId || form.caseId}
+                onChange={e => {
+                  const val = e.target.value;
+                  const isLead = leads.some(l => l.id === val);
+                  setForm({ ...form, leadId: isLead ? val : '', caseId: isLead ? '' : val });
+                }}
               >
-                <option value="">— Selecteaza dosarul —</option>
-                {cases.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.caseNumber} · {c.title}{c.clientName ? ` · ${c.clientName}` : ''}
-                  </option>
-                ))}
+                <option value="">— Selecteaza —</option>
+                {leads.length > 0 && (
+                  <optgroup label="Lead-uri">
+                    {leads.map(l => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {cases.length > 0 && (
+                  <optgroup label="Dosare">
+                    {cases.map(c => (
+                      <option key={c.id} value={c.id}>{c.caseNumber} · {c.title}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             )}
           </div>

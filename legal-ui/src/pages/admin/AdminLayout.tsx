@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 const NAV = [
   { path: '/admin/dashboard',      icon: '📊', label: 'Dashboard' },
   { path: '/admin/leads',          icon: '🎯', label: 'Lead-uri' },
+  { path: '/admin/cases',          icon: '⚖️',  label: 'Dosare' },
   { path: '/admin/consultations',  icon: '📅', label: 'Consultatii' },
   { path: '/admin/documents',      icon: '📄', label: 'Documente' },
   { path: '/admin/research',       icon: '🔍', label: 'Cercetare AI' },
