@@ -388,13 +388,14 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
             entity.Property(e => e.FilePath).IsRequired().HasMaxLength(500);
-            
+
             entity.HasOne(e => e.Lead)
                 .WithMany(l => l.Documents)
                 .HasForeignKey(e => e.LeadId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.LeadId);
+            entity.HasIndex(e => e.GeneratedDocumentId);
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
 

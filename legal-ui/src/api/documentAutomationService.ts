@@ -170,6 +170,7 @@ export interface GeneratedDocumentListItem {
   readabilityScore?: number;
   exportedFilePath?: string;
   createdAt: string;
+  linkedLeads: { leadId: string; leadName: string }[];
 }
 
 export interface GeneratedDocumentDetail {
@@ -275,6 +276,12 @@ export const deleteGeneratedDocument = (id: string) =>
 
 export const runQualityCheck = (documentId: string) =>
   apiClient.post<ApiResponse<QualityCheckResult>>(`/documentautomation/documents/${documentId}/quality-check`).then(unwrap);
+
+// ── Save generated document as a Lead attachment ─────────────────────
+
+export const saveGeneratedToLead = (leadId: string, generatedDocId: string) =>
+  apiClient.post(`/leads/${leadId}/documents/from-generated/${generatedDocId}`)
+    .then(r => { if (!r.data.success) throw new Error(r.data.message); return r.data.data; });
 
 // ── Stats ────────────────────────────────────────────────────────────
 

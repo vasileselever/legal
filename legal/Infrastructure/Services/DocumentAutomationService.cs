@@ -646,7 +646,15 @@ public class DocumentAutomationService : IDocumentAutomationService
                 Version = g.Version,
                 ReadabilityScore = g.ReadabilityScore,
                 ExportedFilePath = g.ExportedFilePath,
-                CreatedAt = g.CreatedAt
+                CreatedAt = g.CreatedAt,
+                LinkedLeads = _db.LeadDocuments
+                    .Where(ld => ld.GeneratedDocumentId == g.Id)
+                    .Select(ld => new LinkedLeadDto
+                    {
+                        LeadId = ld.LeadId,
+                        LeadName = ld.Lead.Name
+                    })
+                    .ToList()
             })
             .ToListAsync(ct);
     }

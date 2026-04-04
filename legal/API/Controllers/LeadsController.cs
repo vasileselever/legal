@@ -969,5 +969,72 @@ public class LeadsController : ControllerBase
         return Ok(new ApiResponse<bool> { Success = true, Data = true });
     }
 
+    /// <summary>
+    /// Save a generated document (from Document Automation) as an attachment on a lead.
+    /// The HTML content is written to disk as a .html file and a LeadDocument record is created.
+    /// </summary>
+    [HttpPost("{id}/documents/from-generated/{generatedDocId}")]
+    public async Task<ActionResult<ApiResponse<LeadDocumentDto>>> AttachGeneratedDocument(
+        Guid id, Guid generatedDocId)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+
+        var lead = await _context.Leads.FirstOrDefaultAsync(l => l.Id == id && l.FirmId == firmId);
+        if (lead == null)
+            return NotFound(new ApiResponse<LeadDocumentDto> { Success = false, Message = "Lead not found" });
+
+        var generated = await _context.GeneratedDocuments
+            .FirstOrDefaultAsync(d => d.Id == generatedDocId && d.FirmId == firmId);
+        if (generated == null)
+            return NotFound(new ApiResponse<LeadDocumentDto> { Success = false, Message = "Generated document not found" });
+
+        var uploadsDir = Path.Combine(UploadsRoot, "leads", id.ToString());
+        Directory.CreateDirectory(uploadsDir);
+
+        var safeTitle = string.Concat(generated.Title.Split(Path.GetInvalidFileNameChars()));
+        var uniqueName = $"{Guid.NewGuid()}_{safeTitle}.html";
+        var filePath = Path.Combine(uploadsDir, uniqueName);
+
+        await System.IO.File.WriteAllTextAsync(filePath, generated.ContentHtml, System.Text.Encoding.UTF8);
+
+        var doc = new LeadDocument
+        {
+            LeadId = id,
+            FileName = $"{safeTitle}.html",
+            FilePath = filePath,
+            FileSize = new FileInfo(filePath).Length,
+            FileType = "text/html",
+            Description = $"Document generat automat: {generated.Title}",
+            GeneratedDocumentId = generatedDocId
+        };
+
+        _context.LeadDocuments.Add(doc);
+        _context.LeadActivities.Add(new LeadActivity
+        {
+            LeadId = id,
+            ActivityType = "DocumentAttached",
+            Description = $"Document generat atașat: {generated.Title}",
+            UserId = ClaimsHelper.GetUserId(User)
+        });
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Generated document {GeneratedDocId} attached to lead {LeadId} as {FileName}",
+            generatedDocId, id, doc.FileName);
+
+        return Ok(new ApiResponse<LeadDocumentDto>
+        {
+            Success = true,
+            Data = new LeadDocumentDto
+            {
+                Id = doc.Id, FileName = doc.FileName, FilePath = doc.FilePath,
+                FileSize = doc.FileSize, FileType = doc.FileType,
+                Description = doc.Description, CreatedAt = doc.CreatedAt
+            },
+            Message = "Document atașat cu succes la lead"
+        });
+    }
+
     #endregion
 }

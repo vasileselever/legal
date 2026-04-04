@@ -11,10 +11,12 @@ import {
   getTemplates, getTemplate, getSessions, getSession, startSession, submitAnswers,
   generateDocument, getGeneratedDocuments, getGeneratedDocument, runQualityCheck,
   getClauses, getDocAutomationStats, abandonSession, deleteGeneratedDocument,
-  createTemplate, updateTemplate, deleteTemplate,
+  createTemplate, updateTemplate, deleteTemplate, saveGeneratedToLead,
   DOCUMENT_CATEGORIES, PRACTICE_AREAS, FIELD_TYPES, RISK_LEVELS,
   SESSION_STATUSES, LANGUAGES,
 } from '../../api/documentAutomationService';
+import { leadService } from '../../api/leadService';
+import type { LeadItem } from '../../api/leadService';
 
 // ── Shared styles ────────────────────────────────────────────────────
 
@@ -494,6 +496,39 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
   const [qa, setQa] = useState<QualityCheckResult | null>(null);
   const [runningQa, setRunningQa] = useState(false);
   const [showEn, setShowEn] = useState(false);
+  const [showLeadPicker, setShowLeadPicker] = useState(false);
+  const [leads, setLeads] = useState<LeadItem[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+  const [leadsSearch, setLeadsSearch] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState('');
+  const [saveError, setSaveError] = useState('');
+
+  const openLeadPicker = async () => {
+    setShowLeadPicker(true);
+    setLeadsLoading(true);
+    setSaveSuccess(''); setSaveError('');
+    try {
+      const result = await leadService.getLeads({ pageSize: 100 });
+      setLeads(result.data);
+    } catch (e: any) { setSaveError(e.message); }
+    setLeadsLoading(false);
+  };
+
+  const handleSaveToLead = async (leadId: string, leadName: string) => {
+    setSaving(true); setSaveError('');
+    try {
+      await saveGeneratedToLead(leadId, doc.id);
+      setSaveSuccess(`Document atașat cu succes la „${leadName}"`);
+      setShowLeadPicker(false);
+    } catch (e: any) { setSaveError(e.message); }
+    setSaving(false);
+  };
+
+  const filteredLeads = leads.filter(l =>
+    l.name.toLowerCase().includes(leadsSearch.toLowerCase()) ||
+    l.email.toLowerCase().includes(leadsSearch.toLowerCase())
+  );
 
   const handleQa = async () => {
     setRunningQa(true);
@@ -514,7 +549,7 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
                 v{doc.version} · {LANGUAGES[doc.language]} · {new Date(doc.createdAt).toLocaleString('ro-RO')}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {doc.contentHtmlEn && (
                 <button onClick={() => setShowEn(!showEn)} style={outlineBtn}>
                   {showEn ? '🇷🇴 Română' : '🇬🇧 English'}
@@ -527,8 +562,22 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
                 const w = window.open('', '_blank');
                 if (w) { w.document.write(showEn && doc.contentHtmlEn ? doc.contentHtmlEn : doc.contentHtml); w.document.close(); w.print(); }
               }} style={btn('#00796b')}>🖨 Printează</button>
+              <button onClick={openLeadPicker} style={btn('#e65100')}>📎 Salvează la Lead</button>
             </div>
           </div>
+
+          {saveSuccess && (
+            <div style={{ padding: '0.65rem 1rem', background: '#e8f5e9', border: '1px solid #a5d6a7',
+              borderRadius: '6px', color: '#2e7d32', fontWeight: 600, fontSize: '0.88rem', marginBottom: '1rem' }}>
+              ✅ {saveSuccess}
+            </div>
+          )}
+          {saveError && (
+            <div style={{ padding: '0.65rem 1rem', background: '#ffebee', border: '1px solid #ef9a9a',
+              borderRadius: '6px', color: '#c62828', fontSize: '0.88rem', marginBottom: '1rem' }}>
+              ⚠ {saveError}
+            </div>
+          )}
 
           {/* Quality check results */}
           {qa && (
@@ -546,6 +595,56 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
                   ))}
                 </ul>
               )}
+            </div>
+          )}
+
+          {/* Lead picker modal */}
+          {showLeadPicker && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000,
+              display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={e => { if (e.target === e.currentTarget) setShowLeadPicker(false); }}>
+              <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem',
+                width: '100%', maxWidth: '520px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ margin: 0, color: '#1a237e' }}>📎 Alege Lead-ul</h3>
+                  <button onClick={() => setShowLeadPicker(false)}
+                    style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#666' }}>×</button>
+                </div>
+                <input
+                  placeholder="Caută după nume sau email..."
+                  value={leadsSearch}
+                  onChange={e => setLeadsSearch(e.target.value)}
+                  style={{ ...inputStyle, marginBottom: '0.75rem' }}
+                  autoFocus
+                />
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  {leadsLoading
+                    ? <div style={{ textAlign: 'center', padding: '1rem' }}><Spinner /></div>
+                    : filteredLeads.length === 0
+                      ? <div style={{ textAlign: 'center', color: '#aaa', padding: '1.5rem' }}>Niciun lead găsit.</div>
+                      : filteredLeads.map(l => (
+                        <div key={l.id}
+                          onClick={() => !saving && handleSaveToLead(l.id, l.name)}
+                          style={{ padding: '0.75rem 1rem', borderRadius: '8px',
+                            cursor: saving ? 'not-allowed' : 'pointer', marginBottom: '0.4rem',
+                            border: '1px solid #e8eaf6', background: 'white', opacity: saving ? 0.6 : 1 }}
+                          onMouseEnter={e => { if (!saving) (e.currentTarget as HTMLDivElement).style.background = '#f0f4ff'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'white'; }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1a237e' }}>{l.name}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#888', marginTop: '0.15rem' }}>
+                            {l.email} · {PRACTICE_AREAS[l.practiceArea] ?? ''}
+                          </div>
+                        </div>
+                      ))
+                  }
+                </div>
+                {saving && (
+                  <div style={{ textAlign: 'center', padding: '0.75rem', color: '#666', fontSize: '0.85rem' }}>
+                    ⏳ Se atașează documentul...
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -678,6 +777,7 @@ function DocumentsPanel() {
                 <th style={{ padding: '0.6rem' }}>Limbă</th>
                 <th style={{ padding: '0.6rem' }}>Versiune</th>
                 <th style={{ padding: '0.6rem' }}>Lizibilitate</th>
+                <th style={{ padding: '0.6rem' }}>Atașat la Lead</th>
                 <th style={{ padding: '0.6rem' }}>Creat</th>
                 <th style={{ padding: '0.6rem' }}>Acțiuni</th>
               </tr>
@@ -690,6 +790,23 @@ function DocumentsPanel() {
                   <td style={{ padding: '0.6rem' }}>{LANGUAGES[d.language]}</td>
                   <td style={{ padding: '0.6rem' }}>v{d.version}</td>
                   <td style={{ padding: '0.6rem' }}>{d.readabilityScore != null ? `${d.readabilityScore}/100` : '—'}</td>
+                  <td style={{ padding: '0.6rem' }}>
+                    {d.linkedLeads.length === 0
+                      ? <span style={{ color: '#bbb', fontSize: '0.8rem' }}>—</span>
+                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                          {d.linkedLeads.map(l => (
+                            <span key={l.leadId} title={l.leadId} style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                              padding: '0.2rem 0.55rem', borderRadius: '12px', fontSize: '0.75rem',
+                              fontWeight: 600, background: '#fff3e0', color: '#e65100',
+                              border: '1px solid #ffcc80',
+                            }}>
+                              📎 {l.leadName}
+                            </span>
+                          ))}
+                        </div>
+                    }
+                  </td>
                   <td style={{ padding: '0.6rem', color: '#888', fontSize: '0.8rem' }}>{new Date(d.createdAt).toLocaleDateString('ro-RO')}</td>
                   <td style={{ padding: '0.6rem' }}>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>

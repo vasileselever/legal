@@ -284,6 +284,15 @@ public class GeneratedDocumentListDto
     public int? ReadabilityScore { get; set; }
     public string? ExportedFilePath { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>Leads this document has been saved to (name + id pairs).</summary>
+    public List<LinkedLeadDto> LinkedLeads { get; set; } = new();
+}
+
+public class LinkedLeadDto
+{
+    public Guid LeadId { get; set; }
+    public string LeadName { get; set; } = string.Empty;
 }
 
 public class GeneratedDocumentDetailDto
