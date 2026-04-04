@@ -4,6 +4,7 @@ using LegalRO.CaseManagement.Infrastructure.Data;
 using LegalRO.CaseManagement.Infrastructure.Services;
 using LegalRO.CaseManagement.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -31,6 +32,15 @@ try
     // Add services to the container
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+    // Persist DataProtection keys to a stable directory backed by a Docker volume.
+    // Without this, keys are regenerated on every container restart, invalidating
+    // all active sessions and encrypted cookies.
+    var keysDir = new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys"));
+    keysDir.Create();
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(keysDir)
+        .SetApplicationName("LegalRO.CaseManagement");
 
     // Configure SQL Server with Entity Framework Core
     builder.Services.AddDbContext<ApplicationDbContext>(options =>

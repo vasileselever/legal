@@ -88,10 +88,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.ToTable("Users");
             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Firm)
                 .WithMany(f => f.Users)
                 .HasForeignKey(e => e.FirmId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.FirmId);
@@ -154,10 +155,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         {
             entity.ToTable("CaseUsers");
             entity.HasKey(e => new { e.CaseId, e.UserId });
-            
+
             entity.HasOne(e => e.Case)
                 .WithMany(c => c.AssignedUsers)
                 .HasForeignKey(e => e.CaseId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.User)
@@ -249,10 +251,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.ToTable("TaskComments");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Content).IsRequired();
-            
+
             entity.HasOne(e => e.Task)
                 .WithMany(t => t.Comments)
                 .HasForeignKey(e => e.TaskId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.User)
@@ -292,10 +295,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ActivityType).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
-            
+
             entity.HasOne(e => e.Case)
                 .WithMany(c => c.Activities)
                 .HasForeignKey(e => e.CaseId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.User)
@@ -365,10 +369,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.ToTable("LeadConversations");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Message).IsRequired();
-            
+
             entity.HasOne(e => e.Lead)
                 .WithMany(l => l.Conversations)
                 .HasForeignKey(e => e.LeadId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.LeadId);
@@ -455,10 +460,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ActivityType).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
-            
+
             entity.HasOne(e => e.Lead)
                 .WithMany(l => l.Activities)
                 .HasForeignKey(e => e.LeadId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.User)

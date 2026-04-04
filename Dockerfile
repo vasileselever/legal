@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # Stage 1: Build React Frontend
 # ============================================================
 FROM node:20-alpine AS frontend-build
@@ -50,8 +50,8 @@ COPY --from=backend-build /app/publish .
 # Copy React build output into wwwroot
 COPY --from=frontend-build /app/frontend/dist ./wwwroot/
 
-# Create uploads directory (will be overlaid by the Docker volume at runtime)
-RUN mkdir -p /app/uploads
+# Create persistent directories (overlaid by Docker volumes at runtime)
+RUN mkdir -p /app/uploads /app/keys
 
 # Environment
 ENV ASPNETCORE_ENVIRONMENT=Production
@@ -63,3 +63,11 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "legal.dll"]
+
+VOLUME ["/app/keys"]
+
+entity.HasOne(e => e.Case)
+    .WithMany(c => c.Activities)
+    .HasForeignKey(e => e.CaseId)
+    .IsRequired(false)        // ← added
+    .OnDelete(DeleteBehavior.Restrict);
