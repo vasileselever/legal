@@ -4,18 +4,20 @@
 FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
 
-# Install dependencies first (better caching)
+# Install dependencies first (cached as long as package.json doesn't change)
 COPY legal-ui/package.json legal-ui/package-lock.json* ./
 RUN npm ci
 
-# Copy source and build
-COPY legal-ui/ ./
-
-# Build args for env vars baked into the frontend at build time
+# Build args for env vars baked into the frontend at build time.
+# Declared BEFORE COPY so any change to VITE_FIRM_ID also busts the source layer.
 ARG VITE_API_URL=/api
 ARG VITE_FIRM_ID
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_FIRM_ID=$VITE_FIRM_ID
+
+# Copy all source — any change to legal-ui/src/** automatically invalidates
+# this layer and forces npm run build to re-run. No manual CACHE_BUST needed.
+COPY legal-ui/ ./
 
 RUN npm run build
 
