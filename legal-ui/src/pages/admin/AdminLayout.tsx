@@ -6,9 +6,9 @@ const NAV = [
   { path: '/admin/dashboard',      icon: '📊', label: 'Dashboard' },
   { path: '/admin/leads',          icon: '🎯', label: 'Lead-uri' },
   { path: '/admin/consultations',  icon: '📅', label: 'Consultatii' },
-  { path: '/admin/billing',        icon: '💰', label: 'Facturare' },
-  { path: '/admin/research',       icon: '🔍', label: 'Cercetare AI' },
   { path: '/admin/documents',      icon: '📄', label: 'Documente' },
+  { path: '/admin/research',       icon: '🔍', label: 'Cercetare AI' },
+  { path: '/admin/billing',        icon: '💰', label: 'Facturare' },
   { path: '/admin/users',          icon: '👥', label: 'Utilizatori' },
 ];
 
