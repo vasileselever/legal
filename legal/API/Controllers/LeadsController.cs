@@ -370,7 +370,7 @@ public class LeadsController : ControllerBase
             if (!string.IsNullOrWhiteSpace(dto.Name) && dto.Name != lead.Name) { lead.Name = dto.Name; changes.Add("Name"); }
             if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != lead.Email) { lead.Email = dto.Email; changes.Add("Email"); }
             if (!string.IsNullOrWhiteSpace(dto.Phone) && dto.Phone != lead.Phone) { lead.Phone = dto.Phone; changes.Add("Phone"); }
-            changes.Add($"Status: {oldStatus} -> {dto.Status.Value}");
+            if (dto.Status.HasValue && dto.Status.Value != oldStatus) { lead.Status = dto.Status.Value; changes.Add($"Status: {oldStatus} -> {dto.Status.Value}"); }
             if (dto.PracticeArea.HasValue && dto.PracticeArea.Value != lead.PracticeArea) { lead.PracticeArea = dto.PracticeArea.Value; changes.Add("PracticeArea"); }
             if (!string.IsNullOrWhiteSpace(dto.Description)) { lead.Description = dto.Description; changes.Add("Description"); }
             if (dto.Urgency.HasValue && dto.Urgency.Value != lead.Urgency) { lead.Urgency = dto.Urgency.Value; changes.Add("Urgency"); }
