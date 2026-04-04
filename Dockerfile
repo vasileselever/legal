@@ -63,11 +63,3 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "legal.dll"]
-
-VOLUME ["/app/keys"]
-
-entity.HasOne(e => e.Case)
-    .WithMany(c => c.Activities)
-    .HasForeignKey(e => e.CaseId)
-    .IsRequired(false)        // ← added
-    .OnDelete(DeleteBehavior.Restrict);
