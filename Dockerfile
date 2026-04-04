@@ -41,8 +41,8 @@ RUN dotnet publish ./legal/legal.csproj -c Release -o /app/publish --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Install curl for health checks
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+# Install curl for health checks and openssl for DataProtection key encryption
+RUN apt-get update && apt-get install -y --no-install-recommends curl openssl && rm -rf /var/lib/apt/lists/*
 
 # Copy published .NET app
 COPY --from=backend-build /app/publish .
@@ -51,7 +51,14 @@ COPY --from=backend-build /app/publish .
 COPY --from=frontend-build /app/frontend/dist ./wwwroot/
 
 # Create persistent directories (overlaid by Docker volumes at runtime)
-RUN mkdir -p /app/uploads /app/keys
+# Generate a self-signed cert used to encrypt DataProtection key XML files at rest.
+# The PFX is baked into the image (public cert only) — the volume stores the encrypted keys.
+RUN mkdir -p /app/uploads /app/keys && \
+    openssl req -x509 -newkey rsa:2048 -keyout /tmp/dp-key.pem -out /tmp/dp-cert.pem \
+        -days 3650 -nodes -subj "/CN=LegalRO-DataProtection" && \
+    openssl pkcs12 -export -out /app/dataprotection.pfx \
+        -inkey /tmp/dp-key.pem -in /tmp/dp-cert.pem -passout pass:dp-internal && \
+    rm /tmp/dp-key.pem /tmp/dp-cert.pem
 
 # Environment
 ENV ASPNETCORE_ENVIRONMENT=Production

@@ -34,13 +34,21 @@ try
         ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
     // Persist DataProtection keys to a stable directory backed by a Docker volume.
-    // Without this, keys are regenerated on every container restart, invalidating
-    // all active sessions and encrypted cookies.
+    // Keys are encrypted at rest using a self-signed X.509 certificate baked into the image.
     var keysDir = new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys"));
     keysDir.Create();
-    builder.Services.AddDataProtection()
+    var dpBuilder = builder.Services.AddDataProtection()
         .PersistKeysToFileSystem(keysDir)
         .SetApplicationName("LegalRO.CaseManagement");
+
+    var pfxPath = Path.Combine(builder.Environment.ContentRootPath, "dataprotection.pfx");
+    if (File.Exists(pfxPath))
+    {
+        var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(
+            pfxPath, "dp-internal",
+            System.Security.Cryptography.X509Certificates.X509KeyStorageFlags.EphemeralKeySet);
+        dpBuilder.ProtectKeysWithCertificate(cert);
+    }
 
     // Configure SQL Server with Entity Framework Core
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
