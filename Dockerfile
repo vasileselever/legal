@@ -61,6 +61,8 @@ RUN mkdir -p /app/uploads /app/keys && \
     rm /tmp/dp-key.pem /tmp/dp-cert.pem
 
 # Environment
+# Unset HTTP_PORTS (set by the base image) to avoid conflict with ASPNETCORE_URLS.
+ENV ASPNETCORE_HTTP_PORTS=""
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
 
