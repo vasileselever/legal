@@ -4,6 +4,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
 import { ErrorBanner } from '../../components/ui/ErrorBanner';
+import { apiClient } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { leadService } from '../../api/leadService';
 import type { LeadItem } from '../../api/leadService';
@@ -715,9 +716,8 @@ function CreateTrustAccountModal({ onClose, onCreated }: { onClose: () => void, 
   const [clientsLoading, setClientsLoading] = useState(true);
 
   useEffect(() => {
-    // Load clients (converted leads) — use leads endpoint since there may not be a separate clients endpoint
-    leadService.getLeads({ page: 1, pageSize: 500 })
-      .then(res => setClients(res.data.map((l: any) => ({ id: l.id, name: l.name })))) // <-- FIX: Closed setClients() properly
+    apiClient.get('/v1/clients')
+      .then(res => setClients((res.data ?? []).map((c: any) => ({ id: c.id, name: c.name }))))
       .catch(() => setClients([]))
       .finally(() => setClientsLoading(false));
   }, []);
