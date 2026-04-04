@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { leadService } from '../api/leadService';
 import { authService } from '../api/authService';
 import type { LeadDetailItem, ConversationItem, LeadDocumentItem } from '../api/leadService';
@@ -122,9 +123,24 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
     } catch (e: any) { setError(e.message); }
   };
 
+  const navigate = useNavigate();
+
   const handleConvert = async () => {
-    if (!lead || !window.confirm('Convertiti ' + lead.name + ' in client?')) return;
-    try { await leadService.convertToClient(leadId, lead.name); onStatusChanged(); onClose(); }
+    if (!lead || !window.confirm('Convertiti ' + lead.name + ' in client si creati un dosar?')) return;
+    try {
+      const clientId = await leadService.convertToClient(leadId, lead.name);
+      onStatusChanged();
+      onClose();
+      // Navigate to Cases page with state so CreateCaseModal opens pre-filled
+      navigate('/admin/cases', {
+        state: {
+          openCreate: true,
+          clientId,
+          clientName: lead.name,
+          practiceArea: lead.practiceArea,
+        }
+      });
+    }
     catch (e: any) { setError(e.message); }
   };
 

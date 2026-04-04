@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AdminLayout } from './AdminLayout';
 import { apiClient } from '../../api/apiClient';
+import { authService } from '../../api/authService';
+import type { UserInfo } from '../../api/authService';
 
 // ?? Enums ?????????????????????????????????????????????????????????????
 const CASE_STATUS: Record<number, string> = {
@@ -214,6 +217,166 @@ function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
   );
 }
 
+// -- CreateCaseModal props allow pre-filling from a converted lead ----
+interface CreateCaseModalProps {
+  onClose: () => void;
+  onCreated: () => void;
+  prefilledClientId?: string;
+  prefilledClientName?: string;
+  prefilledPracticeArea?: number;
+}
+
+function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClientName, prefilledPracticeArea }: CreateCaseModalProps) {
+  const [clients,  setClients]  = useState<{ id: string; name: string }[]>([]);
+  const [lawyers,  setLawyers]  = useState<UserInfo[]>([]);
+  const [loading,  setLoading]  = useState(false);
+  const [refLoading, setRefLoading] = useState(true);
+  const [error,    setError]    = useState('');
+
+  const [form, setForm] = useState({
+    clientId:            prefilledClientId   ?? '',
+    title:               prefilledClientName ? `Dosar - ${prefilledClientName}` : '',
+    description:         '',
+    practiceArea:        prefilledPracticeArea ?? 1,
+    caseType:            1,
+    responsibleLawyerId: '',
+    court:               '',
+    opposingParty:       '',
+    caseValue:           '' as number | '',
+    billingArrangement:  1,
+  });
+
+  useEffect(() => {
+    Promise.all([
+      apiClient.get('/v1/clients').then(r => r.data ?? []),
+      authService.getUsers(),
+    ]).then(([c, u]) => {
+      setClients(c.map((x: any) => ({ id: x.id, name: x.name })));
+      setLawyers(u);
+    }).catch((e: any) => setError(e.message))
+      .finally(() => setRefLoading(false));
+  }, []);
+
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async () => {
+    if (!form.clientId)            { setError('Selectati clientul.');          return; }
+    if (!form.title.trim())        { setError('Introduceti titlul dosarului.'); return; }
+    if (!form.responsibleLawyerId) { setError('Selectati avocatul responsabil.'); return; }
+    setLoading(true); setError('');
+    try {
+      await apiClient.post('/v1/cases', {
+        clientId:            form.clientId,
+        title:               form.title.trim(),
+        description:         form.description || undefined,
+        practiceArea:        form.practiceArea,
+        caseType:            form.caseType,
+        responsibleLawyerId: form.responsibleLawyerId,
+        court:               form.court || undefined,
+        opposingParty:       form.opposingParty || undefined,
+        caseValue:           form.caseValue !== '' ? form.caseValue : undefined,
+        billingArrangement:  form.billingArrangement,
+      });
+      onCreated();
+      onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#555', marginBottom: '0.3rem' };
+  const btnPrimary: React.CSSProperties = { padding: '0.5rem 1.2rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' };
+
+  return (
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Adauga dosar nou</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1 }}>&times;</button>
+        </div>
+
+        {error && <div style={{ color: '#c62828', background: '#fff3f3', border: '1px solid #f44336', borderRadius: '6px', padding: '0.5rem 0.75rem', marginBottom: '1rem', fontSize: '0.88rem' }}>{error}</div>}
+        {refLoading ? <div style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>Se incarca...</div> : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={lbl}>Client *</label>
+              <select style={selectStyle} value={form.clientId} onChange={e => set('clientId', e.target.value)}>
+                <option value="">-- Selecteaza clientul --</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={lbl}>Titlu dosar *</label>
+              <input style={inputStyle} value={form.title} onChange={e => set('title', e.target.value)} placeholder="ex: Divort - Ion Popescu" />
+            </div>
+
+            <div>
+              <label style={lbl}>Arie juridica *</label>
+              <select style={selectStyle} value={form.practiceArea} onChange={e => set('practiceArea', +e.target.value)}>
+                {Object.entries(PRACTICE_AREA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={lbl}>Tip dosar *</label>
+              <select style={selectStyle} value={form.caseType} onChange={e => set('caseType', +e.target.value)}>
+                {Object.entries(CASE_TYPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={lbl}>Avocat responsabil *</label>
+              <select style={selectStyle} value={form.responsibleLawyerId} onChange={e => set('responsibleLawyerId', e.target.value)}>
+                <option value="">-- Selecteaza avocatul --</option>
+                {lawyers.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={lbl}>Instanta</label>
+              <input style={inputStyle} value={form.court} onChange={e => set('court', e.target.value)} placeholder="ex: Tribunalul Cluj" />
+            </div>
+
+            <div>
+              <label style={lbl}>Parte adversa</label>
+              <input style={inputStyle} value={form.opposingParty} onChange={e => set('opposingParty', e.target.value)} />
+            </div>
+
+            <div>
+              <label style={lbl}>Valoare dosar (RON)</label>
+              <input type="number" min="0" step="0.01" style={inputStyle}
+                value={form.caseValue}
+                onChange={e => set('caseValue', e.target.value ? parseFloat(e.target.value) : '')} />
+            </div>
+
+            <div>
+              <label style={lbl}>Modalitate facturare</label>
+              <select style={selectStyle} value={form.billingArrangement} onChange={e => set('billingArrangement', +e.target.value)}>
+                {Object.entries(BILLING).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={lbl}>Descriere</label>
+              <textarea style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' }}
+                value={form.description} onChange={e => set('description', e.target.value)}
+                placeholder="Detalii despre dosar..." />
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose} disabled={loading}>Anuleaza</button>
+          <button style={btnPrimary} onClick={handleSubmit} disabled={loading || refLoading}>
+            {loading ? 'Se salveaza...' : 'Creeaza dosar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ?? Main Page ?????????????????????????????????????????????????????????
 export function CasesPage() {
   const [items, setItems] = useState<CaseListItem[]>([]);
@@ -223,6 +386,19 @@ export function CasesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createPrefill, setCreatePrefill] = useState<{ clientId?: string; clientName?: string; practiceArea?: number } | null>(null);
+
+  const location = useLocation();
+  useEffect(() => {
+    const s = location.state as any;
+    if (s?.openCreate) {
+      setCreatePrefill({ clientId: s.clientId, clientName: s.clientName, practiceArea: s.practiceArea });
+      setShowCreate(true);
+      // Clear state so re-visiting the page doesn't re-open the modal
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -260,6 +436,9 @@ export function CasesPage() {
             <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#1a237e' }}>Dosare</h1>
             <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.85rem' }}>{total} dosare totale</p>
           </div>
+          <button
+            style={{ padding: '0.5rem 1.2rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+            onClick={() => setShowCreate(true)}>+ Adauga dosar</button>
         </div>
 
         {/* Filters */}
@@ -342,6 +521,15 @@ export function CasesPage() {
       </div>
 
       {selectedId && <CaseDetailModal id={selectedId} onClose={() => setSelectedId(null)} />}
+      {showCreate && (
+        <CreateCaseModal
+          onClose={() => { setShowCreate(false); setCreatePrefill(null); }}
+          onCreated={load}
+          prefilledClientId={createPrefill?.clientId}
+          prefilledClientName={createPrefill?.clientName}
+          prefilledPracticeArea={createPrefill?.practiceArea}
+        />
+      )}
     </AdminLayout>
   );
 }
