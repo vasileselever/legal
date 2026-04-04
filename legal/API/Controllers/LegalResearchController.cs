@@ -141,7 +141,7 @@ public class LegalResearchController : ControllerBase
                 if (doc.RootElement.ValueKind == JsonValueKind.Array)
                     sourceCount = doc.RootElement.GetArrayLength();
             }
-            catch { /* malformed JSON – default to 0 */ }
+            catch { /* malformed JSON - default to 0 */ }
 
             return new LegalResearchHistoryItemDto
             {

@@ -29,7 +29,7 @@ public class InvoiceLineItem : BaseEntity
     public decimal UnitPrice { get; set; }
 
     /// <summary>
-    /// Line total = Quantity × UnitPrice
+    /// Line total = Quantity x UnitPrice
     /// </summary>
     public decimal Amount { get; set; }
 

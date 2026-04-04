@@ -30,7 +30,7 @@ public class TestEmailController : ControllerBase
     public async Task<IActionResult> SendTestEmail([FromQuery] string to)
     {
         if (string.IsNullOrWhiteSpace(to))
-            return BadRequest("Provide ?to=email@example.com");
+            return BadRequest("Provide to=email@example.com as query param");
 
         try
         {

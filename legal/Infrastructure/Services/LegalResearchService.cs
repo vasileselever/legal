@@ -214,10 +214,10 @@ public class LegalResearchService : ILegalResearchService
 
         ### Concedierea pentru motive ce tin de persoana salariatului
         Art. 61 permite concedierea pentru:
-        - **Abateri disciplinare grave** (lit. a) – necesita cercetare disciplinara prealabila (art. 251)
+        - **Abateri disciplinare grave** (lit. a) - necesita cercetare disciplinara prealabila (art. 251)
         - **Arest preventiv > 30 zile** (lit. b)
         - **Inaptitudine fizica/psihica** constatata prin decizie medicala (lit. c)
-        - **Necorespundere profesionala** (lit. d) – necesita evaluare prealabila
+        - **Necorespundere profesionala** (lit. d) - necesita evaluare prealabila
 
         ### Procedura obligatorie
         1. Cercetare disciplinara prealabila (art. 251-252)
@@ -276,16 +276,16 @@ public class LegalResearchService : ILegalResearchService
         **Art. 1349-1395 din Codul Civil** (Legea nr. 287/2009) reglementeaza raspunderea civila delictuala.
 
         ### Conditiile angajarii raspunderii (art. 1357)
-        1. **Fapta ilicita** – actiune sau inactiune contrara dreptului
-        2. **Prejudiciul** – cert, direct, personal si nereparat
+        1. **Fapta ilicita** - actiune sau inactiune contrara dreptului
+        2. **Prejudiciul** - cert, direct, personal si nereparat
         3. **Legatura de cauzalitate** intre fapta si prejudiciu
-        4. **Vinovatia** – intentie sau culpa (inclusiv culpa cea mai usage)
+        4. **Vinovatia** - intentie sau culpa (inclusiv culpa cea mai usage)
 
         ### Tipuri de raspundere
-        - **Art. 1372** – Raspunderea pentru fapta altei persoane (comitent-prepus)
-        - **Art. 1375** – Raspunderea pentru prejudiciile cauzate de animale
-        - **Art. 1376** – Raspunderea pentru ruina edificiului
-        - **Art. 1380** – Raspunderea pentru produse cu defecte
+        - **Art. 1372** - Raspunderea pentru fapta altei persoane (comitent-prepus)
+        - **Art. 1375** - Raspunderea pentru prejudiciile cauzate de animale
+        - **Art. 1376** - Raspunderea pentru ruina edificiului
+        - **Art. 1380** - Raspunderea pentru produse cu defecte
 
         ### Evaluarea prejudiciului (art. 1385-1395)
         Victima are dreptul la repararea **integrala** a prejudiciului, incluzand:
@@ -303,15 +303,15 @@ public class LegalResearchService : ILegalResearchService
         });
 
     private static (string, List<LegalSourceDto>) MockCriminal() => ("""
-        ## Drept Penal Roman – Aspecte Generale
+        ## Drept Penal Roman - Aspecte Generale
 
         **Codul Penal (Legea nr. 286/2009)** si **Codul de Procedura Penala (Legea nr. 135/2010)**
         constituie cadrul legal fundamental.
 
         ### Principii fundamentale
-        - **Legalitatea incriminarii** (art. 1 CP) – *nullum crimen sine lege*
+        - **Legalitatea incriminarii** (art. 1 CP) - *nullum crimen sine lege*
         - **Legalitatea sanctiunii** (art. 2 CP)
-        - **Vinovatia** (art. 16 CP) – intentie directa/indirecta, culpa cu/fara prevedere, praeterintentie
+        - **Vinovatia** (art. 16 CP) - intentie directa/indirecta, culpa cu/fara prevedere, praeterintentie
 
         ### Masuri preventive (art. 202 CPP)
         | Masura | Durata initiala | Organ competent |
@@ -334,7 +334,7 @@ public class LegalResearchService : ILegalResearchService
         });
 
     private static (string, List<LegalSourceDto>) MockCommercial() => ("""
-        ## Drept Comercial – Contracte si Societati
+        ## Drept Comercial - Contracte si Societati
 
         **Codul Civil (art. 1166-1323)** si **Legea nr. 31/1990** privind societatile reglementeaza
         principalele institutii ale dreptului comercial roman.
@@ -351,8 +351,8 @@ public class LegalResearchService : ILegalResearchService
 
         ### Raspunderea contractuala (art. 1530-1548)
         - Daune-interese pentru neexecutare culpabila
-        - Clauza penala (art. 1538) – evaluare anticipata
-        - Arvuna (art. 1544) – functie confirmatorie sau penalizatoare
+        - Clauza penala (art. 1538) - evaluare anticipata
+        - Arvuna (art. 1544) - functie confirmatorie sau penalizatoare
 
         ### Insolvent (Legea nr. 85/2014)
         Procedura de insolventa se deschide la cererea debitorului sau a creditorului cu
@@ -363,8 +363,8 @@ public class LegalResearchService : ILegalResearchService
         new List<LegalSourceDto>
         {
             new() { Title="Codul Civil - Contracte", Type="Lege", Reference="Art. 1166-1323", Excerpt="Incheierea, executarea si incetarea contractelor", Relevance=94, PublishedDate="2009" },
-            new() { Title="Legea nr. 31/1990 – Societatile", Type="Lege", Reference="Republicata 2004", Url="https://legislatie.just.ro/Public/DetaliiDocument/1760", Excerpt="Constituirea si functionarea societatilor comerciale", Relevance=90, PublishedDate="1990" },
-            new() { Title="Legea nr. 85/2014 – Insolventa", Type="Lege", Reference="Art. 5, 66, 70", Excerpt="Procedura generala si simplificata de insolventa", Relevance=80, PublishedDate="2014" },
+            new() { Title="Legea nr. 31/1990 - Societatile", Type="Lege", Reference="Republicata 2004", Url="https://legislatie.just.ro/Public/DetaliiDocument/1760", Excerpt="Constituirea si functionarea societatilor comerciale", Relevance=90, PublishedDate="1990" },
+            new() { Title="Legea nr. 85/2014 - Insolventa", Type="Lege", Reference="Art. 5, 66, 70", Excerpt="Procedura generala si simplificata de insolventa", Relevance=80, PublishedDate="2014" },
         });
 
     private static (string, List<LegalSourceDto>) MockGeneral(string query) => ($"""
@@ -374,8 +374,8 @@ public class LegalResearchService : ILegalResearchService
 
         ### Cadrul legal aplicabil
         Legislatia romana este structurata pe **coduri principale**:
-        - **Codul Civil** (Legea nr. 287/2009) – drept privat general
-        - **Codul Penal** (Legea nr. 286/2009) – drept penal
+        - **Codul Civil** (Legea nr. 287/2009) - drept privat general
+        - **Codul Penal** (Legea nr. 286/2009) - drept penal
         - **Codul de Procedura Civila** (Legea nr. 134/2010)
         - **Codul de Procedura Penala** (Legea nr. 135/2010)
         - **Codul Muncii** (Legea nr. 53/2003)

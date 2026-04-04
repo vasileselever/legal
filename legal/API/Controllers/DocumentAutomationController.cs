@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LegalRO.CaseManagement.API.Controllers;
 
 /// <summary>
-/// Legal Document Automation – template management, guided interview sessions,
+/// Legal Document Automation ï¿½ template management, guided interview sessions,
 /// document generation, clause library and quality assurance.
 /// </summary>
 [ApiController]
@@ -52,7 +52,7 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.GetTemplateByIdAsync(firmId, id, ct);
         if (data == null)
-            return NotFound(new ApiResponse<DocumentTemplateDetailDto> { Success = false, Message = "Template neg?sit" });
+            return NotFound(new ApiResponse<DocumentTemplateDetailDto> { Success = false, Message = "Template negasit" });
         return Ok(new ApiResponse<DocumentTemplateDetailDto> { Success = true, Data = data });
     }
 
@@ -77,7 +77,7 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.UpdateTemplateAsync(firmId, id, dto, ct);
         if (data == null)
-            return NotFound(new ApiResponse<DocumentTemplateDetailDto> { Success = false, Message = "Template neg?sit" });
+            return NotFound(new ApiResponse<DocumentTemplateDetailDto> { Success = false, Message = "Template negasit" });
         return Ok(new ApiResponse<DocumentTemplateDetailDto> { Success = true, Data = data, Message = "Template actualizat" });
     }
 
@@ -88,8 +88,8 @@ public class DocumentAutomationController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var ok = await _svc.DeleteTemplateAsync(firmId, id, ct);
-        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Template neg?sit" });
-        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Template ?ters" });
+        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Template negasit" });
+        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Template sters" });
     }
 
     // >> Template Fields >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -112,7 +112,7 @@ public class DocumentAutomationController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var ok = await _svc.RemoveFieldAsync(firmId, templateId, fieldId, ct);
-        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Câmp neg?sit" });
+        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Camp negasit" });
         return Ok(new ApiResponse<bool> { Success = true, Data = true });
     }
 
@@ -137,7 +137,7 @@ public class DocumentAutomationController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var ok = await _svc.RemoveClauseFromTemplateAsync(firmId, templateId, mappingId, ct);
-        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Mapping neg?sit" });
+        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Mapping negasit" });
         return Ok(new ApiResponse<bool> { Success = true, Data = true });
     }
 
@@ -168,7 +168,7 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.GetClauseByIdAsync(firmId, id, ct);
         if (data == null)
-            return NotFound(new ApiResponse<ClauseLibraryItemDto> { Success = false, Message = "Clauz? neg?sit?" });
+            return NotFound(new ApiResponse<ClauseLibraryItemDto> { Success = false, Message = "Clauza negasita" });
         return Ok(new ApiResponse<ClauseLibraryItemDto> { Success = true, Data = data });
     }
 
@@ -181,7 +181,7 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.CreateClauseAsync(firmId, dto, ct);
         return CreatedAtAction(nameof(GetClause), new { id = data.Id },
-            new ApiResponse<ClauseLibraryItemDto> { Success = true, Data = data, Message = "Clauz? creat?" });
+            new ApiResponse<ClauseLibraryItemDto> { Success = true, Data = data, Message = "Clauza creata" });
     }
 
     /// <summary>Update a clause</summary>
@@ -193,8 +193,8 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.UpdateClauseAsync(firmId, id, dto, ct);
         if (data == null)
-            return NotFound(new ApiResponse<ClauseLibraryItemDto> { Success = false, Message = "Clauz? neg?sit?" });
-        return Ok(new ApiResponse<ClauseLibraryItemDto> { Success = true, Data = data, Message = "Clauz? actualizat?" });
+            return NotFound(new ApiResponse<ClauseLibraryItemDto> { Success = false, Message = "Clauza negasita" });
+        return Ok(new ApiResponse<ClauseLibraryItemDto> { Success = true, Data = data, Message = "Clauza actualizata" });
     }
 
     /// <summary>Soft-delete a clause</summary>
@@ -204,8 +204,8 @@ public class DocumentAutomationController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var ok = await _svc.DeleteClauseAsync(firmId, id, ct);
-        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Clauz? neg?sit?" });
-        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Clauz? ?tears?" });
+        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Clauza negasita" });
+        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Clauza stearsa" });
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -232,7 +232,7 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.GetSessionByIdAsync(firmId, id, ct);
         if (data == null)
-            return NotFound(new ApiResponse<DocumentSessionDetailDto> { Success = false, Message = "Sesiune neg?sit?" });
+            return NotFound(new ApiResponse<DocumentSessionDetailDto> { Success = false, Message = "Sesiune negasita" });
         return Ok(new ApiResponse<DocumentSessionDetailDto> { Success = true, Data = data });
     }
 
@@ -246,7 +246,7 @@ public class DocumentAutomationController : ControllerBase
         var userId = ClaimsHelper.GetUserId(User);
         var data = await _svc.StartSessionAsync(firmId, userId, dto, ct);
         return CreatedAtAction(nameof(GetSession), new { id = data.Id },
-            new ApiResponse<DocumentSessionDetailDto> { Success = true, Data = data, Message = "Sesiune pornit?" });
+            new ApiResponse<DocumentSessionDetailDto> { Success = true, Data = data, Message = "Sesiune pornita" });
     }
 
     /// <summary>Submit answers (can be called multiple times to save progress)</summary>
@@ -258,8 +258,8 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.SubmitAnswersAsync(firmId, id, dto, ct);
         if (data == null)
-            return NotFound(new ApiResponse<DocumentSessionDetailDto> { Success = false, Message = "Sesiune neg?sit?" });
-        return Ok(new ApiResponse<DocumentSessionDetailDto> { Success = true, Data = data, Message = "R?spunsuri salvate" });
+            return NotFound(new ApiResponse<DocumentSessionDetailDto> { Success = false, Message = "Sesiune negasita" });
+        return Ok(new ApiResponse<DocumentSessionDetailDto> { Success = true, Data = data, Message = "Raspunsuri salvate" });
     }
 
     /// <summary>Abandon an in-progress session</summary>
@@ -269,8 +269,8 @@ public class DocumentAutomationController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var ok = await _svc.AbandonSessionAsync(firmId, id, ct);
-        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Sesiune neg?sit?" });
-        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Sesiune abandonat?" });
+        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Sesiune negasita" });
+        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Sesiune abandonata" });
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -287,7 +287,7 @@ public class DocumentAutomationController : ControllerBase
         var userId = ClaimsHelper.GetUserId(User);
         var data = await _svc.GenerateDocumentAsync(firmId, userId, sessionId, ct);
         if (data == null)
-            return NotFound(new ApiResponse<GeneratedDocumentDetailDto> { Success = false, Message = "Sesiune neg?sit?" });
+            return NotFound(new ApiResponse<GeneratedDocumentDetailDto> { Success = false, Message = "Sesiune negasita" });
         return CreatedAtAction(nameof(GetGeneratedDocument), new { id = data.Id },
             new ApiResponse<GeneratedDocumentDetailDto> { Success = true, Data = data, Message = "Document generat" });
     }
@@ -311,7 +311,7 @@ public class DocumentAutomationController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var data = await _svc.GetGeneratedDocumentByIdAsync(firmId, id, ct);
         if (data == null)
-            return NotFound(new ApiResponse<GeneratedDocumentDetailDto> { Success = false, Message = "Document neg?sit" });
+            return NotFound(new ApiResponse<GeneratedDocumentDetailDto> { Success = false, Message = "Document negasit" });
         return Ok(new ApiResponse<GeneratedDocumentDetailDto> { Success = true, Data = data });
     }
 
@@ -322,8 +322,8 @@ public class DocumentAutomationController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var ok = await _svc.DeleteGeneratedDocumentAsync(firmId, id, ct);
-        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Document neg?sit" });
-        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Document ?ters" });
+        if (!ok) return NotFound(new ApiResponse<bool> { Success = false, Message = "Document negasit" });
+        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Document sters" });
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

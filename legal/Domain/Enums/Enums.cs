@@ -196,7 +196,7 @@ public enum ConflictType
     ConcurrentConflict = 2,  // Competing interests
     FormerClientConflict = 3,// Related to prior representation
     ImputedConflict = 4,     // Another lawyer in firm has conflict
-    RelatedParty = 5         // Same person, different matter — informational only, not a true conflict
+    RelatedParty = 5         // Same person, different matter - informational only, not a true conflict
 }
 
 /// <summary>

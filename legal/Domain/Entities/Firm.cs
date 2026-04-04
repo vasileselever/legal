@@ -17,7 +17,7 @@ public class Firm : BaseEntity
     public string? LogoUrl { get; set; }
     
     /// <summary>
-    /// CUI (Cod Unic de Înregistrare) - Romanian tax identification number
+    /// CUI (Cod Unic de Inregistrare) - Romanian tax identification number
     /// </summary>
     public string? FiscalCode { get; set; }
     

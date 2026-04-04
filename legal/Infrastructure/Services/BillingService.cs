@@ -238,6 +238,8 @@ public class BillingService : IBillingService
         exp.IsBillable = request.IsBillable;
         exp.ReceiptFilePath = request.ReceiptFilePath;
         exp.Vendor = request.Vendor;
+        if (request.Status.HasValue)
+            exp.Status = request.Status.Value;
         exp.UpdatedBy = userId.ToString();
 
         await _db.SaveChangesAsync();

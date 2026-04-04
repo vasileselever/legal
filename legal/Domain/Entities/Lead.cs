@@ -94,7 +94,7 @@ public class LeadDocument : BaseEntity
 
     /// <summary>
     /// Set when this document was produced by Document Automation.
-    /// Used to show the "Ata?at la Lead" indicator in the Documents list.
+    /// Used to show the "Atasat la Lead" indicator in the Documents list.
     /// </summary>
     public Guid? GeneratedDocumentId { get; set; }
 

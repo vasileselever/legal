@@ -717,7 +717,7 @@ public class DocumentAutomationService : IDocumentAutomationService
                 issues.Add(new QualityIssueDto
                 {
                     Severity = "Error",
-                    Message = $"Clauza obligatorie '{mapping.Clause.Title}' lipse?te din document."
+                    Message = $"Clauza obligatorie '{mapping.Clause.Title}' lipseste din document."
                 });
             }
         }

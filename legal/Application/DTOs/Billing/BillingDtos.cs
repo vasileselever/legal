@@ -114,6 +114,7 @@ public class UpdateExpenseRequest
     public bool IsBillable { get; set; } = true;
     [MaxLength(500)] public string? ReceiptFilePath { get; set; }
     [MaxLength(200)] public string? Vendor { get; set; }
+    public ExpenseStatus? Status { get; set; }
 }
 
 // >> Invoice >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

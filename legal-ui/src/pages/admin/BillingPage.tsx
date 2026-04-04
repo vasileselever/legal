@@ -283,6 +283,7 @@ function ExpensesTab() {
   const [showCreate, setShowCreate] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [changingStatus, setChangingStatus] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -294,6 +295,26 @@ function ExpensesTab() {
   }, [page]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleStatusChange = async (exp: ExpenseDto, newStatus: number) => {
+    if (exp.status === 3) return; // Billed - locked
+    setChangingStatus(exp.id);
+    try {
+      await billingService.updateExpense(exp.id, {
+        expenseDate: exp.expenseDate,
+        category: exp.category,
+        description: exp.description,
+        amount: exp.amount,
+        markupPercent: exp.markupPercent,
+        isBillable: exp.isBillable,
+        receiptFilePath: exp.receiptFilePath,
+        vendor: exp.vendor,
+        status: newStatus,
+      });
+      setItems(prev => prev.map(e => e.id === exp.id ? { ...e, status: newStatus } : e));
+    } catch (e: any) { setError(e.message); }
+    finally { setChangingStatus(null); }
+  };
 
   return (
     <div style={{ marginTop: '1rem' }}>
@@ -321,7 +342,26 @@ function ExpensesTab() {
                     <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.amount, e.currency)}</td>
                     <td style={{ ...tdStyle, fontWeight: 700, color: '#6a1b9a' }}>{fmtMoney(e.billableAmount, e.currency)}</td>
-                    <td style={tdStyle}><Badge label={EXPENSE_STATUS[e.status] ?? '-'} color={EXPENSE_STATUS_COLORS[e.status] ?? '#999'} /></td>
+                    <td style={tdStyle}>
+                      {e.status === 3
+                        ? <Badge label={EXPENSE_STATUS[e.status]} color={EXPENSE_STATUS_COLORS[e.status]} />
+                        : <select
+                            disabled={changingStatus === e.id}
+                            value={e.status}
+                            onChange={ev => handleStatusChange(e, +ev.target.value)}
+                            style={{
+                              fontSize: '0.78rem', fontWeight: 600, borderRadius: '12px',
+                              padding: '0.2rem 0.5rem', border: `1px solid ${EXPENSE_STATUS_COLORS[e.status] ?? '#ccc'}`,
+                              color: EXPENSE_STATUS_COLORS[e.status] ?? '#333',
+                              background: (EXPENSE_STATUS_COLORS[e.status] ?? '#ccc') + '22',
+                              cursor: 'pointer', outline: 'none',
+                            }}>
+                            {Object.entries(EXPENSE_STATUS)
+                              .filter(([k]) => +k !== 3) // cannot manually set Facturat
+                              .map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
