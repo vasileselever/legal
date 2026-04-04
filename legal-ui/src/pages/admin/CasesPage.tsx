@@ -254,6 +254,11 @@ function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClien
     ]).then(([c, u]) => {
       setClients(c.map((x: any) => ({ id: x.id, name: x.name })));
       setLawyers(u);
+      // Apply prefilled lawyer once lawyers are loaded
+      if (prefilledLawyerId) {
+        const match = (u as UserInfo[]).find(l => l.id === prefilledLawyerId);
+        if (match) setForm(f => ({ ...f, responsibleLawyerId: match.id }));
+      }
     }).catch((e: any) => setError(e.message))
       .finally(() => setRefLoading(false));
   }, []);
