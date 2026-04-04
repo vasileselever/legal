@@ -40,8 +40,8 @@ interface CaseDetail {
 }
 
 // ?? Helpers ???????????????????????????????????????????????????????????
-const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('ro-RO') : '—';
-const fmtMoney = (v?: number) => v != null ? v.toLocaleString('ro-RO', { minimumFractionDigits: 2 }) + ' RON' : '—';
+const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('ro-RO') : '-';
+const fmtMoney = (v?: number) => v != null ? v.toLocaleString('ro-RO', { minimumFractionDigits: 2 }) + ' RON' : '-';
 
 // ?? Styles ????????????????????????????????????????????????????????????
 const thStyle: React.CSSProperties = {
@@ -101,10 +101,10 @@ function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
       <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>
-            {data ? `${data.caseNumber} — ${data.title}` : 'Detalii dosar'}
+            {data ? `${data.caseNumber} - ${data.title}` : 'Detalii dosar'}
           </h2>
           <button onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1 }}>?</button>
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1 }}>&times;</button>
         </div>
 
         {loading && <div style={{ color: '#888', padding: '2rem', textAlign: 'center' }}>Se incarca...</div>}
@@ -157,8 +157,8 @@ function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
                       ['Data deschiderii', fmtDate(data.openingDate)],
                       ['Data inchiderii', fmtDate(data.closingDate)],
                       ['Urmatorul termen', fmtDate(data.nextDeadline)],
-                      ['Instanta', data.court || '—'],
-                      ['Parte adversa', data.opposingParty || '—'],
+                      ['Instanta', data.court || '-'],
+                      ['Parte adversa', data.opposingParty || '-'],
                       ['Valoare dosar', fmtMoney(data.caseValue)],
                     ].map(([k, v]) => (
                       <tr key={k}>
@@ -332,9 +332,9 @@ export function CasesPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '1rem', borderTop: '1px solid #f0f0f0' }}>
-                <button style={btnOutline} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹ Anterior</button>
+                <button style={btnOutline} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>&lsaquo; Anterior</button>
                 <span style={{ fontSize: '0.85rem', color: '#666' }}>Pagina {page} din {totalPages}</span>
-                <button style={btnOutline} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Urmator ›</button>
+                <button style={btnOutline} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Urmator &rsaquo;</button>
               </div>
             )}
           </div>
