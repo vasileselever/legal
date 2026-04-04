@@ -211,10 +211,8 @@ try
         });
     }
 
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseHttpsRedirection();
-    }
+    // HTTPS redirection is intentionally omitted: Caddy handles HTTP?HTTPS
+    // externally. The app only ever receives plain HTTP on port 8080 inside Docker.
 
     app.UseCors("AllowFrontend");
 

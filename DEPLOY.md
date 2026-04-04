@@ -1,4 +1,17 @@
 # LegalRO - Server Deployment Guide
+# LegalRO - Server Deployment Guide
+
+## Production Status ?
+
+All systems clean as of last deploy:
+- ? Zero warnings in container logs
+- ? DataProtection keys persisted and encrypted at rest (X.509 cert, `/app/keys` volume)
+- ? EF Core query filter warnings resolved
+- ? HTTPS handled by Caddy — no internal redirect warnings
+- ? Uploaded documents persisted across rebuilds (`/app/uploads` volume)
+- ? Health check: `GET /health` ? `200 Healthy`
+
+---
 
 ## Prerequisites
 
