@@ -34,7 +34,17 @@ public class ClientsController : ControllerBase
                 Email = c.Email,
                 Phone = c.Phone,
                 IsCorporate = c.IsCorporate,
-                FiscalCode = c.FiscalCode
+                FiscalCode = c.FiscalCode,
+                AssignedLawyerId = _context.Leads
+                    .Where(l => l.ConvertedToClientId == c.Id && l.AssignedTo != null)
+                    .Select(l => (Guid?)l.AssignedTo)
+                    .FirstOrDefault(),
+                AssignedLawyerName = _context.Leads
+                    .Where(l => l.ConvertedToClientId == c.Id && l.AssignedTo != null)
+                    .Select(l => l.AssignedLawyer != null
+                        ? l.AssignedLawyer.FirstName + " " + l.AssignedLawyer.LastName
+                        : null)
+                    .FirstOrDefault(),
             })
             .ToListAsync();
 
@@ -50,4 +60,6 @@ public class ClientListItem
     public string? Phone { get; set; }
     public bool IsCorporate { get; set; }
     public string? FiscalCode { get; set; }
+    public Guid? AssignedLawyerId { get; set; }
+    public string? AssignedLawyerName { get; set; }
 }

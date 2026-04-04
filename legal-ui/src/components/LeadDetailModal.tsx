@@ -139,6 +139,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
           clientName: lead.name,
           practiceArea: lead.practiceArea,
           assignedTo: lead.assignedTo,
+          assignedToName: lead.assignedToName,
         }
       });
     }

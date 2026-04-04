@@ -228,11 +228,11 @@ interface CreateCaseModalProps {
 }
 
 function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClientName, prefilledPracticeArea, prefilledLawyerId }: CreateCaseModalProps) {
-  const [clients,  setClients]  = useState<{ id: string; name: string }[]>([]);
-  const [lawyers,  setLawyers]  = useState<UserInfo[]>([]);
-  const [loading,  setLoading]  = useState(false);
-  const [refLoading, setRefLoading] = useState(true);
-  const [error,    setError]    = useState('');
+  const [clients,     setClients]     = useState<{ id: string; name: string; assignedLawyerId?: string; assignedLawyerName?: string }[]>([]);
+  const [lawyers,     setLawyers]     = useState<UserInfo[]>([]);
+  const [loading,     setLoading]     = useState(false);
+  const [refLoading,  setRefLoading]  = useState(true);
+  const [error,       setError]       = useState('');
 
   const [form, setForm] = useState({
     clientId:            prefilledClientId   ?? '',
@@ -252,7 +252,7 @@ function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClien
       apiClient.get('/v1/clients').then(r => r.data ?? []),
       authService.getUsers(),
     ]).then(([c, u]) => {
-      setClients(c.map((x: any) => ({ id: x.id, name: x.name })));
+      setClients(c.map((x: any) => ({ id: x.id, name: x.name, assignedLawyerId: x.assignedLawyerId ?? undefined, assignedLawyerName: x.assignedLawyerName ?? undefined })));
       setLawyers(u);
       // Apply prefilled lawyer once lawyers are loaded
       if (prefilledLawyerId) {
@@ -306,9 +306,25 @@ function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClien
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={lbl}>Client *</label>
-              <select style={selectStyle} value={form.clientId} onChange={e => set('clientId', e.target.value)}>
+              <select style={selectStyle} value={form.clientId}
+                onChange={e => {
+                  const selected = clients.find(c => c.id === e.target.value);
+                  setForm(f => ({
+                    ...f,
+                    clientId: e.target.value,
+                    responsibleLawyerId: selected?.assignedLawyerId ?? f.responsibleLawyerId,
+                  }));
+                }}>
                 <option value="">-- Selecteaza clientul --</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={lbl}>Avocat responsabil *</label>
+              <select style={selectStyle} value={form.responsibleLawyerId} onChange={e => set('responsibleLawyerId', e.target.value)}>
+                <option value="">-- Selecteaza avocatul --</option>
+                {lawyers.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
               </select>
             </div>
 
@@ -328,14 +344,6 @@ function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClien
               <label style={lbl}>Tip dosar *</label>
               <select style={selectStyle} value={form.caseType} onChange={e => set('caseType', +e.target.value)}>
                 {Object.entries(CASE_TYPE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </div>
-
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={lbl}>Avocat responsabil *</label>
-              <select style={selectStyle} value={form.responsibleLawyerId} onChange={e => set('responsibleLawyerId', e.target.value)}>
-                <option value="">-- Selecteaza avocatul --</option>
-                {lawyers.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
               </select>
             </div>
 
