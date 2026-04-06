@@ -24,8 +24,7 @@ export function LeadsPage() {
   const [error, setError]           = useState('');
   const [selected, setSelected]     = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [unreadOnly, setUnreadOnly] = useState(false);
-  const { count: unreadCount, refresh: refreshUnread } = useUnreadMessages();
+  const { refresh: refreshUnread } = useUnreadMessages();
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -35,12 +34,11 @@ export function LeadsPage() {
         search: search || undefined,
         status: statusFilter,
         practiceArea: areaFilter,
-        unreadOnly: unreadOnly || undefined,
       });
       setLeads(r.data); setTotal(r.pagination?.totalCount ?? 0);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, [page, search, statusFilter, areaFilter, unreadOnly]);
+  }, [page, search, statusFilter, areaFilter]);
 
   useEffect(() => { load(); }, [load]);
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -91,16 +89,6 @@ export function LeadsPage() {
               {PRACTICE_AREAS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
             <button onClick={load} style={{ marginLeft: 'auto', padding: '0.5rem 1rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>&#8635; Refresh</button>
-            <button
-              onClick={() => { setUnreadOnly(v => !v); setPage(1); }}
-              style={{ position: 'relative', padding: '0.5rem 1rem', border: '1px solid #ef5350', borderRadius: '6px', cursor: 'pointer', background: unreadOnly ? '#ef5350' : 'white', color: unreadOnly ? 'white' : '#ef5350', fontWeight: 600, fontSize: '0.85rem' }}>
-              &#128276; Necitite
-              {unreadCount > 0 && !unreadOnly && (
-                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef5350', color: 'white', borderRadius: '10px', fontSize: '0.6rem', fontWeight: 700, padding: '1px 4px', lineHeight: 1.4 }}>
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
           </div>
           {/* Quick status pills */}
           <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid #f5f5f5', display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
