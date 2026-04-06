@@ -10,6 +10,7 @@ import {
   type LegalResearchResult,
   type LegalResearchHistoryItem,
   type LegalSource,
+  type ConversationTurn,
 } from '../../api/legalResearchService';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -111,6 +112,7 @@ export function LegalResearchPage() {
   const [searching, setSearching]       = useState(false);
   const [result, setResult]             = useState<LegalResearchResult | null>(null);
   const [error, setError]               = useState('');
+  const [convHistory, setConvHistory]   = useState<ConversationTurn[]>([]);
 
   const [history, setHistory]               = useState<LegalResearchHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -131,7 +133,13 @@ export function LegalResearchPage() {
     if (!trimmed || trimmed.length < 10) { setError('Intrebarea trebuie sa aiba cel putin 10 caractere.'); return; }
     setSearching(true); setError(''); setResult(null); setActiveTab('search');
     try {
-      const res = await legalResearchService.search({ query: trimmed, practiceArea });
+      const res = await legalResearchService.search({
+        query: trimmed,
+        practiceArea,
+        history: convHistory.slice(-3),
+      });
+      // Append current Q&A to conversation history
+      setConvHistory(h => [...h, { question: trimmed, answer: res.answer }].slice(-3));
       setResult(res);
       loadHistory();
     } catch (e: any) {
@@ -320,6 +328,52 @@ export function LegalResearchPage() {
                         ))}
                       </div>
                     </Card>
+                  )}
+
+                  {/* Related questions */}
+                  {result.relatedQuestions?.length > 0 && (
+                    <Card>
+                      <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.88rem', color: '#1a237e', fontWeight: 700 }}>
+                          🔍 Intrebari conexe
+                        </h3>
+                        {convHistory.length > 0 && (
+                          <button
+                            onClick={() => setConvHistory([])}
+                            style={{ fontSize: '0.75rem', color: '#888', background: 'none', border: '1px solid #e0e0e0', borderRadius: '5px', cursor: 'pointer', padding: '0.2rem 0.6rem' }}
+                          >
+                            ✕ Reseteaza conversatia
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {result.relatedQuestions.map((q, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setQuery(q); handleSearch(q); }}
+                            style={{
+                              textAlign: 'left', padding: '0.6rem 0.9rem',
+                              background: '#f8f9ff', border: '1px solid #e8eaf6',
+                              borderRadius: '7px', cursor: 'pointer', fontSize: '0.87rem',
+                              color: '#1a237e', fontWeight: 500,
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = '#e8eaf6')}
+                            onMouseLeave={e => (e.currentTarget.style.background = '#f8f9ff')}
+                          >
+                            → {q}
+                          </button>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Conversation context indicator */}
+                  {convHistory.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '7px', fontSize: '0.78rem', color: '#2e7d32' }}>
+                      <span>💬</span>
+                      <span>Conversatie activa cu {convHistory.length} {convHistory.length === 1 ? 'schimb' : 'schimburi'} anterior — urmatoarea intrebare va tine cont de context.</span>
+                    </div>
                   )}
                 </div>
               )}

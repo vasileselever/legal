@@ -20,6 +20,16 @@ public class LegalResearchQueryDto
 
     /// <summary>Whether to save this search to history (default true)</summary>
     public bool SaveToHistory { get; set; } = true;
+
+    /// <summary>Previous Q&amp;A turns for conversational context (max 3)</summary>
+    public List<ConversationTurnDto>? History { get; set; }
+}
+
+/// <summary>A single prior Q&amp;A exchange passed for conversational context</summary>
+public class ConversationTurnDto
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
 }
 
 /// <summary>Update bookmark / title of a saved research</summary>
@@ -58,6 +68,8 @@ public class LegalResearchResultDto
     public DateTime CreatedAt { get; set; }
     public bool IsBookmarked { get; set; }
     public string? Title { get; set; }
+    /// <summary>Follow-up questions suggested by the AI</summary>
+    public List<string> RelatedQuestions { get; set; } = new();
 }
 
 /// <summary>Summary item for the research history list</summary>

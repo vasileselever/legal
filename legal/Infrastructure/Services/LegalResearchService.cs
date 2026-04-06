@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Azure.AI.OpenAI;
 using LegalRO.CaseManagement.Application.DTOs.LegalResearch;
 using LegalRO.CaseManagement.Application.Services;
+using OpenAI;
 using OpenAI.Chat;
 
 namespace LegalRO.CaseManagement.Infrastructure.Services;
@@ -28,12 +30,14 @@ public class LegalResearchService : ILegalResearchService
         string query,
         string? practiceAreaHint,
         string? caseContext,
+        IReadOnlyList<ConversationTurn>? history = null,
         CancellationToken ct = default)
     {
         var sw = Stopwatch.StartNew();
 
-        var endpoint  = _cfg["Ai:AzureOpenAI:Endpoint"];
-        var apiKey    = _cfg["Ai:AzureOpenAI:ApiKey"];
+        // 1. Try Azure OpenAI
+        var endpoint   = _cfg["Ai:AzureOpenAI:Endpoint"];
+        var apiKey     = _cfg["Ai:AzureOpenAI:ApiKey"];
         var deployment = _cfg["Ai:AzureOpenAI:Deployment"] ?? "gpt-4o";
 
         if (!string.IsNullOrWhiteSpace(endpoint) && !string.IsNullOrWhiteSpace(apiKey))
@@ -41,14 +45,32 @@ public class LegalResearchService : ILegalResearchService
             try
             {
                 return await CallAzureOpenAiAsync(
-                    query, practiceAreaHint, caseContext, endpoint, apiKey, deployment, sw, ct);
+                    query, practiceAreaHint, caseContext, history, endpoint, apiKey, deployment, sw, ct);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Azure OpenAI call failed; falling back to mock");
+                _logger.LogWarning(ex, "Azure OpenAI call failed; trying OpenAI direct");
             }
         }
 
+        // 2. Try OpenAI direct API
+        var openAiKey   = _cfg["Ai:OpenAI:ApiKey"];
+        var openAiModel = _cfg["Ai:OpenAI:Model"] ?? "gpt-4o";
+
+        if (!string.IsNullOrWhiteSpace(openAiKey))
+        {
+            try
+            {
+                return await CallOpenAiDirectAsync(
+                    query, practiceAreaHint, caseContext, history, openAiKey, openAiModel, sw, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "OpenAI direct call failed; falling back to mock");
+            }
+        }
+
+        // 3. Structured mock
         return await BuildMockResponseAsync(query, practiceAreaHint, sw);
     }
 
@@ -56,65 +78,118 @@ public class LegalResearchService : ILegalResearchService
 
     private async Task<LegalResearchResultDto> CallAzureOpenAiAsync(
         string query, string? area, string? caseCtx,
+        IReadOnlyList<ConversationTurn>? history,
         string endpoint, string apiKey, string deployment,
         Stopwatch sw, CancellationToken ct)
     {
         var client = new AzureOpenAIClient(new Uri(endpoint), new Azure.AzureKeyCredential(apiKey));
         var chat   = client.GetChatClient(deployment);
-
-        var systemPrompt = BuildSystemPrompt();
-        var userPrompt   = BuildUserPrompt(query, area, caseCtx);
-
-        var messages = new List<ChatMessage>
-        {
-            ChatMessage.CreateSystemMessage(systemPrompt),
-            ChatMessage.CreateUserMessage(userPrompt),
-        };
-
-        var options = new ChatCompletionOptions
-        {
-            Temperature          = 0.2f,
-            MaxOutputTokenCount  = 2048,
-        };
+        var messages = BuildMessages(query, area, caseCtx, history);
+        var options  = new ChatCompletionOptions { Temperature = 0.2f, MaxOutputTokenCount = 4096 };
 
         var completion = await chat.CompleteChatAsync(messages, options, ct);
-        var rawJson    = completion.Value.Content[0].Text;
-
         sw.Stop();
-        return ParseAiResponse(query, rawJson, area, (int)sw.Elapsed.TotalMilliseconds, deployment);
+        return ParseAiResponse(query, completion.Value.Content[0].Text, area, (int)sw.Elapsed.TotalMilliseconds, deployment);
+    }
+
+    // ?? OpenAI Direct ????????????????????????????????????????????????????????
+
+    private async Task<LegalResearchResultDto> CallOpenAiDirectAsync(
+        string query, string? area, string? caseCtx,
+        IReadOnlyList<ConversationTurn>? history,
+        string apiKey, string model,
+        Stopwatch sw, CancellationToken ct)
+    {
+        var client  = new OpenAIClient(apiKey);
+        var chat    = client.GetChatClient(model);
+        var messages = BuildMessages(query, area, caseCtx, history);
+        var options  = new ChatCompletionOptions { Temperature = 0.2f, MaxOutputTokenCount = 4096 };
+
+        var completion = await chat.CompleteChatAsync(messages, options, ct);
+        sw.Stop();
+        return ParseAiResponse(query, completion.Value.Content[0].Text, area, (int)sw.Elapsed.TotalMilliseconds, model);
+    }
+
+    // ?? Message builder (shared) ?????????????????????????????????????????????
+
+    private static List<ChatMessage> BuildMessages(
+        string query, string? area, string? caseCtx,
+        IReadOnlyList<ConversationTurn>? history)
+    {
+        var messages = new List<ChatMessage>
+        {
+            ChatMessage.CreateSystemMessage(BuildSystemPrompt()),
+        };
+
+        if (history != null)
+        {
+            foreach (var turn in history.TakeLast(3))
+            {
+                messages.Add(ChatMessage.CreateUserMessage(turn.Question));
+                messages.Add(ChatMessage.CreateAssistantMessage(turn.Answer));
+            }
+        }
+
+        messages.Add(ChatMessage.CreateUserMessage(BuildUserPrompt(query, area, caseCtx)));
+        return messages;
     }
 
     // >> Prompt helpers >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     private static string BuildSystemPrompt() =>
 """
-        Esti un asistent juridic AI specializat pe dreptul roman.
-        Raspunzi EXCLUSIV la intrebari juridice referitoare la legislatia romana.
-        Raspunsul tau trebuie sa fie un JSON valid cu exact urmatoarea structura:
-        {
-          "answer": "<raspuns detaliat in Markdown, in romana>",
-          "confidence": <numar 0-100>,
-          "sources": [
-            {
-              "title": "<titlu sursa>",
-              "type": "<Lege|Hotarare|Jurisprudenta|Doctrina>",
-              "reference": "<referinta specifica, ex: Art. 1357 Cod Civil>",
-              "url": "<url optional>",
-              "excerpt": "<citat relevant, max 200 caractere>",
-              "publishedDate": "<YYYY optional>",
-              "relevance": <0-100>
-            }
-          ]
-        }
-        Citeaza cel putin 3 surse relevante. Fii precis si citeaza articole exacte.
-        Nu inventa legi care nu exista.
-        """;
+Esti LegalRO AI, un asistent juridic specializat EXCLUSIV pe dreptul roman in vigoare.
+
+CORPUS JURIDIC DE REFERINTA:
+- Codul Civil (Legea nr. 287/2009, republicat) - drept privat general, contracte, familie, proprietate
+- Codul Penal (Legea nr. 286/2009) - infractiuni si pedepse
+- Codul de Procedura Civila (Legea nr. 134/2010) - procedura judiciara civila
+- Codul de Procedura Penala (Legea nr. 135/2010) - procedura penala
+- Codul Muncii (Legea nr. 53/2003) - raporturi de munca
+- Codul Fiscal (Legea nr. 227/2015) - fiscalitate
+- Legea nr. 31/1990 - societati comerciale
+- Legea nr. 85/2014 - insolventa
+- Legea nr. 50/1991 - autorizarea constructiilor
+- Legea nr. 10/2001 - imobile preluate abuziv
+- Deciziile ICCJ in interesul legii si RIL
+- Deciziile Curtii Constitutionale
+
+REGULI STRICTE:
+1. Citeaza EXCLUSIV legi romane existente cu numarul exact al articolului (ex: Art. 1357 Cod Civil)
+2. Indica daca o norma a fost MODIFICATA sau ABROGATA dupa data ta de cunostinte
+3. Distinge intre norma in vigoare si norma istorica
+4. Raspunde NUMAI la intrebari juridice; refuza politicos altele
+5. Adauga intotdeauna un avertisment ca raspunsul nu constituie consultanta juridica
+
+FORMATUL RASPUNSULUI trebuie sa fie JSON valid cu aceasta structura exacta:
+{
+  "answer": "<raspuns detaliat in Markdown, in limba romana>",
+  "confidence": <numar intreg 0-100>,
+  "sources": [
+    {
+      "title": "<titlu complet al actului normativ>",
+      "type": "<Lege|Hotarare|Jurisprudenta|Doctrina>",
+      "reference": "<articol exact, ex: Art. 1357 alin. (1) Cod Civil>",
+      "url": "<url legislatie.just.ro sau portal.just.ro daca exista>",
+      "excerpt": "<citat relevant din text, max 200 caractere>",
+      "publishedDate": "<YYYY>",
+      "relevance": <0-100>
+    }
+  ],
+  "relatedQuestions": [
+    "<intrebare conexa 1>",
+    "<intrebare conexa 2>",
+    "<intrebare conexa 3>"
+  ]
+}
+Citeaza cel putin 3 surse. Genereaza exact 3 intrebari conexe relevante pentru aprofundare.
+""";
 
     private static string BuildUserPrompt(string query, string? area, string? caseCtx)
     {
         var sb = new StringBuilder();
-        if (!string.IsNullOrWhiteSpace(area))   sb.AppendLine($"Domeniu juridic: {area}");
-        if (!string.IsNullOrWhiteSpace(caseCtx)) sb.AppendLine($"Context dosar: {caseCtx}");
+        if (!string.IsNullOrWhiteSpace(area))    sb.AppendLine($"Domeniu juridic: {area}");
+        if (!string.IsNullOrWhiteSpace(caseCtx)) sb.AppendLine($"Context dosar:\n{caseCtx}");
         sb.AppendLine();
         sb.AppendLine($"Intrebare: {query}");
         return sb.ToString();
@@ -158,15 +233,26 @@ public class LegalResearchService : ILegalResearchService
             }
         }
 
+        var related = new List<string>();
+        if (root.TryGetProperty("relatedQuestions", out var rqArr) && rqArr.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var q in rqArr.EnumerateArray())
+            {
+                var text = q.GetString();
+                if (!string.IsNullOrWhiteSpace(text)) related.Add(text);
+            }
+        }
+
         return new LegalResearchResultDto
         {
-            Query          = query,
-            Answer         = answer,
-            Sources        = sources,
-            ConfidenceScore = confidence,
-            ProcessingMs   = ms,
-            ModelUsed      = model,
-            CreatedAt      = DateTime.UtcNow,
+            Query            = query,
+            Answer           = answer,
+            Sources          = sources,
+            RelatedQuestions = related,
+            ConfidenceScore  = confidence,
+            ProcessingMs     = ms,
+            ModelUsed        = model,
+            CreatedAt        = DateTime.UtcNow,
         };
     }
 
@@ -196,6 +282,7 @@ public class LegalResearchService : ILegalResearchService
             Query           = query,
             Answer          = answer,
             Sources         = sources,
+            RelatedQuestions = new List<string> { "Care sunt consecintele nerespectarii acestei proceduri?", "Ce termene legale trebuie respectate?", "Cum se poate contesta decizia la instanta competenta?" },
             ConfidenceScore = 72,
             ProcessingMs    = (int)sw.Elapsed.TotalMilliseconds + 400,
             ModelUsed       = "mock-ro-legal-v1",

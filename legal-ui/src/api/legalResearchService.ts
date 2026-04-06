@@ -22,6 +22,7 @@ export interface LegalResearchResult {
   createdAt: string;
   isBookmarked: boolean;
   title?: string;
+  relatedQuestions: string[];
 }
 
 export interface LegalResearchHistoryItem {
@@ -42,11 +43,17 @@ export interface LegalResearchStats {
   searchesByPracticeArea: Record<string, number>;
 }
 
+export interface ConversationTurn {
+  question: string;
+  answer: string;
+}
+
 export interface SearchQueryDto {
   query: string;
   practiceArea?: number;
   caseId?: string;
   saveToHistory?: boolean;
+  history?: ConversationTurn[];
 }
 
 export const legalResearchService = {

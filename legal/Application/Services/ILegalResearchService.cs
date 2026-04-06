@@ -11,5 +11,9 @@ public interface ILegalResearchService
         string query,
         string? practiceAreaHint,
         string? caseContext,
+        IReadOnlyList<ConversationTurn>? history = null,
         CancellationToken ct = default);
 }
+
+/// <summary>A single previous Q&amp;A turn passed as conversation context</summary>
+public record ConversationTurn(string Question, string Answer);

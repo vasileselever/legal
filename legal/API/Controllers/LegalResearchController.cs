@@ -55,23 +55,38 @@ public class LegalResearchController : ControllerBase
         var firmId = ClaimsHelper.GetFirmId(User);
         var userId = ClaimsHelper.GetUserId(User);
 
-        // Optionally pull case title as context
+        // Pull enriched case context when CaseId is provided
         string? caseContext = null;
         if (dto.CaseId.HasValue)
         {
             var c = await _db.Cases
                 .Where(x => x.Id == dto.CaseId && x.FirmId == firmId)
-                .Select(x => new { x.Title, x.CaseNumber })
+                .Select(x => new { x.Title, x.CaseNumber, x.Description, x.PracticeArea })
                 .FirstOrDefaultAsync(ct);
-            if (c != null) caseContext = $"Dosar nr. {c.CaseNumber}: {c.Title}";
+            if (c != null)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"Dosar nr. {c.CaseNumber}: {c.Title}");
+                if (!string.IsNullOrWhiteSpace(c.Description))
+                    sb.AppendLine($"Descriere: {c.Description[..Math.Min(400, c.Description.Length)]}");
+                if (c.PracticeArea != null)
+                    sb.AppendLine($"Domeniu: {c.PracticeArea}");
+                caseContext = sb.ToString().Trim();
+            }
         }
 
         var practiceHint = dto.PracticeArea.HasValue ? dto.PracticeArea.ToString() : null;
 
+        // Map conversation history (cap at last 3 turns)
+        var history = dto.History?
+            .TakeLast(3)
+            .Select(h => new ConversationTurn(h.Question, h.Answer))
+            .ToList();
+
         _logger.LogInformation("Legal research query by {UserId} in firm {FirmId}: {Query}",
             userId, firmId, dto.Query[..Math.Min(80, dto.Query.Length)]);
 
-        var result = await _ai.SearchAsync(dto.Query, practiceHint, caseContext, ct);
+        var result = await _ai.SearchAsync(dto.Query, practiceHint, caseContext, history, ct);
         result.PracticeArea = dto.PracticeArea;
 
         // Persist to history if requested
