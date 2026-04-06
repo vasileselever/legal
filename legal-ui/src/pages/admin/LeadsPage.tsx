@@ -116,7 +116,7 @@ export function LeadsPage() {
                       <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: '#1a237e' }}>
                         {lead.name}
                         {lead.unreadMessages > 0 && <span style={{ marginLeft: '0.4rem', background: '#c62828', color: 'white', borderRadius: '10px', padding: '0.1rem 0.4rem', fontSize: '0.7rem' }}>{lead.unreadMessages}</span>}
-                        {lead.nextConsultation && <div style={{ fontSize: '0.72rem', color: '#f57c00', fontWeight: 400 }}>?? {new Date(lead.nextConsultation).toLocaleDateString('ro-RO')}</div>}
+
                       </td>
                       <td style={{ padding: '0.65rem 1rem' }}>
                         <div style={{ color: '#555', fontSize: '0.85rem' }}>{lead.email}</div>

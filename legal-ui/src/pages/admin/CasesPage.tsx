@@ -140,15 +140,15 @@ function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
               <div>
                 <div style={sectionTitle}>Client</div>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>{data.client.name}</p>
-                {data.client.email && <p style={{ margin: '0.15rem 0', fontSize: '0.82rem', color: '#666' }}>? {data.client.email}</p>}
-                {data.client.phone && <p style={{ margin: '0.15rem 0', fontSize: '0.82rem', color: '#666' }}>?? {data.client.phone}</p>}
+                {data.client.email && <p style={{ margin: '0.15rem 0', fontSize: '0.82rem', color: '#666' }}>&#9993; {data.client.email}</p>}
+                {data.client.phone && <p style={{ margin: '0.15rem 0', fontSize: '0.82rem', color: '#666' }}>&#128222; {data.client.phone}</p>}
               </div>
 
               <div>
                 <div style={sectionTitle}>Avocat responsabil</div>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>{data.responsibleLawyer.fullName}</p>
                 {data.responsibleLawyer.email && (
-                  <p style={{ margin: '0.15rem 0', fontSize: '0.82rem', color: '#666' }}>? {data.responsibleLawyer.email}</p>
+                  <p style={{ margin: '0.15rem 0', fontSize: '0.82rem', color: '#666' }}>&#9993; {data.responsibleLawyer.email}</p>
                 )}
               </div>
 
@@ -177,8 +177,8 @@ function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
                 <div style={sectionTitle}>Statistici</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                   {[
-                    ['??', 'Documente', data.documentCount],
-                    ['?', 'Sarcini deschise', data.openTaskCount],
+                    ['\uD83D\uDCCE', 'Documente', data.documentCount],
+                    ['\u2713', 'Sarcini deschise', data.openTaskCount],
                   ].map(([icon, label, val]) => (
                     <div key={String(label)} style={{
                       background: '#f5f5f5', borderRadius: '8px',
@@ -470,7 +470,7 @@ export function CasesPage() {
             <option value="">Toate ariile</option>
             {Object.entries(PRACTICE_AREA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <button style={btnOutline} onClick={load}>? Actualizeaza</button>
+          <button style={btnOutline} onClick={load}>&#8635; Actualizeaza</button>
         </div>
 
         {/* Error */}
