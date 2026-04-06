@@ -5,9 +5,11 @@ using LegalRO.CaseManagement.Application.Services;
 using LegalRO.CaseManagement.Domain.Entities;
 using LegalRO.CaseManagement.Domain.Enums;
 using LegalRO.CaseManagement.Infrastructure.Data;
+using LegalRO.CaseManagement.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace LegalRO.CaseManagement.API.Controllers;
 
@@ -23,17 +25,20 @@ public class LeadsController : ControllerBase
     private readonly ILogger<LeadsController> _logger;
     private readonly INotificationService _notifications;
     private readonly IWebHostEnvironment _env;
+    private readonly NotificationSettings _notificationSettings;
 
     public LeadsController(
         ApplicationDbContext context,
         ILogger<LeadsController> logger,
         INotificationService notifications,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        IOptions<NotificationSettings> notificationSettings)
     {
         _context = context;
         _logger = logger;
         _notifications = notifications;
         _env = env;
+        _notificationSettings = notificationSettings.Value;
     }
 
     // Absolute base directory for lead document uploads.
@@ -52,6 +57,7 @@ public class LeadsController : ControllerBase
         [FromQuery] Guid? assignedTo = null,
         [FromQuery] int? minScore = null,
         [FromQuery] string? search = null,
+        [FromQuery] bool unreadOnly = false,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
@@ -77,6 +83,8 @@ public class LeadsController : ControllerBase
                     l.Email.Contains(search) ||
                     l.Phone.Contains(search) ||
                     l.Description.Contains(search));
+            if (unreadOnly)
+                query = query.Where(l => l.Conversations.Any(c => !c.IsRead && c.IsFromLead));
 
             // Get total count for pagination
             var totalCount = await query.CountAsync();
@@ -129,6 +137,27 @@ public class LeadsController : ControllerBase
         {
             _logger.LogError(ex, "Error retrieving leads");
             return StatusCode(500, new ApiResponse<List<LeadListDto>> { Success = false, Message = "An error occurred while retrieving leads" });
+        }
+    }
+
+    /// <summary>
+    /// Get total unread message count across all leads for the firm
+    /// </summary>
+    [HttpGet("unread-count")]
+    public async Task<ActionResult<ApiResponse<int>>> GetUnreadCount()
+    {
+        try
+        {
+            var firmId = ClaimsHelper.GetFirmId(User);
+            var count = await _context.LeadConversations
+                .Where(c => c.Lead.FirmId == firmId && !c.IsRead && c.IsFromLead)
+                .CountAsync();
+            return Ok(new ApiResponse<int> { Success = true, Data = count });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting unread count");
+            return StatusCode(500, new ApiResponse<int> { Success = false, Message = "An error occurred" });
         }
     }
 
@@ -375,7 +404,7 @@ public class LeadsController : ControllerBase
             if (!string.IsNullOrWhiteSpace(dto.Description)) { lead.Description = dto.Description; changes.Add("Description"); }
             if (dto.Urgency.HasValue && dto.Urgency.Value != lead.Urgency) { lead.Urgency = dto.Urgency.Value; changes.Add("Urgency"); }
             if (dto.BudgetRange != null && dto.BudgetRange != lead.BudgetRange) { lead.BudgetRange = dto.BudgetRange; changes.Add("BudgetRange"); }
-            if (dto.AssignedTo != lead.AssignedTo) { lead.AssignedTo = dto.AssignedTo; changes.Add("Assigned"); }
+            if (dto.AssignedTo.HasValue && dto.AssignedTo != lead.AssignedTo) { lead.AssignedTo = dto.AssignedTo; changes.Add("Assigned"); }
             if (dto.Score.HasValue && dto.Score.Value != lead.Score) { lead.Score = dto.Score.Value; changes.Add("Score"); }
 
             if (changes.Any())
@@ -616,7 +645,24 @@ public class LeadsController : ControllerBase
 
             await _context.SaveChangesAsync();
 
-            // TODO: Actually deliver message via WhatsApp API / SendGrid / Twilio
+            // Deliver message via email when channel is Email and lead has an email address
+            if (dto.Channel == MessageChannel.Email && !string.IsNullOrWhiteSpace(lead.Email))
+            {
+                try
+                {
+                    await _notifications.SendLeadMessageEmailAsync(
+                        lead.Email,
+                        lead.Name,
+                        message.Sender,
+                        _notificationSettings.FirmName,
+                        dto.Message);
+                }
+                catch (Exception emailEx)
+                {
+                    // Log but don't fail the request — message is saved to DB regardless
+                    _logger.LogWarning(emailEx, "Failed to deliver email message to lead {LeadId}", id);
+                }
+            }
 
             return CreatedAtAction(nameof(GetConversations), new { id }, new ApiResponse<Guid>
             {

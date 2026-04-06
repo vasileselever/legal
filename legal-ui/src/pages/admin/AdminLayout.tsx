@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 
 const NAV = [
   { path: '/admin/dashboard',      icon: '📊', label: 'Dashboard' },
@@ -18,6 +19,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { count: unreadCount } = useUnreadMessages();
 
   const handleLogout = () => { logout(); navigate('/admin/login'); };
 
@@ -120,8 +122,22 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Mobile top bar (hidden on desktop via CSS) ── */}
       <div className="lro-topbar">
-        <div className="lro-topbar-brand"><span>⚖️</span> LegalRO</div>
-        <button className="lro-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Meniu">☰</button>
+        <div className="lro-topbar-brand"><span>&#9878;&#65039;</span> LegalRO</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {unreadCount > 0 && (
+            <Link to="/admin/leads" style={{ position: 'relative', color: 'white', textDecoration: 'none', fontSize: '1.2rem', lineHeight: 1 }}
+              title={`${unreadCount} mesaje necitite`}>
+              &#128276;
+              <span style={{
+                position: 'absolute', top: '-6px', right: '-8px',
+                background: '#ef5350', color: 'white', borderRadius: '10px',
+                fontSize: '0.6rem', fontWeight: 700, padding: '1px 4px', lineHeight: 1.4,
+                minWidth: '16px', textAlign: 'center',
+              }}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+            </Link>
+          )}
+          <button className="lro-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Meniu">&#9776;</button>
+        </div>
       </div>
 
       {/* ── Backdrop (mobile only) ── */}
@@ -140,6 +156,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <nav style={{ flex: 1, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
           {NAV.map(n => {
             const active = location.pathname === n.path;
+            const badge = n.path === '/admin/leads' && unreadCount > 0 ? unreadCount : 0;
             return (
               <Link key={n.path} to={n.path} onClick={() => setDrawerOpen(false)} style={{
                 display: 'flex', alignItems: 'center', gap: '0.6rem',
@@ -148,7 +165,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 color: active ? 'white' : 'rgba(255,255,255,0.75)',
                 fontWeight: active ? 600 : 400, fontSize: '0.95rem',
               }}>
-                <span style={{ fontSize: '1.05rem' }}>{n.icon}</span><span>{n.label}</span>
+                <span style={{ fontSize: '1.05rem' }}>{n.icon}</span>
+                <span style={{ flex: 1 }}>{n.label}</span>
+                {badge > 0 && (
+                  <span style={{
+                    background: '#ef5350', color: 'white', borderRadius: '10px',
+                    fontSize: '0.65rem', fontWeight: 700, padding: '1px 6px',
+                    lineHeight: 1.5, minWidth: '18px', textAlign: 'center',
+                  }}>{badge > 99 ? '99+' : badge}</span>
+                )}
               </Link>
             );
           })}
@@ -177,6 +202,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {NAV.map(n => {
               const active = location.pathname === n.path;
+              const badge = n.path === '/admin/leads' && unreadCount > 0 ? unreadCount : 0;
               return (
                 <Link key={n.path} to={n.path} style={{
                   display: 'flex', alignItems: 'center', gap: '0.65rem',
@@ -186,7 +212,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   fontWeight: active ? 600 : 400, fontSize: '0.9rem',
                   transition: 'all 0.15s',
                 }}>
-                  <span>{n.icon}</span><span>{n.label}</span>
+                  <span>{n.icon}</span>
+                  <span style={{ flex: 1 }}>{n.label}</span>
+                  {badge > 0 && (
+                    <span style={{
+                      background: '#ef5350', color: 'white', borderRadius: '10px',
+                      fontSize: '0.65rem', fontWeight: 700, padding: '1px 6px',
+                      lineHeight: 1.5, minWidth: '18px', textAlign: 'center',
+                    }}>{badge > 99 ? '99+' : badge}</span>
+                  )}
                 </Link>
               );
             })}

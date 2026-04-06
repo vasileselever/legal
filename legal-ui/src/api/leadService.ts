@@ -111,10 +111,15 @@ export const leadService = {
     return data.data;
   },
 
+  getUnreadCount: async (): Promise<number> => {
+    const { data } = await apiClient.get('/leads/unread-count');
+    return data.success ? (data.data ?? 0) : 0;
+  },
+
   getLeads: async (params?: {
     status?: number; source?: number; practiceArea?: number;
     assignedTo?: string; minScore?: number; search?: string;
-    page?: number; pageSize?: number;
+    page?: number; pageSize?: number; unreadOnly?: boolean;
   }) => {
     const { data } = await apiClient.get('/leads', { params });
     return {
@@ -135,12 +140,14 @@ export const leadService = {
     return data.data as CreateLeadResult;
   },
 
-  updateLead: async (id: string, patch: {
+  updateLead: async (id: string, dto: {
     status?: number; name?: string; email?: string; phone?: string;
     practiceArea?: number; urgency?: number; assignedTo?: string;
     description?: string; budgetRange?: string; score?: number;
   }): Promise<void> => {
-    const { data } = await apiClient.put('/leads/' + id, patch);
+    // Strip undefined fields so they are not serialized as null and do not overwrite existing values
+    const payload = Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined));
+    const { data } = await apiClient.put('/leads/' + id, payload);
     if (!data.success) throw new Error(data.message);
   },
 

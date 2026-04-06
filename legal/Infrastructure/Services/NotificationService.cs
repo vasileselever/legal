@@ -35,4 +35,7 @@ public class NotificationService : INotificationService
 
     public Task SendLeadAssignedEmailAsync(string lawyerEmail, string lawyerName, string leadName, string practiceArea, CancellationToken ct = default)
         => _email.SendLeadAssignedEmailAsync(lawyerEmail, lawyerName, leadName, practiceArea, ct);
+
+    public Task SendLeadMessageEmailAsync(string toEmail, string toName, string senderName, string firmName, string messageText, CancellationToken ct = default)
+        => _email.SendLeadMessageEmailAsync(toEmail, toName, senderName, firmName, messageText, ct);
 }

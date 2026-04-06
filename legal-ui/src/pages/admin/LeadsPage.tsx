@@ -9,6 +9,7 @@ import { LeadDetailModal } from '../../components/LeadDetailModal';
 import { CreateLeadModal } from '../../components/CreateLeadModal';
 import { leadService, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, URGENCY_LABELS, PRACTICE_AREAS } from '../../api/leadService';
 import type { LeadItem } from '../../api/leadService';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 
 const PAGE_SIZE = 15;
 
@@ -23,6 +24,8 @@ export function LeadsPage() {
   const [error, setError]           = useState('');
   const [selected, setSelected]     = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const { count: unreadCount, refresh: refreshUnread } = useUnreadMessages();
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -32,11 +35,12 @@ export function LeadsPage() {
         search: search || undefined,
         status: statusFilter,
         practiceArea: areaFilter,
+        unreadOnly: unreadOnly || undefined,
       });
       setLeads(r.data); setTotal(r.pagination?.totalCount ?? 0);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, [page, search, statusFilter, areaFilter]);
+  }, [page, search, statusFilter, areaFilter, unreadOnly]);
 
   useEffect(() => { load(); }, [load]);
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -45,7 +49,13 @@ export function LeadsPage() {
   const handleCreated = (id: string) => {
     setShowCreate(false);
     load();
-    setSelected(id);   // open detail drawer immediately
+    setSelected(id);
+  };
+
+  const handleCloseDetail = () => {
+    setSelected(null);
+    refreshUnread();
+    load();
   };
 
   return (
@@ -62,7 +72,7 @@ export function LeadsPage() {
               fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem',
             }}
           >
-            ? Lead Nou
+            + Lead Nou
           </button>
         }
       />
@@ -70,7 +80,7 @@ export function LeadsPage() {
       <div className="lro-page-body" style={{ padding: '1.25rem 1.5rem' }}>
         <Card>
           <div className="lro-filterbar" style={{ padding: '1rem', borderBottom: '1px solid #f0f0f0', display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <input placeholder="?? Cauta dupa nume, email..." value={search}
+            <input placeholder="Cauta dupa nume, email..." value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ ...si, width: '240px' }} />
             <select value={statusFilter ?? ''} onChange={e => { setStatus(e.target.value ? Number(e.target.value) : undefined); setPage(1); }} style={si}>
               <option value="">Toate statusurile</option>
@@ -80,7 +90,17 @@ export function LeadsPage() {
               <option value="">Toate domeniile</option>
               {PRACTICE_AREAS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
-            <button onClick={load} style={{ marginLeft: 'auto', padding: '0.5rem 1rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>?? Refresh</button>
+            <button onClick={load} style={{ marginLeft: 'auto', padding: '0.5rem 1rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>&#8635; Refresh</button>
+            <button
+              onClick={() => { setUnreadOnly(v => !v); setPage(1); }}
+              style={{ position: 'relative', padding: '0.5rem 1rem', border: '1px solid #ef5350', borderRadius: '6px', cursor: 'pointer', background: unreadOnly ? '#ef5350' : 'white', color: unreadOnly ? 'white' : '#ef5350', fontWeight: 600, fontSize: '0.85rem' }}>
+              &#128276; Necitite
+              {unreadCount > 0 && !unreadOnly && (
+                <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef5350', color: 'white', borderRadius: '10px', fontSize: '0.6rem', fontWeight: 700, padding: '1px 4px', lineHeight: 1.4 }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
           </div>
           {/* Quick status pills */}
           <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid #f5f5f5', display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
@@ -91,7 +111,7 @@ export function LeadsPage() {
           </div>
           {loading ? <Spinner /> : leads.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: '#aaa' }}>
-              <div style={{ fontSize: '3rem' }}>??</div><p>Nu exista lead-uri.</p>
+              <div style={{ fontSize: '3rem' }}>&#128203;</div><p>Nu exista lead-uri.</p>
             </div>
           ) : (
             <div className="lro-table-wrap" style={{ overflowX: 'auto' }}>
@@ -144,7 +164,7 @@ export function LeadsPage() {
           )}
         </Card>
       </div>
-      {selected && <LeadDetailModal leadId={selected} onClose={() => setSelected(null)} onStatusChanged={load} />}
+      {selected && <LeadDetailModal leadId={selected} onClose={handleCloseDetail} onStatusChanged={() => { load(); refreshUnread(); }} />}
       {showCreate && (
         <CreateLeadModal
           onClose={() => setShowCreate(false)}

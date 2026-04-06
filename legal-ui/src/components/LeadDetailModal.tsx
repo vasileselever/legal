@@ -38,6 +38,42 @@ const FIELDS = (lead: LeadDetailItem) => [
 ] as [string, string][];
 
 const STATUS_FLOW = [1, 2, 3, 4, 5, 6, 7];
+const STATUS_TERMINAL = [8, 9]; // Lost, Disqualified
+
+const COLLAPSE_LENGTH = 120; // chars before truncating
+
+function MessageBubble({ conv }: { conv: ConversationItem }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = conv.message.length > COLLAPSE_LENGTH;
+  const displayed = isLong && !expanded ? conv.message.slice(0, COLLAPSE_LENGTH) + '…' : conv.message;
+
+  return (
+    <div style={{ display: 'flex', justifyContent: conv.isFromLead ? 'flex-start' : 'flex-end' }}>
+      <div
+        onClick={() => isLong && setExpanded(e => !e)}
+        style={{
+          maxWidth: '75%', padding: '0.6rem 0.85rem',
+          borderRadius: conv.isFromLead ? '4px 12px 12px 12px' : '12px 4px 12px 12px',
+          background: conv.isFromLead ? '#e8eaf6' : '#1a237e',
+          color: conv.isFromLead ? '#1a237e' : 'white',
+          fontSize: '0.88rem', lineHeight: 1.5,
+          cursor: isLong ? 'pointer' : 'default',
+        }}
+      >
+        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{displayed}</div>
+        {isLong && (
+          <div style={{ fontSize: '0.72rem', fontWeight: 700, marginTop: '0.2rem', opacity: 0.8 }}>
+            {expanded ? '▲ Restrânge' : '▼ Extinde'}
+          </div>
+        )}
+        <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.25rem', textAlign: 'right' }}>
+          {conv.sender && <span>{conv.sender} · </span>}
+          {new Date(conv.messageTimestamp).toLocaleString('ro-RO', { hour12: false })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigger }: Props) {
   const [lead, setLead]                 = useState<LeadDetailItem | null>(null);
@@ -51,7 +87,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
   const [showConsForm, setShowConsForm] = useState(false);
   const [documents, setDocuments]       = useState<LeadDocumentItem[]>([]);
   const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [consForm, setConsForm]         = useState({ lawyerId: '', scheduledAt: '', durationMinutes: 30, type: 1, location: '' });
+  const [consForm, setConsForm]         = useState<{ lawyerId: string; scheduledAt: string; durationMinutes: number; type: number; location: string; _showLawyerPicker?: boolean }>({ lawyerId: '', scheduledAt: '', durationMinutes: 30, type: 1, location: '' });
   const [notifyClientCons, setNotifyClientCons] = useState(true);
 
   const inp: React.CSSProperties = {
@@ -69,6 +105,8 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
         leadService.getDocuments(leadId),
       ]);
       setLead(l); setConvs(c); setUsers(u); setDocuments(docs);
+      // Pre-fill consultation lawyer from lead's assigned lawyer
+      if (l.assignedTo) setConsForm(f => ({ ...f, lawyerId: l.assignedTo! }));
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
   };
@@ -185,11 +223,26 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
               color: lead.status === s ? 'white' : LEAD_STATUS_COLORS[s],
             }}>{LEAD_STATUS_LABELS[s]}</button>
           ))}
-          {lead.status !== 7 && (
+
+          {/* Separator */}
+          <span style={{ color: '#ddd', margin: '0 0.2rem', fontWeight: 300, fontSize: '1rem' }}>|</span>
+
+          {/* Terminal statuses: Lost & Disqualified */}
+          {STATUS_TERMINAL.map(s => (
+            <button key={s} onClick={() => handleStatusChange(s)} style={{
+              padding: '0.25rem 0.65rem', borderRadius: '12px', cursor: 'pointer', fontSize: '0.76rem',
+              fontWeight: lead.status === s ? 700 : 400, border: '1px solid ' + LEAD_STATUS_COLORS[s],
+              background: lead.status === s ? LEAD_STATUS_COLORS[s] : 'white',
+              color: lead.status === s ? 'white' : LEAD_STATUS_COLORS[s],
+            }}>{LEAD_STATUS_LABELS[s]}</button>
+          ))}
+
+          {/* Convert button — hidden for terminal or already-converted leads */}
+          {lead.status !== 7 && lead.status !== 8 && lead.status !== 9 && (
             <button onClick={handleConvert} style={{ marginLeft: 'auto', padding: '0.25rem 0.85rem',
               borderRadius: '12px', background: '#2e7d32', color: 'white',
               border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-              🎉 Converteste
+              Converteste
             </button>
           )}
         </div>
@@ -210,7 +263,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
         </div>
 
         {/* Tab content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {tab === 'info' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               {FIELDS(lead).map(([k, v]) => (
@@ -245,29 +298,18 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
           )}
 
           {tab === 'messages' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.6rem', minHeight: '200px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+              {/* Scrollable message list */}
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.6rem', minHeight: 0, paddingBottom: '0.5rem' }}>
                 {convs.length === 0
                   ? <div style={{ textAlign: 'center', color: '#aaa', padding: '2rem' }}>📭 Niciun mesaj</div>
                   : convs.map(c => (
-                    <div key={c.id} style={{ display: 'flex', justifyContent: c.isFromLead ? 'flex-start' : 'flex-end' }}>
-                      <div style={{
-                        maxWidth: '75%', padding: '0.6rem 0.85rem',
-                        borderRadius: c.isFromLead ? '4px 12px 12px 12px' : '12px 4px 12px 12px',
-                        background: c.isFromLead ? '#e8eaf6' : '#1a237e',
-                        color: c.isFromLead ? '#1a237e' : 'white', fontSize: '0.88rem', lineHeight: 1.5,
-                      }}>
-                        <div>{c.message}</div>
-                        <div style={{ fontSize: '0.72rem', opacity: 0.65, marginTop: '0.25rem', textAlign: 'right' }}>
-                          {c.sender && <span>{c.sender} · </span>}
-                          {new Date(c.messageTimestamp).toLocaleString('ro-RO', { hour12: false })}
-                        </div>
-                      </div>
-                    </div>
+                    <MessageBubble key={c.id} conv={c} />
                   ))
                 }
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e8eaf6' }}>
+              {/* Pinned compose box */}
+              <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e8eaf6', flexShrink: 0 }}>
                 <textarea value={msg} onChange={e => setMsg(e.target.value)}
                   placeholder="Scrieti un mesaj... (Ctrl+Enter pentru trimitere)"
                   style={{ ...inp, flex: 1, minHeight: '60px', resize: 'vertical' }}
@@ -302,10 +344,23 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
                 }}>
                   <div style={{ gridColumn: '1/-1' }}>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Avocat *</label>
-                    <select style={inp} required value={consForm.lawyerId} onChange={e => setConsForm(f => ({ ...f, lawyerId: e.target.value }))}>
-                      <option value="">Selectati avocatul</option>
-                      {users.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
-                    </select>
+                    {consForm.lawyerId && !consForm._showLawyerPicker ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.45rem 0.75rem', background: '#f5f7ff', border: '1px solid #c5cae9', borderRadius: '6px' }}>
+                        <span style={{ fontWeight: 600, color: '#1a237e', fontSize: '0.9rem' }}>
+                          {users.find(u => u.id === consForm.lawyerId)?.firstName + ' ' + users.find(u => u.id === consForm.lawyerId)?.lastName}
+                        </span>
+                        <button type="button" onClick={() => setConsForm(f => ({ ...f, _showLawyerPicker: true } as any))}
+                          style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#5c6bc0', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, padding: 0 }}>
+                          Schimba
+                        </button>
+                      </div>
+                    ) : (
+                      <select style={inp} required value={consForm.lawyerId}
+                        onChange={e => setConsForm(f => ({ ...f, lawyerId: e.target.value, _showLawyerPicker: false } as any))}>
+                        <option value="">Selectati avocatul</option>
+                        {users.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+                      </select>
+                    )}
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.25rem' }}>Data si Ora *</label>
@@ -482,7 +537,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
       display: 'flex', alignItems: 'stretch', justifyContent: 'flex-end' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ width: '100%', maxWidth: '780px', background: 'white',
-        display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 24px rgba(0,0,0,0.15)' }}>
+        display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', boxShadow: '-4px 0 24px rgba(0,0,0,0.15)' }}>
         {children}
       </div>
     </div>

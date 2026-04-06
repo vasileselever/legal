@@ -158,4 +158,23 @@ public class EmailNotificationService
 
         await SendEmailAsync(lawyerEmail, lawyerName, subject, html, ct);
     }
+
+    public async Task SendLeadMessageEmailAsync(
+        string toEmail, string toName, string senderName, string firmName, string messageText, CancellationToken ct = default)
+    {
+        var subject = $"Mesaj nou de la {firmName}";
+        var html = $"""
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
+              <h2 style="color:#1a237e">Mesaj nou</h2>
+              <p>Buna ziua, <strong>{toName}</strong>,</p>
+              <p>Aveti un mesaj nou de la <strong>{senderName}</strong> ({firmName}):</p>
+              <div style="background:#f5f7ff;border-left:4px solid #1a237e;padding:16px;margin:16px 0;border-radius:4px">
+                <p style="margin:0;white-space:pre-wrap">{System.Net.WebUtility.HtmlEncode(messageText)}</p>
+              </div>
+              <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+              <p style="color:#888;font-size:12px">{firmName}</p>
+            </div>
+            """;
+        await SendEmailAsync(toEmail, toName, subject, html, ct);
+    }
 }
