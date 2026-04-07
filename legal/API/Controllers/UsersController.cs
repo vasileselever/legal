@@ -143,12 +143,17 @@ public class UsersController : ControllerBase
     /// Update user
     /// </summary>
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<UserDto>>> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
     {
         var firmId = ClaimsHelper.GetFirmId(User);
+        var callerId = ClaimsHelper.GetUserId(User);
+
+        // Only admins can update users
+        var caller = await _userManager.FindByIdAsync(callerId.ToString());
+        if (caller == null || caller.Role != UserRole.Admin)
+            return StatusCode(403, new ApiResponse<UserDto> { Success = false, Message = "Nu aveti permisiuni pentru aceasta actiune." });
 
         var user = await _userManager.FindByIdAsync(id.ToString());
         if (user == null || user.FirmId != firmId)

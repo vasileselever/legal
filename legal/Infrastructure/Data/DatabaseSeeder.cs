@@ -75,6 +75,11 @@ public static class DatabaseSeeder
         await userManager.CreateAsync(lawyer1, "Test@123456");
         await userManager.CreateAsync(lawyer2, "Test@123456");
 
+        // Ensure custom Role property is persisted (Identity CreateAsync may not track it)
+        lawyer1.Role = UserRole.Admin;
+        lawyer2.Role = UserRole.Lawyer;
+        await context.SaveChangesAsync();
+
         var client1 = new Client
         {
             Id = Guid.Parse("00000000-0000-0000-0000-000000000021"),

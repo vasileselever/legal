@@ -24,9 +24,18 @@ public class TimeEntryDto
     public Currency Currency { get; set; }
     public decimal TotalAmount { get; set; }
     public TimeEntryStatus Status { get; set; }
+    public string? RejectionReason { get; set; }
     public DateTime? TimerStart { get; set; }
     public DateTime? TimerStop { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+public class RejectTimeEntriesRequest
+{
+    [Required]
+    public List<Guid> Ids { get; set; } = new();
+    [MaxLength(500)]
+    public string? Reason { get; set; }
 }
 
 public class CreateTimeEntryRequest

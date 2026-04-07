@@ -2,8 +2,10 @@ using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Billing;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Application.Services;
+using LegalRO.CaseManagement.Domain.Entities;
 using LegalRO.CaseManagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LegalRO.CaseManagement.API.Controllers;
@@ -14,11 +16,13 @@ namespace LegalRO.CaseManagement.API.Controllers;
 public class ExpensesController : ControllerBase
 {
     private readonly IBillingService _billing;
+    private readonly UserManager<User> _userManager;
     private readonly ILogger<ExpensesController> _logger;
 
-    public ExpensesController(IBillingService billing, ILogger<ExpensesController> logger)
+    public ExpensesController(IBillingService billing, UserManager<User> userManager, ILogger<ExpensesController> logger)
     {
         _billing = billing;
+        _userManager = userManager;
         _logger = logger;
     }
 
@@ -59,6 +63,15 @@ public class ExpensesController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var userId = ClaimsHelper.GetUserId(User);
+
+        // Only admin can change expense status
+        if (request.Status.HasValue)
+        {
+            var caller = await _userManager.FindByIdAsync(userId.ToString());
+            if (caller == null || caller.Role != UserRole.Admin)
+                return StatusCode(403, new ApiError { Code = "FORBIDDEN", Message = "Doar administratorul poate modifica statusul cheltuielilor." });
+        }
+
         try { return Ok(await _billing.UpdateExpenseAsync(firmId, userId, id, request)); }
         catch (KeyNotFoundException) { return NotFound(new ApiError { Code = "NOT_FOUND", Message = "Expense not found" }); }
         catch (InvalidOperationException ex) { return BadRequest(new ApiError { Code = "INVALID_OP", Message = ex.Message }); }
@@ -79,6 +92,9 @@ public class ExpensesController : ControllerBase
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var userId = ClaimsHelper.GetUserId(User);
+        var caller = await _userManager.FindByIdAsync(userId.ToString());
+        if (caller == null || caller.Role != UserRole.Admin)
+            return StatusCode(403, new { message = "Doar administratorul poate aproba cheltuielile." });
         await _billing.ApproveExpensesAsync(firmId, userId, ids);
         return Ok(new { message = $"{ids.Count} expenses approved" });
     }

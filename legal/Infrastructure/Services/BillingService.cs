@@ -178,19 +178,53 @@ public class BillingService : IBillingService
         return await GetTimeEntryAsync(firmId, id);
     }
 
+    public async Task SubmitTimeEntriesAsync(Guid firmId, Guid userId, List<Guid> ids)
+    {
+        var entries = await _db.TimeEntries
+            .Where(t => t.FirmId == firmId && t.UserId == userId && ids.Contains(t.Id)
+                        && (t.Status == TimeEntryStatus.Draft))
+            .ToListAsync();
+
+        foreach (var e in entries)
+        {
+            e.Status = TimeEntryStatus.Submitted;
+            e.RejectionReason = null;
+            e.UpdatedBy = userId.ToString();
+        }
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("{Count} time entries submitted for approval by {UserId}", entries.Count, userId);
+    }
+
     public async Task ApproveTimeEntriesAsync(Guid firmId, Guid userId, List<Guid> ids)
     {
         var entries = await _db.TimeEntries
-            .Where(t => t.FirmId == firmId && ids.Contains(t.Id) && t.Status == TimeEntryStatus.Draft)
+            .Where(t => t.FirmId == firmId && ids.Contains(t.Id) && t.Status == TimeEntryStatus.Submitted)
             .ToListAsync();
 
         foreach (var e in entries)
         {
             e.Status = TimeEntryStatus.Approved;
+            e.RejectionReason = null;
             e.UpdatedBy = userId.ToString();
         }
         await _db.SaveChangesAsync();
         _logger.LogInformation("{Count} time entries approved by {UserId}", entries.Count, userId);
+    }
+
+    public async Task RejectTimeEntriesAsync(Guid firmId, Guid userId, List<Guid> ids, string reason)
+    {
+        var entries = await _db.TimeEntries
+            .Where(t => t.FirmId == firmId && ids.Contains(t.Id) && t.Status == TimeEntryStatus.Submitted)
+            .ToListAsync();
+
+        foreach (var e in entries)
+        {
+            e.Status = TimeEntryStatus.Draft;
+            e.RejectionReason = reason;
+            e.UpdatedBy = userId.ToString();
+        }
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("{Count} time entries rejected by {UserId}: {Reason}", entries.Count, userId, reason);
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1010,6 +1044,7 @@ public class BillingService : IBillingService
         Currency = e.Currency,
         TotalAmount = e.TotalAmount,
         Status = e.Status,
+        RejectionReason = e.RejectionReason,
         TimerStart = e.TimerStart,
         TimerStop = e.TimerStop,
         CreatedAt = e.CreatedAt
@@ -1030,7 +1065,7 @@ public class BillingService : IBillingService
         Description = e.Description,
         Amount = e.Amount,
         Currency = e.Currency,
-        MarkupPercent = e.BillableAmount,
+        MarkupPercent = e.MarkupPercent,
         BillableAmount = e.BillableAmount,
         IsBillable = e.IsBillable,
         Status = e.Status,

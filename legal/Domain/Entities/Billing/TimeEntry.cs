@@ -49,6 +49,9 @@ public class TimeEntry : BaseEntity
 
     public TimeEntryStatus Status { get; set; } = TimeEntryStatus.Draft;
 
+    /// <summary>Reason provided by the approver when rejecting the entry</summary>
+    public string? RejectionReason { get; set; }
+
     /// <summary>
     /// Link to the invoice line item once billed
     /// </summary>

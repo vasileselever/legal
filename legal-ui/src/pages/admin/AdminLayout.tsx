@@ -179,7 +179,24 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{user?.firstName} {user?.lastName}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.65rem' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.8rem', fontWeight: 700, flexShrink: 0,
+            }}>
+              {(user?.firstName?.[0] ?? '')}{(user?.lastName?.[0] ?? '')}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.firstName} {user?.lastName}
+              </div>
+              <div style={{ fontSize: '0.68rem', opacity: 0.55, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.email}
+              </div>
+            </div>
+          </div>
           <button onClick={handleLogout} style={{ width: '100%', padding: '0.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '5px', cursor: 'pointer', fontSize: '0.85rem' }}>
             Deconectare
           </button>
@@ -227,7 +244,24 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </nav>
           <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <Link to="/" style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', textDecoration: 'none', marginBottom: '0.75rem' }}>← Site public</Link>
-            <div style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{user?.firstName} {user?.lastName}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.65rem' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: 'rgba(255,255,255,0.15)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.8rem', fontWeight: 700, flexShrink: 0,
+              }}>
+                {(user?.firstName?.[0] ?? '')}{(user?.lastName?.[0] ?? '')}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user?.firstName} {user?.lastName}
+                </div>
+                <div style={{ fontSize: '0.68rem', opacity: 0.55, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user?.email}
+                </div>
+              </div>
+            </div>
             <button onClick={handleLogout} style={{ width: '100%', padding: '0.4rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}>
               Deconectare
             </button>

@@ -19,7 +19,9 @@ public interface IBillingService
         int page = 1, int pageSize = 25);
     Task<TimeEntryDto> StartTimerAsync(Guid firmId, Guid userId, StartTimerRequest request);
     Task<TimeEntryDto> StopTimerAsync(Guid firmId, Guid userId, Guid id, StopTimerRequest request);
+    Task SubmitTimeEntriesAsync(Guid firmId, Guid userId, List<Guid> ids);
     Task ApproveTimeEntriesAsync(Guid firmId, Guid userId, List<Guid> ids);
+    Task RejectTimeEntriesAsync(Guid firmId, Guid userId, List<Guid> ids, string reason);
 
     // >> Expenses >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     Task<ExpenseDto> CreateExpenseAsync(Guid firmId, Guid userId, CreateExpenseRequest request);

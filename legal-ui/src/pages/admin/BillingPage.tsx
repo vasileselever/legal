@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AdminLayout } from './AdminLayout';
+import { useAuth } from '../../hooks/useAuth';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
@@ -186,22 +187,36 @@ function DashboardTab() {
 // =====================================================================
 
 function TimeEntriesTab() {
-  const [entries, setEntries] = useState<TimeEntryDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showCreate, setShowCreate] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const { user, initialising } = useAuth();
+  const isAdmin = user?.role === 1;
+
+  const [entries, setEntries]           = useState<TimeEntryDto[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState('');
+  const [showCreate, setShowCreate]     = useState(false);
+  const [selected, setSelected]         = useState<Set<string>>(new Set());
+  const [page, setPage]                 = useState(1);
+  const [totalPages, setTotalPages]     = useState(1);
+  const [statusFilter, setStatusFilter] = useState<number | ''>('');
+  const [rejectReason, setRejectReason] = useState('');
+  const [showReject, setShowReject]     = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Once auth resolves, set default filter: Admin → Trimis(2), Lawyer → all
+  useEffect(() => {
+    if (!initialising) setStatusFilter(isAdmin ? 2 : '');
+  }, [initialising, isAdmin]);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const res = await billingService.getTimeEntries({ page, pageSize: 20 });
+      const params: Record<string, any> = { page, pageSize: 20 };
+      if (statusFilter !== '') params.status = statusFilter;
+      const res = await billingService.getTimeEntries(params);
       setEntries(res.data); setTotalPages(res.pagination.totalPages);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, [page]);
+  }, [page, statusFilter]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -209,23 +224,95 @@ function TimeEntriesTab() {
     setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
 
+  const handleSubmit = async () => {
+    if (selected.size === 0) return;
+    setActionLoading(true);
+    try {
+      await billingService.submitTimeEntries(Array.from(selected));
+      setSelected(new Set()); load();
+    } catch (e: any) { setError(e.message); }
+    finally { setActionLoading(false); }
+  };
+
   const handleApprove = async () => {
     if (selected.size === 0) return;
+    setActionLoading(true);
     try {
       await billingService.approveTimeEntries(Array.from(selected));
-      setSelected(new Set());
-      load();
+      setSelected(new Set()); load();
     } catch (e: any) { setError(e.message); }
+    finally { setActionLoading(false); }
   };
+
+  const handleReject = async () => {
+    if (selected.size === 0) return;
+    setActionLoading(true);
+    try {
+      await billingService.rejectTimeEntries(Array.from(selected), rejectReason);
+      setSelected(new Set()); setShowReject(false); setRejectReason(''); load();
+    } catch (e: any) { setError(e.message); }
+    finally { setActionLoading(false); }
+  };
+
+  // Which entries can be selected depends on role
+  const canSelect = (e: TimeEntryDto) =>
+    isAdmin ? e.status === 2 : e.status === 1; // Admin selects Submitted; Lawyer selects Draft
+
+  const selectedEntries = entries.filter(e => selected.has(e.id));
+  const [editEntry, setEditEntry] = useState<TimeEntryDto | null>(null);
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      {/* Admin pending-approval banner */}
+      {isAdmin && statusFilter === 2 && !loading && entries.filter(e => e.status === 2).length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1rem', background: '#fff3e0', border: '1px solid #ffb74d', borderRadius: '8px', marginBottom: '0.875rem', fontSize: '0.85rem', color: '#e65100', fontWeight: 600 }}>
+          <span>⏳</span>
+          <span>{entries.filter(e => e.status === 2).length} pontaj{entries.filter(e => e.status === 2).length !== 1 ? 'e' : ''} asteapta aprobare.</span>
+          <span style={{ fontWeight: 400, color: '#795548' }}>Selecteaza-le din tabel si apasa Aproba sau Respinge.</span>
+        </div>
+      )}
+
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga pontaj</button>
-        {selected.size > 0 && (
-          <button style={{ ...btnOutline, color: '#2e7d32', borderColor: '#2e7d32' }} onClick={handleApprove}>
-            Aproba ({selected.size})
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={e => { setStatusFilter(e.target.value === '' ? '' : Number(e.target.value)); setPage(1); setSelected(new Set()); }}
+          style={{ ...selectStyle, width: 'auto', minWidth: '160px' }}
+        >
+          <option value="">Toate statusurile</option>
+          {Object.entries(TIME_ENTRY_STATUS).map(([k, v]) =>
+            <option key={k} value={k}>{v}</option>
+          )}
+        </select>
+
+        {/* Lawyer actions — on Draft entries */}
+        {!isAdmin && selected.size > 0 && (
+          <button
+            style={{ ...btnOutline, color: '#1976d2', borderColor: '#1976d2' }}
+            onClick={handleSubmit} disabled={actionLoading}
+          >
+            &#128228; Trimite spre aprobare ({selected.size})
           </button>
+        )}
+
+        {/* Admin actions — on Submitted entries */}
+        {isAdmin && selected.size > 0 && (
+          <>
+            <button
+              style={{ ...btnOutline, color: '#2e7d32', borderColor: '#2e7d32' }}
+              onClick={handleApprove} disabled={actionLoading}
+            >
+              ✓ Aproba ({selected.size})
+            </button>
+            <button
+              style={{ ...btnOutline, color: '#c62828', borderColor: '#c62828' }}
+              onClick={() => setShowReject(true)} disabled={actionLoading}
+            >
+              ✕ Respinge ({selected.size})
+            </button>
+          </>
         )}
       </div>
 
@@ -239,15 +326,15 @@ function TimeEntriesTab() {
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
                   <th style={thStyle}></th>
-                  {['Data', 'Dosar', 'Avocat', 'Ore', 'Tarif/ora', 'Total', 'Descriere', 'Status'].map(h =>
+                  {['Data', 'Dosar', 'Avocat', 'Ore', 'Tarif/ora', 'Total', 'Descriere', 'Status', ''].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {entries.map(e => (
-                  <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                  <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5', background: e.rejectionReason ? '#fff8f8' : undefined }}>
                     <td style={tdStyle}>
-                      {e.status === 1 && (
+                      {canSelect(e) && (
                         <input type="checkbox" checked={selected.has(e.id)} onChange={() => toggleSelect(e.id)} />
                       )}
                     </td>
@@ -257,8 +344,24 @@ function TimeEntriesTab() {
                     <td style={{ ...tdStyle, fontWeight: 700, color: '#1a237e' }}>{fmtHours(e.durationHours)}</td>
                     <td style={tdStyle}>{fmtMoney(e.hourlyRate, e.currency)}</td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.totalAmount, e.currency)}</td>
-                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</td>
+                    <td style={{ ...tdStyle, maxWidth: '200px' }}>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</div>
+                      {e.rejectionReason && (
+                        <div style={{ fontSize: '0.72rem', color: '#c62828', marginTop: '0.15rem' }}>
+                          ✕ Respins: {e.rejectionReason}
+                        </div>
+                      )}
+                    </td>
                     <td style={tdStyle}><Badge label={TIME_ENTRY_STATUS[e.status] ?? '-'} color={TIME_ENTRY_STATUS_COLORS[e.status] ?? '#999'} /></td>
+                    <td style={tdStyle}>
+                      {e.status === 1 && (
+                        <button
+                          onClick={() => setEditEntry(e)}
+                          title="Editeaza"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#1a237e', padding: '0.15rem 0.4rem' }}
+                        >&#9998;</button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -269,6 +372,36 @@ function TimeEntriesTab() {
       )}
 
       {showCreate && <CreateTimeEntryModal onClose={() => setShowCreate(false)} onCreated={load} />}
+      {editEntry && <EditTimeEntryModal entry={editEntry} onClose={() => setEditEntry(null)} onSaved={load} />}
+
+      {/* Reject modal */}
+      {showReject && (
+        <div className="lro-overlay" style={overlayStyle} onClick={() => setShowReject(false)}>
+          <div className="lro-modal" style={{ ...modalStyle, maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 1rem', color: '#c62828', fontSize: '1rem' }}>Respinge pontaje ({selectedEntries.length})</h3>
+            <div style={{ marginBottom: '1rem', fontSize: '0.85rem', color: '#555' }}>
+              Motivul respingerii va fi vizibil avocatului care a introdus pontajul.
+            </div>
+            <label style={labelStyle}>Motiv (optional)</label>
+            <textarea
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              rows={3}
+              placeholder="Ex: Durata incorecta, lipseste descrierea..."
+              style={{ ...inputStyle, resize: 'vertical', marginBottom: '1rem' }}
+            />
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button style={btnOutline} onClick={() => setShowReject(false)}>Anuleaza</button>
+              <button
+                style={{ ...btnStyle, background: '#c62828' }}
+                onClick={handleReject} disabled={actionLoading}
+              >
+                {actionLoading ? 'Se proceseaza...' : 'Confirma respingere'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -278,48 +411,121 @@ function TimeEntriesTab() {
 // =====================================================================
 
 function ExpensesTab() {
+  const { user, initialising } = useAuth();
+  const isAdmin = user?.role === 1;
+
   const [items, setItems] = useState<ExpenseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [changingStatus, setChangingStatus] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [actionLoading, setActionLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<number | ''>('');
+
+  // Admin defaults to Pending (1) filter
+  useEffect(() => {
+    if (!initialising) setStatusFilter(isAdmin ? 1 : '');
+  }, [initialising, isAdmin]);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const res = await billingService.getExpenses({ page, pageSize: 20 });
+      const params: Record<string, any> = { page, pageSize: 20 };
+      if (statusFilter !== '') params.status = statusFilter;
+      const res = await billingService.getExpenses(params);
       setItems(res.data); setTotalPages(res.pagination.totalPages);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, [page]);
+  }, [page, statusFilter]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleStatusChange = async (exp: ExpenseDto, newStatus: number) => {
-    if (exp.status === 3) return; // Billed - locked
-    setChangingStatus(exp.id);
+  const toggleSelect = (id: string) => {
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
+
+  // Only admin can select Pending expenses for approval
+  const canSelect = (e: ExpenseDto) => isAdmin && e.status === 1;
+
+  const handleApprove = async () => {
+    if (selected.size === 0) return;
+    setActionLoading(true);
     try {
-      await billingService.updateExpense(exp.id, {
-        expenseDate: exp.expenseDate,
-        category: exp.category,
-        description: exp.description,
-        amount: exp.amount,
-        markupPercent: exp.markupPercent,
-        isBillable: exp.isBillable,
-        receiptFilePath: exp.receiptFilePath,
-        vendor: exp.vendor,
-        status: newStatus,
-      });
-      setItems(prev => prev.map(e => e.id === exp.id ? { ...e, status: newStatus } : e));
+      await billingService.approveExpenses(Array.from(selected));
+      setSelected(new Set()); load();
     } catch (e: any) { setError(e.message); }
-    finally { setChangingStatus(null); }
+    finally { setActionLoading(false); }
+  };
+
+  const handleReject = async () => {
+    if (selected.size === 0) return;
+    setActionLoading(true);
+    try {
+      const ids = items.filter(e => selected.has(e.id)).map(e => e.id);
+      for (let i = 0; i < ids.length; i++) {
+        const exp = items.find(e => e.id === ids[i]);
+        if (!exp) continue;
+        await billingService.updateExpense(ids[i], {
+          expenseDate: exp.expenseDate,
+          category: exp.category,
+          description: exp.description,
+          amount: exp.amount,
+          markupPercent: exp.markupPercent,
+          isBillable: exp.isBillable,
+          vendor: exp.vendor,
+          status: 4,
+        });
+      }
+      setSelected(new Set()); load();
+    } catch (e: any) { setError(e.message); }
+    finally { setActionLoading(false); }
   };
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga cheltuiala</button>
+      {/* Admin pending banner */}
+      {isAdmin && statusFilter === 1 && !loading && items.filter(e => e.status === 1).length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1rem', background: '#fff3e0', border: '1px solid #ffb74d', borderRadius: '8px', marginBottom: '0.875rem', fontSize: '0.85rem', color: '#e65100', fontWeight: 600 }}>
+          <span>⏳</span>
+          <span>{items.filter(e => e.status === 1).length} cheltuiel{items.filter(e => e.status === 1).length !== 1 ? 'i' : 'a'} asteapta aprobare.</span>
+        </div>
+      )}
+
+      <div className="lro-toolbar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button style={btnStyle} onClick={() => setShowCreate(true)}>+ Adauga cheltuiala</button>
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={e => { setStatusFilter(e.target.value === '' ? '' : Number(e.target.value)); setPage(1); setSelected(new Set()); }}
+          style={{ ...selectStyle, width: 'auto', minWidth: '160px' }}
+        >
+          <option value="">Toate statusurile</option>
+          {Object.entries(EXPENSE_STATUS).map(([k, v]) =>
+            <option key={k} value={k}>{v}</option>
+          )}
+        </select>
+
+        {/* Admin actions */}
+        {isAdmin && selected.size > 0 && (
+          <>
+            <button
+              style={{ ...btnOutline, color: '#2e7d32', borderColor: '#2e7d32' }}
+              onClick={handleApprove} disabled={actionLoading}
+            >
+              ✓ Aproba ({selected.size})
+            </button>
+            <button
+              style={{ ...btnOutline, color: '#c62828', borderColor: '#c62828' }}
+              onClick={handleReject} disabled={actionLoading}
+            >
+              ✕ Respinge ({selected.size})
+            </button>
+          </>
+        )}
+      </div>
 
       {error && <ErrorBanner message={error} onRetry={load} />}
       {loading ? <Spinner /> : items.length === 0 ? (
@@ -330,6 +536,7 @@ function ExpensesTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8f9fa' }}>
+                  <th style={thStyle}></th>
                   {['Data', 'Dosar', 'Categorie', 'Descriere', 'Suma', 'Facturabil', 'Status'].map(h =>
                     <th key={h} style={thStyle}>{h}</th>)}
                 </tr>
@@ -337,32 +544,18 @@ function ExpensesTab() {
               <tbody>
                 {items.map(e => (
                   <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                    <td style={tdStyle}>
+                      {canSelect(e) && (
+                        <input type="checkbox" checked={selected.has(e.id)} onChange={() => toggleSelect(e.id)} />
+                      )}
+                    </td>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{fmtDate(e.expenseDate)}</td>
-                    <td style={tdStyle}>{e.caseNumber || e.caseId?.slice(0, 8) || '-'}</td>
+                    <td style={tdStyle}>{e.caseNumber || e.leadName || (e.caseId ? e.caseId.slice(0, 8) : e.leadId?.slice(0, 8) || '-')}</td>
                     <td style={tdStyle}>{EXPENSE_CATEGORIES.find(c => c.value === e.category)?.label ?? '-'}</td>
                     <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</td>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{fmtMoney(e.amount, e.currency)}</td>
                     <td style={{ ...tdStyle, fontWeight: 700, color: '#6a1b9a' }}>{fmtMoney(e.billableAmount, e.currency)}</td>
-                    <td style={tdStyle}>
-                      {e.status === 3
-                        ? <Badge label={EXPENSE_STATUS[e.status]} color={EXPENSE_STATUS_COLORS[e.status]} />
-                        : <select
-                            disabled={changingStatus === e.id}
-                            value={e.status}
-                            onChange={ev => handleStatusChange(e, +ev.target.value)}
-                            style={{
-                              fontSize: '0.78rem', fontWeight: 600, borderRadius: '12px',
-                              padding: '0.2rem 0.5rem', border: `1px solid ${EXPENSE_STATUS_COLORS[e.status] ?? '#ccc'}`,
-                              color: EXPENSE_STATUS_COLORS[e.status] ?? '#333',
-                              background: (EXPENSE_STATUS_COLORS[e.status] ?? '#ccc') + '22',
-                              cursor: 'pointer', outline: 'none',
-                            }}>
-                            {Object.entries(EXPENSE_STATUS)
-                              .filter(([k]) => +k !== 3) // cannot manually set Facturat
-                              .map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                          </select>
-                      }
-                    </td>
+                    <td style={tdStyle}><Badge label={EXPENSE_STATUS[e.status] ?? '-'} color={EXPENSE_STATUS_COLORS[e.status] ?? '#999'} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -1192,13 +1385,13 @@ function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void, onC
     finally { setLoading(false); }
   };
 
-  /** Save + submit for approval — creates then immediately approves */
+  /** Save + submit for approval — creates as Draft then immediately submits for approval */
   const handleSubmit = async () => {
     if (!isValid()) { setError('Completeaza dosarul, data, durata si descrierea.'); return; }
     setLoading(true); setError('');
     try {
       const entry = await billingService.createTimeEntry(buildRequest());
-      await billingService.approveTimeEntries([entry.id]);
+      await billingService.submitTimeEntries([entry.id]);
       onCreated(); onClose();
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
@@ -1329,6 +1522,126 @@ function CreateTimeEntryModal({ onClose, onCreated }: { onClose: () => void, onC
 }
 
 // =====================================================================
+//  EDIT TIME ENTRY MODAL (Draft only)
+// =====================================================================
+
+function EditTimeEntryModal({ entry, onClose, onSaved }: { entry: TimeEntryDto; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    workDate: entry.workDate ? new Date(entry.workDate).toISOString().slice(0, 10) : '',
+    durationHours: entry.durationHours as number | '',
+    description: entry.description,
+    activityCode: entry.activityCode ?? '',
+    isBillable: entry.isBillable,
+    hourlyRateOverride: '' as number | '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const patch = (fields: Partial<typeof form>) => setForm(prev => ({ ...prev, ...fields }));
+
+  const isValid = () =>
+    !!form.workDate && !!form.durationHours && !!form.description.trim();
+
+  const handleSave = async () => {
+    if (!isValid()) { setError('Completeaza data, durata si descrierea.'); return; }
+    setLoading(true); setError('');
+    try {
+      await billingService.updateTimeEntry(entry.id, {
+        workDate: form.workDate,
+        durationHours: form.durationHours || 0,
+        description: form.description,
+        activityCode: form.activityCode || undefined,
+        isBillable: form.isBillable,
+        hourlyRateOverride: form.hourlyRateOverride !== '' ? form.hourlyRateOverride : undefined,
+      });
+      onSaved(); onClose();
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
+      <div className="lro-modal" style={modalStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Editeaza pontaj</h2>
+          <button onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1, padding: '0 0.25rem' }}
+            title="Inchide">&#10005;</button>
+        </div>
+
+        {entry.rejectionReason && (
+          <div style={{ marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #ef9a9a', fontSize: '0.85rem', color: '#c62828' }}>
+            &#10005; Respins: {entry.rejectionReason}
+          </div>
+        )}
+
+        {error && <div style={{ color: '#f44336', fontSize: '0.9rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #f44336' }}>{error}</div>}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Dosar</label>
+            <input style={{ ...inputStyle, background: '#f5f5f5' }} disabled
+              value={entry.caseNumber || entry.leadName || entry.caseId?.slice(0, 8) || '-'} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Data lucrata *</label>
+            <input type="date" style={inputStyle}
+              value={form.workDate}
+              onChange={e => patch({ workDate: e.target.value })} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Durata (ore) *</label>
+            <input type="number" step="0.01" min="0.01" max="24" style={inputStyle}
+              value={form.durationHours}
+              onChange={e => patch({ durationHours: e.target.value ? parseFloat(e.target.value) : '' })} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Facturabil</label>
+            <select style={selectStyle} value={form.isBillable ? '1' : '0'}
+              onChange={e => patch({ isBillable: e.target.value === '1' })}>
+              <option value="1">Da</option>
+              <option value="0">Nu</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Tarif/ora (optional)</label>
+            <input type="number" step="0.01" style={inputStyle}
+              value={form.hourlyRateOverride}
+              onChange={e => patch({ hourlyRateOverride: e.target.value ? parseFloat(e.target.value) : '' })} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Cod activitate</label>
+            <input type="text" style={inputStyle} placeholder="ex: RESEARCH, DRAFTING"
+              value={form.activityCode}
+              onChange={e => patch({ activityCode: e.target.value })} />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Descriere *</label>
+            <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+              value={form.description}
+              onChange={e => patch({ description: e.target.value })}
+              placeholder="Descrieti activitatea desfasurata..." />
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button style={btnOutline} onClick={onClose}>Anuleaza</button>
+          <button style={btnStyle} onClick={handleSave} disabled={loading}>
+            {loading ? <Spinner size={18} /> : 'Salveaza modificarile'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
 //  CREATE EXPENSE MODAL
 // =====================================================================
 
@@ -1336,7 +1649,7 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
   const [form, setForm] = useState({
     caseId: '', leadId: '', expenseDate: '', category: 0, description: '',
     amount: 0, currency: 1, markupPercent: 0, isBillable: true,
-    vendor: '', status: 1,
+    vendor: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -1471,18 +1784,6 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
             >
               <option value="0">Nu</option>
               <option value="1">Da</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Status</label>
-            <select style={selectStyle}
-              value={form.status}
-              onChange={e => setForm({ ...form, status: parseInt(e.target.value) })}
-            >
-              {Object.entries(EXPENSE_STATUS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
             </select>
           </div>
 

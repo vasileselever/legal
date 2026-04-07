@@ -8,7 +8,7 @@ namespace LegalRO.CaseManagement.API.Helpers;
 public static class ClaimsHelper
 {
     public const string FirmIdClaim = "firm_id";
-    public const string UserIdClaim = ClaimTypes.NameIdentifier;
+    public const string UserIdClaim = "sub";
 
     public static Guid GetFirmId(ClaimsPrincipal user)
     {

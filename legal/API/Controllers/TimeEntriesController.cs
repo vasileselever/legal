@@ -1,9 +1,12 @@
 using LegalRO.CaseManagement.API.Helpers;
+using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Application.DTOs.Billing;
 using LegalRO.CaseManagement.Application.DTOs.Common;
 using LegalRO.CaseManagement.Application.Services;
+using LegalRO.CaseManagement.Domain.Entities;
 using LegalRO.CaseManagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LegalRO.CaseManagement.API.Controllers;
@@ -14,11 +17,13 @@ namespace LegalRO.CaseManagement.API.Controllers;
 public class TimeEntriesController : ControllerBase
 {
     private readonly IBillingService _billing;
+    private readonly UserManager<User> _userManager;
     private readonly ILogger<TimeEntriesController> _logger;
 
-    public TimeEntriesController(IBillingService billing, ILogger<TimeEntriesController> logger)
+    public TimeEntriesController(IBillingService billing, UserManager<User> userManager, ILogger<TimeEntriesController> logger)
     {
         _billing = billing;
+        _userManager = userManager;
         _logger = logger;
     }
 
@@ -102,12 +107,36 @@ public class TimeEntriesController : ControllerBase
         catch (InvalidOperationException ex) { return BadRequest(new ApiError { Code = "INVALID_OP", Message = ex.Message }); }
     }
 
+    [HttpPost("submit")]
+    public async Task<ActionResult> SubmitTimeEntries([FromBody] List<Guid> ids)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
+        await _billing.SubmitTimeEntriesAsync(firmId, userId, ids);
+        return Ok(new { message = $"{ids.Count} time entries submitted for approval" });
+    }
+
     [HttpPost("approve")]
     public async Task<ActionResult> ApproveTimeEntries([FromBody] List<Guid> ids)
     {
         var firmId = ClaimsHelper.GetFirmId(User);
         var userId = ClaimsHelper.GetUserId(User);
+        var caller = await _userManager.FindByIdAsync(userId.ToString());
+        if (caller == null || caller.Role != UserRole.Admin)
+            return StatusCode(403, new { message = "Nu aveti permisiuni pentru aceasta actiune." });
         await _billing.ApproveTimeEntriesAsync(firmId, userId, ids);
         return Ok(new { message = $"{ids.Count} time entries approved" });
+    }
+
+    [HttpPost("reject")]
+    public async Task<ActionResult> RejectTimeEntries([FromBody] RejectTimeEntriesRequest request)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
+        var caller = await _userManager.FindByIdAsync(userId.ToString());
+        if (caller == null || caller.Role != UserRole.Admin)
+            return StatusCode(403, new { message = "Nu aveti permisiuni pentru aceasta actiune." });
+        await _billing.RejectTimeEntriesAsync(firmId, userId, request.Ids, request.Reason ?? string.Empty);
+        return Ok(new { message = $"{request.Ids.Count} time entries rejected" });
     }
 }

@@ -353,11 +353,11 @@ public class AuthController : ControllerBase
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email ?? string.Empty),
-            new(ClaimTypes.Name, user.FullName),
-            new(ClaimTypes.Role, user.Role.ToString()),
-            new(ClaimsHelper.FirmIdClaim, user.FirmId.ToString()),
+            new("sub", user.Id.ToString()),
+            new("email", user.Email ?? string.Empty),
+            new("name", user.FullName),
+            new("role", user.Role.ToString()),
+            new("firm_id", user.FirmId.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

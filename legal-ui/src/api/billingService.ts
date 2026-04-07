@@ -7,7 +7,7 @@ export const TIME_ENTRY_STATUS: Record<number, string> = {
   1: 'Ciorna', 2: 'Trimis', 3: 'Aprobat', 4: 'Facturat', 5: 'Anulat',
 };
 export const TIME_ENTRY_STATUS_COLORS: Record<number, string> = {
-  1: '#757575', 2: '#1976d2', 3: '#2e7d32', 4: '#6a1b9a', 5: '#c62828',
+  1: '#757575', 2: '#f57c00', 3: '#2e7d32', 4: '#6a1b9a', 5: '#c62828',
 };
 
 export const EXPENSE_STATUS: Record<number, string> = {
@@ -66,12 +66,14 @@ export interface TimeEntryDto {
   workDate: string; durationHours: number; description: string;
   activityCode?: string; isBillable: boolean;
   hourlyRate: number; currency: number; totalAmount: number;
-  status: number; timerStart?: string; timerStop?: string;
+  status: number; rejectionReason?: string;
+  timerStart?: string; timerStop?: string;
   createdAt: string;
 }
 
 export interface ExpenseDto {
   id: string; caseId: string; caseNumber?: string; caseTitle?: string;
+  leadId?: string; leadName?: string;
   userId: string; userFullName?: string;
   expenseDate: string; category: number; description: string;
   amount: number; currency: number; markupPercent: number;
@@ -235,8 +237,14 @@ export const billingService = {
     const { data } = await apiClient.post(`${B}/time-entries/${id}/stop-timer`, dto ?? {});
     return data;
   },
+  submitTimeEntries: async (ids: string[]): Promise<void> => {
+    await apiClient.post(`${B}/time-entries/submit`, ids);
+  },
   approveTimeEntries: async (ids: string[]): Promise<void> => {
     await apiClient.post(`${B}/time-entries/approve`, ids);
+  },
+  rejectTimeEntries: async (ids: string[], reason: string): Promise<void> => {
+    await apiClient.post(`${B}/time-entries/reject`, { ids, reason });
   },
 
   // Expenses
