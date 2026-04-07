@@ -130,6 +130,10 @@ echo ""
 echo -e "${YELLOW}[5/6] Building Docker image...${NC}"
 echo "This may take 5-10 minutes on first build..."
 cd "$APP_DIR"
+
+# Pull latest code before building
+git pull origin main
+
 docker compose build --no-cache
 
 if [ $? -eq 0 ]; then
