@@ -208,15 +208,16 @@ function TimeEntriesTab() {
   }, [initialising, isAdmin]);
 
   const load = useCallback(async () => {
+    if (initialising) return;
     setLoading(true); setError('');
     try {
       const params: Record<string, any> = { page, pageSize: 20 };
       if (statusFilter !== '') params.status = statusFilter;
       const res = await billingService.getTimeEntries(params);
-      setEntries(res.data); setTotalPages(res.pagination.totalPages);
+      setEntries(res.data); setTotalPages(res.pagination?.totalPages ?? 1);
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
-  }, [page, statusFilter]);
+  }, [page, statusFilter, initialising]);
 
   useEffect(() => { load(); }, [load]);
 

@@ -103,7 +103,7 @@ public class BillingService : IBillingService
         int page = 1, int pageSize = 25)
     {
         var q = _db.TimeEntries
-            .Where(t => t.FirmId == firmId)
+            .Where(t => t.FirmId == firmId && !t.IsDeleted)
             .Include(t => t.User)
             .Include(t => t.Case)
             .Include(t => t.Lead)
