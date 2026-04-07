@@ -134,6 +134,7 @@ cd "$APP_DIR"
 # Pull latest code before building
 git pull origin main
 
+docker compose down
 docker compose build --no-cache
 
 if [ $? -eq 0 ]; then
