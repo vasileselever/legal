@@ -30,17 +30,30 @@ fi
 
 echo -e "${YELLOW}Applying missing DB columns to legalro-db...${NC}"
 
+echo -e "${YELLOW}Checking existing tables...${NC}"
 docker exec legalro-db /opt/mssql-tools18/bin/sqlcmd \
-    -S localhost -U sa -P "$DB_PASSWORD" -C -Q "
+    -S localhost -U sa -P "$DB_PASSWORD" -C -d "LegalRO_CaseManagement" -Q "
+SELECT TABLE_SCHEMA, TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE='BASE TABLE'
+ORDER BY TABLE_SCHEMA, TABLE_NAME;
+"
+
+echo ""
+echo -e "${YELLOW}Applying missing DB columns...${NC}"
+docker exec legalro-db /opt/mssql-tools18/bin/sqlcmd \
+    -S localhost -U sa -P "$DB_PASSWORD" -C -d "LegalRO_CaseManagement" -Q "
 IF NOT EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA='legal'
-      AND TABLE_NAME='TimeEntries'
+    WHERE TABLE_NAME='TimeEntries'
       AND COLUMN_NAME='RejectionReason'
 )
 BEGIN
-    ALTER TABLE [legal].[TimeEntries] ADD [RejectionReason] nvarchar(500) NULL;
-    PRINT 'Column RejectionReason added.';
+    DECLARE @schema NVARCHAR(50);
+    SELECT @schema = TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='TimeEntries';
+    DECLARE @sql NVARCHAR(500) = 'ALTER TABLE [' + @schema + '].[TimeEntries] ADD [RejectionReason] nvarchar(500) NULL';
+    EXEC sp_executesql @sql;
+    PRINT 'Column RejectionReason added to ' + @schema + '.TimeEntries';
 END
 ELSE
 BEGIN
