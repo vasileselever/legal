@@ -2065,6 +2065,11 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
 
+  // ── inline client edit ─────────────────────────────────────────────
+  const [showClientEdit, setShowClientEdit] = useState(false);
+  const [clientEdit,     setClientEdit]     = useState<any>({});
+  const [clientSaving,   setClientSaving]   = useState(false);
+
   useEffect(() => {
     Promise.all([billingService.getClients(), billingService.getCases(), billingService.getFirmInfo()])
       .then(([cls, c, firm]) => { setClients(cls); setCases(c); setFirmInfo(firm); })
@@ -2276,11 +2281,108 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Client *</label>
-              <select style={selectStyle} value={clientId} onChange={e => { setClientId(e.target.value); setCaseId(''); }}>
+              <select style={selectStyle} value={clientId} onChange={e => { setClientId(e.target.value); setCaseId(''); setShowClientEdit(false); }}>
                 <option value="">— Selecteaza clientul —</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+
+            {/* ── Client data warning banner ── */}
+            {(() => {
+              const sel = clients.find(c => c.id === clientId);
+              if (!sel) return null;
+              const missingAddress = !sel.address && !sel.city;
+              const missingFiscal  = sel.isCorporate && (!sel.fiscalCode || !sel.registrationCode);
+              const missingBank    = !sel.bank || !sel.bankAccount;
+              const hasGaps        = missingAddress || missingFiscal || missingBank;
+              return (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  {hasGaps && !showClientEdit && (
+                    <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '0.65rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', fontSize: '0.82rem' }}>
+                      <div>
+                        <span style={{ fontWeight: 700, color: '#f57c00' }}>⚠️ Date incomplete — </span>
+                        <span style={{ color: '#555' }}>
+                          {[missingAddress && 'adresa', missingFiscal && 'date fiscale', missingBank && 'banca/IBAN'].filter(Boolean).join(', ')} lipsesc si nu vor aparea pe factura.
+                        </span>
+                      </div>
+                      <button type="button"
+                        onClick={() => { setClientEdit({ ...sel }); setShowClientEdit(true); }}
+                        style={{ flexShrink: 0, padding: '0.3rem 0.75rem', background: '#f57c00', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}>
+                        ✏️ Completeaza acum
+                      </button>
+                    </div>
+                  )}
+                  {!hasGaps && (
+                    <div style={{ background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '6px', padding: '0.5rem 0.85rem', fontSize: '0.8rem', color: '#2e7d32' }}>
+                      ✅ {sel.name} — {sel.isCorporate ? `CIF: ${sel.fiscalCode}` : 'Persoana fizica'}{sel.address ? ` · ${sel.address}` : ''}{sel.city ? `, ${sel.city}` : ''}
+                    </div>
+                  )}
+                  {showClientEdit && (
+                    <div style={{ background: '#f0f4ff', border: '1px solid #c5cae9', borderRadius: '8px', padding: '1rem', marginTop: '0.25rem' }}>
+                      <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.8rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>✏️ Completeaza datele clientului — <em>{sel.name}</em></span>
+                        <button type="button" onClick={() => setShowClientEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', fontSize: '1rem' }}>✕</button>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                        {[{ v: false, l: '👤 Persoana fizica' }, { v: true, l: '🏢 Firma / PJ' }].map(({ v, l }) => (
+                          <button key={String(v)} type="button"
+                            onClick={() => setClientEdit((p: any) => ({ ...p, isCorporate: v }))}
+                            style={{ flex: 1, padding: '0.35rem', border: '2px solid', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem',
+                              borderColor: clientEdit.isCorporate === v ? '#1a237e' : '#ddd',
+                              background: clientEdit.isCorporate === v ? '#e8eaf6' : '#fafafa',
+                              color: clientEdit.isCorporate === v ? '#1a237e' : '#666' }}>{l}</button>
+                        ))}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '0.15rem' }}>Adresa</label>
+                          <input style={inputStyle} value={clientEdit.address ?? ''} onChange={e => setClientEdit((p: any) => ({ ...p, address: e.target.value }))} placeholder="Str. Exemplu nr. 1" />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '0.15rem' }}>Oras</label>
+                          <input style={inputStyle} value={clientEdit.city ?? ''} onChange={e => setClientEdit((p: any) => ({ ...p, city: e.target.value }))} placeholder="Bucuresti" />
+                        </div>
+                        {clientEdit.isCorporate && <>
+                          <div>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '0.15rem' }}>CUI / CIF</label>
+                            <input style={inputStyle} value={clientEdit.fiscalCode ?? ''} onChange={e => setClientEdit((p: any) => ({ ...p, fiscalCode: e.target.value }))} placeholder="RO12345678" />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '0.15rem' }}>Nr. Reg. Com.</label>
+                            <input style={inputStyle} value={clientEdit.registrationCode ?? ''} onChange={e => setClientEdit((p: any) => ({ ...p, registrationCode: e.target.value }))} placeholder="J40/1234/2020" />
+                          </div>
+                        </> }
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '0.15rem' }}>Banca</label>
+                          <input style={inputStyle} value={clientEdit.bank ?? ''} onChange={e => setClientEdit((p: any) => ({ ...p, bank: e.target.value }))} placeholder="BCR / BRD..." />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '0.15rem' }}>IBAN</label>
+                          <input style={inputStyle} value={clientEdit.bankAccount ?? ''} onChange={e => setClientEdit((p: any) => ({ ...p, bankAccount: e.target.value }))} placeholder="RO49AAAA..." />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                        <button type="button" onClick={() => setShowClientEdit(false)}
+                          style={{ padding: '0.3rem 0.85rem', background: '#eee', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '0.82rem' }}>Anuleaza</button>
+                        <button type="button" disabled={clientSaving}
+                          onClick={async () => {
+                            setClientSaving(true);
+                            try {
+                              const updated = await billingService.updateClient(sel.id, clientEdit);
+                              setClients(prev => prev.map(c => c.id === sel.id ? { ...c, ...updated } : c));
+                              setShowClientEdit(false);
+                            } catch (e: any) { setError(e.message); }
+                            finally { setClientSaving(false); }
+                          }}
+                          style={{ padding: '0.3rem 0.85rem', background: '#1a237e', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem' }}>
+                          {clientSaving ? '...' : '✓ Salveaza'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Dosar (optional)</label>

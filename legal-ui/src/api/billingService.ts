@@ -287,6 +287,14 @@ export const billingService = {
     const { data } = await apiClient.get(`/v1/clients/${id}`);
     return data;
   },
+  updateClient: async (id: string, dto: {
+    name?: string; email?: string; phone?: string; isCorporate: boolean;
+    address?: string; city?: string; fiscalCode?: string;
+    registrationCode?: string; bank?: string; bankAccount?: string;
+  }) => {
+    const { data } = await apiClient.put(`/v1/clients/${id}`, dto);
+    return data;
+  },
   getFirmInfo: async () => {
     const { data } = await apiClient.get('/auth/firm');
     return data;
