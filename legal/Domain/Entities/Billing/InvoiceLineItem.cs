@@ -19,6 +19,16 @@ public class InvoiceLineItem : BaseEntity
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
+    /// Product/service code (e.g. CPV, internal code)
+    /// </summary>
+    public string? Cod { get; set; }
+
+    /// <summary>
+    /// Unit of measure (e.g. ora, buc, km)
+    /// </summary>
+    public string? UM { get; set; }
+
+    /// <summary>
     /// Quantity (hours for time, 1 for expenses / flat-fee items)
     /// </summary>
     public decimal Quantity { get; set; }

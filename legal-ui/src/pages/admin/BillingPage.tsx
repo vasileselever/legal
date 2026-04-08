@@ -1815,153 +1815,209 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
 // =====================================================================
 
 function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
-  // ── form state ──────────────────────────────────────────────────────
-  const [clientId,     setClientId]     = useState('');
-  const [caseId,       setCaseId]       = useState('');
-  const [dueDate,      setDueDate]      = useState('');
-  const [currency,     setCurrency]     = useState(1);
-  const [vatPercent,   setVatPercent]   = useState(19);
-  const [periodStart,  setPeriodStart]  = useState('');
-  const [periodEnd,    setPeriodEnd]    = useState('');
-  const [notes,        setNotes]        = useState('');
+  // ── header state ───────────────────────────────────────────────────
+  const [clientId,      setClientId]      = useState('');
+  const [caseId,        setCaseId]        = useState('');
+  const [invoiceDate,   setInvoiceDate]   = useState(new Date().toISOString().slice(0, 10));
+  const [dueDate,       setDueDate]       = useState('');
+  const [invoiceSerial, setInvoiceSerial] = useState('LRO');
+  const [invoiceNo,     setInvoiceNo]     = useState('');
+  const [currency,      setCurrency]      = useState(1);
+  const [vatPercent,    setVatPercent]    = useState(21);
+  const [periodStart,   setPeriodStart]   = useState('');
+  const [periodEnd,     setPeriodEnd]     = useState('');
+  const [notes,         setNotes]         = useState('');
+  const [showPreview,   setShowPreview]   = useState(false);
 
-  // multi-select IDs
-  const [selectedExpenses,   setSelectedExpenses]   = useState<string[]>([]);
-  const [selectedTimeEntries,setSelectedTimeEntries]= useState<string[]>([]);
+  // ── line items ─────────────────────────────────────────────────────
+  interface LineItem {
+    description: string; cod: string; um: string;
+    quantity: number; vatPct: number; unitPrice: number;
+  }
+  const emptyLine = (): LineItem => ({ description: '', cod: '', um: 'buc', quantity: 1, vatPct: vatPercent, unitPrice: 0 });
+  const [lines, setLines] = useState<LineItem[]>([emptyLine()]);
 
-  // manual line items
-  const [manualLines, setManualLines] = useState<{ description: string; quantity: number; unitPrice: number; lineType: string }[]>([]);
+  const patchLine = (i: number, patch: Partial<LineItem>) =>
+    setLines(prev => prev.map((l, idx) => idx === i ? { ...l, ...patch } : l));
+  const addLine = () => setLines(prev => [...prev, emptyLine()]);
+  const removeLine = (i: number) => setLines(prev => prev.filter((_, idx) => idx !== i));
 
   // ── data ────────────────────────────────────────────────────────────
-  const [clients,       setClients]       = useState<{ id: string; name: string }[]>([]);
-  const [cases,         setCases]         = useState<CaseItem[]>([]);
-  const [expenses,      setExpenses]      = useState<ExpenseDto[]>([]);
-  const [timeEntries,   setTimeEntries]   = useState<TimeEntryDto[]>([]);
-  const [dataLoading,   setDataLoading]   = useState(true);
+  const [clients,     setClients]     = useState<{ id: string; name: string }[]>([]);
+  const [cases,       setCases]       = useState<CaseItem[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
 
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
-
-  // ── load data on open ───────────────────────────────────────────────
   useEffect(() => {
-    Promise.all([
-      billingService.getClients(),
-      billingService.getCases(),
-      billingService.getExpenses({ pageSize: 500, status: 2 }),
-      billingService.getTimeEntries({ pageSize: 500, status: 3 }),
-    ]).then(([cls, c, exp, te]) => {
-      setClients(cls);
-      setCases(c);
-      setExpenses(exp.data.filter((e: ExpenseDto) => e.isBillable));
-      setTimeEntries(te.data.filter((t: TimeEntryDto) => t.isBillable));
-    }).catch((e: any) => setError(e.message))
+    Promise.all([billingService.getClients(), billingService.getCases()])
+      .then(([cls, c]) => { setClients(cls); setCases(c); })
+      .catch((e: any) => setError(e.message))
       .finally(() => setDataLoading(false));
   }, []);
 
-  // ── filter cases/expenses/time by selected client ──────────────────
-  const filteredCases = clientId
-    ? cases.filter(c => c.clientId === clientId)
-    : cases;
+  const filteredCases = clientId ? cases.filter(c => c.clientId === clientId) : cases;
 
-  const filteredExpenses = caseId
-    ? expenses.filter(e => e.caseId === caseId)
-    : expenses;
+  // ── computed totals ────────────────────────────────────────────────
+  const lineCalc = (l: LineItem) => {
+    const valFaraTVA = l.quantity * l.unitPrice;
+    const tvaVal = Math.round(valFaraTVA * l.vatPct) / 100;
+    return { valFaraTVA, tvaVal, valoare: valFaraTVA + tvaVal };
+  };
+  const subTotal  = lines.reduce((s, l) => s + lineCalc(l).valFaraTVA, 0);
+  const totalTVA  = lines.reduce((s, l) => s + lineCalc(l).tvaVal, 0);
+  const total     = subTotal + totalTVA;
 
-  const filteredTimeEntries = caseId
-    ? timeEntries.filter(t => t.caseId === caseId)
-    : timeEntries;
-
-  // ── totals preview ──────────────────────────────────────────────────
-  const expenseTotal    = filteredExpenses.filter(e => selectedExpenses.includes(e.id)).reduce((s, e) => s + e.amount, 0);
-  const timeTotal       = filteredTimeEntries.filter(t => selectedTimeEntries.includes(t.id)).reduce((s, t) => s + t.totalAmount, 0);
-  const manualTotal     = manualLines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-  const subTotal        = expenseTotal + timeTotal + manualTotal;
-  const vatAmount       = Math.round(subTotal * vatPercent) / 100;
-  const total           = subTotal + vatAmount;
-
-  // ── toggle helpers ──────────────────────────────────────────────────
-  const toggleExpense = (id: string) =>
-    setSelectedExpenses(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-  const toggleTimeEntry = (id: string) =>
-    setSelectedTimeEntries(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-
-  const addManualLine = () =>
-    setManualLines(p => [...p, { description: '', quantity: 1, unitPrice: 0, lineType: 'FlatFee' }]);
-  const removeManualLine = (i: number) =>
-    setManualLines(p => p.filter((_, idx) => idx !== i));
-  const patchManualLine = (i: number, patch: Partial<typeof manualLines[0]>) =>
-    setManualLines(p => p.map((l, idx) => idx === i ? { ...l, ...patch } : l));
+  const clientName = clients.find(c => c.id === clientId)?.name ?? '—';
+  const caseLabel  = cases.find(c => c.id === caseId)?.caseNumber;
 
   // ── submit ──────────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!clientId)                     { setError('Selectati clientul.');            return; }
-    if (!dueDate)                      { setError('Introduceti data scadenta.');     return; }
-    const hasLines = selectedExpenses.length > 0 || selectedTimeEntries.length > 0 || manualLines.length > 0;
-    if (!hasLines)                     { setError('Adaugati cel putin o linie (cheltuiala, pontaj sau linie manuala).'); return; }
-    const invalidManual = manualLines.find(l => !l.description || l.unitPrice <= 0);
-    if (invalidManual)                 { setError('Completati descrierea si pretul pentru toate liniile manuale.'); return; }
+    if (!clientId)         { setError('Selectati clientul.');                   return; }
+    if (!invoiceDate)      { setError('Introduceti data emiterii.');            return; }
+    if (!dueDate)          { setError('Introduceti data scadentei.');           return; }
+    if (!invoiceSerial)    { setError('Introduceti seria facturii.');           return; }
+    const invalid = lines.find(l => !l.description || l.unitPrice <= 0 || l.quantity <= 0);
+    if (invalid)           { setError('Completati toate liniile corect.');      return; }
 
     setLoading(true); setError('');
     try {
       await billingService.createInvoice({
         clientId,
-        caseId:       caseId || undefined,
+        caseId:          caseId || undefined,
+        invoiceDate,
+        invoiceSerial,
+        invoiceNumberOverride: invoiceNo || undefined,
         dueDate,
         currency,
         vatPercent,
-        periodStart:  periodStart || undefined,
-        periodEnd:    periodEnd   || undefined,
-        notes:        notes       || undefined,
-        expenseIds:   selectedExpenses.length   > 0 ? selectedExpenses   : undefined,
-        timeEntryIds: selectedTimeEntries.length > 0 ? selectedTimeEntries : undefined,
-        manualLineItems: manualLines.length > 0 ? manualLines.map(l => ({
+        periodStart:     periodStart || undefined,
+        periodEnd:       periodEnd   || undefined,
+        notes:           notes       || undefined,
+        manualLineItems: lines.map(l => ({
           description: l.description,
+          cod:         l.cod || undefined,
+          um:          l.um  || undefined,
           quantity:    l.quantity,
           unitPrice:   l.unitPrice,
-          lineType:    l.lineType,
-        })) : undefined,
+          vatPercent:  l.vatPct,
+          lineType:    'FlatFee',
+        })),
       });
-      onCreated();
-      onClose();
+      onCreated(); onClose();
     } catch (e: any) { setError(e.message); }
     finally { setLoading(false); }
   };
 
-  const sectionTitle: React.CSSProperties = {
-    fontSize: '0.78rem', fontWeight: 700, color: '#1a237e',
-    textTransform: 'uppercase', letterSpacing: '0.05em',
-    margin: '1.25rem 0 0.5rem', borderBottom: '1px solid #e8eaf6', paddingBottom: '0.35rem',
+  const sec: React.CSSProperties = {
+    fontSize: '0.75rem', fontWeight: 700, color: '#1a237e', textTransform: 'uppercase',
+    letterSpacing: '0.05em', margin: '1.25rem 0 0.5rem',
+    borderBottom: '1px solid #e8eaf6', paddingBottom: '0.3rem',
   };
-  const checkRow: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: '0.6rem',
-    padding: '0.45rem 0.6rem', borderRadius: '6px', cursor: 'pointer',
-    fontSize: '0.85rem', color: '#333',
-  };
+  const thI: React.CSSProperties = { ...thStyle, padding: '0.4rem 0.5rem', fontSize: '0.75rem', background: '#f0f4ff' };
+  const tdI: React.CSSProperties = { padding: '0.3rem 0.35rem' };
+  const inpS: React.CSSProperties = { ...inputStyle, padding: '0.3rem 0.4rem', fontSize: '0.82rem' };
+
+  // ── Preview ──────────────────────────────────────────────────────────
+  if (showPreview) {
+    const invoiceLabel = invoiceNo
+      ? `${invoiceSerial} ${invoiceNo}`
+      : `${invoiceSerial}-${new Date(invoiceDate).getFullYear()}-XXXXX`;
+    return (
+      <div className="lro-overlay" style={overlayStyle} onClick={() => setShowPreview(false)}>
+        <div className="lro-modal" style={{ ...modalStyle, maxWidth: 780, maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+          {/* Preview header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.05rem', color: '#1a237e' }}>Previzualizare factura</h2>
+            <button onClick={() => setShowPreview(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888' }}>✕</button>
+          </div>
+          {/* Invoice preview body */}
+          <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', fontFamily: 'serif', fontSize: '0.9rem', color: '#222' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1a237e' }}>FACTURA FISCALA</div>
+                <div style={{ fontWeight: 700, marginTop: '0.25rem' }}>Seria: {invoiceSerial} | Nr: {invoiceNo || 'AUTO'}</div>
+              </div>
+              <div style={{ textAlign: 'right', fontSize: '0.85rem' }}>
+                <div>Data emiterii: <strong>{fmtDate(invoiceDate)}</strong></div>
+                <div>Data scadentei: <strong>{fmtDate(dueDate)}</strong></div>
+                {caseLabel && <div>Dosar: <strong>{caseLabel}</strong></div>}
+              </div>
+            </div>
+            <div style={{ marginBottom: '1.25rem', padding: '0.75rem', background: '#f8f9ff', borderRadius: '6px', fontSize: '0.85rem' }}>
+              <strong>Client:</strong> {clientName}
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', marginBottom: '1rem' }}>
+              <thead>
+                <tr style={{ background: '#1a237e', color: 'white' }}>
+                  {['Nr.', 'Denumire produs/serviciu', 'Cod', 'UM', 'Cant.', 'TVA%', 'Pret (fara TVA)', 'Val. TVA', 'Valoare'].map(h => (
+                    <th key={h} style={{ padding: '0.45rem 0.5rem', textAlign: h === 'Cant.' || h === 'TVA%' || h === 'Nr.' ? 'center' : 'left', fontWeight: 600, fontSize: '0.75rem' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map((l, i) => {
+                  const { valFaraTVA, tvaVal, valoare } = lineCalc(l);
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #eee', background: i % 2 === 0 ? '#fafafa' : 'white' }}>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{i + 1}</td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>{l.description}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', color: '#666' }}>{l.cod || '-'}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.um}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.quantity}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.vatPct}%</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{fmtMoney(l.unitPrice, currency)}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{fmtMoney(tvaVal, currency)}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right', fontWeight: 700 }}>{fmtMoney(valoare, currency)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <table style={{ fontSize: '0.88rem', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr><td style={{ padding: '0.2rem 1rem 0.2rem 0', color: '#555' }}>Total fara TVA:</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtMoney(subTotal, currency)}</td></tr>
+                  <tr><td style={{ padding: '0.2rem 1rem 0.2rem 0', color: '#555' }}>Total TVA:</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtMoney(totalTVA, currency)}</td></tr>
+                  <tr style={{ borderTop: '2px solid #1a237e' }}>
+                    <td style={{ padding: '0.4rem 1rem 0.2rem 0', fontWeight: 700, fontSize: '1rem', color: '#1a237e' }}>TOTAL DE PLATA:</td>
+                    <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '1rem', color: '#1a237e' }}>{fmtMoney(total, currency)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {notes && <div style={{ marginTop: '1rem', fontSize: '0.82rem', color: '#555', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>Notite: {notes}</div>}
+          </div>
+          <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+            <button style={btnOutline} onClick={() => setShowPreview(false)}>← Inapoi la editare</button>
+            <button style={btnStyle} onClick={handleSubmit} disabled={loading}>
+              {loading ? <Spinner size={18} /> : '✓ Emite factura'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
-      <div className="lro-modal" style={{ ...modalStyle, maxWidth: 760, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
+      <div className="lro-modal" style={{ ...modalStyle, maxWidth: 820, maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#1a237e' }}>Creaza factura noua</h2>
-          <button onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1 }}>
-            ✕
-          </button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888', lineHeight: 1 }}>✕</button>
         </div>
 
         {error && <div style={{ color: '#f44336', fontSize: '0.88rem', marginBottom: '1rem', padding: '0.5rem 0.75rem', background: '#fff3f3', borderRadius: '6px', border: '1px solid #ffcdd2' }}>{error}</div>}
 
         {dataLoading ? <div style={{ textAlign: 'center', padding: '2rem' }}><Spinner /></div> : <>
 
-          {/* ── Section 1: Header fields ── */}
-          <div style={sectionTitle}>Date factura</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.875rem' }}>
+          {/* ── Antet factura ── */}
+          <div style={sec}>Antet factura</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Client *</label>
-              <select style={selectStyle} value={clientId} onChange={e => { setClientId(e.target.value); setCaseId(''); setSelectedExpenses([]); setSelectedTimeEntries([]); }}>
+              <select style={selectStyle} value={clientId} onChange={e => { setClientId(e.target.value); setCaseId(''); }}>
                 <option value="">— Selecteaza clientul —</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -1969,17 +2025,20 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Dosar (optional)</label>
-              <select style={selectStyle} value={caseId} onChange={e => { setCaseId(e.target.value); setSelectedExpenses([]); setSelectedTimeEntries([]); }}>
+              <select style={selectStyle} value={caseId} onChange={e => setCaseId(e.target.value)}>
                 <option value="">— Toate dosarele clientului —</option>
                 {filteredCases.map(c => <option key={c.id} value={c.id}>{c.caseNumber} · {c.title}</option>)}
               </select>
             </div>
 
             <div>
-              <label style={labelStyle}>Data scadenta *</label>
+              <label style={labelStyle}>Data emiterii *</label>
+              <input type="date" style={inputStyle} value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Data scadentei *</label>
               <input type="date" style={inputStyle} value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </div>
-
             <div>
               <label style={labelStyle}>Moneda</label>
               <select style={selectStyle} value={currency} onChange={e => setCurrency(+e.target.value)}>
@@ -1988,135 +2047,110 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
             </div>
 
             <div>
-              <label style={labelStyle}>TVA %</label>
+              <label style={labelStyle}>Serie factura *</label>
+              <input type="text" style={inputStyle} placeholder="ex: LRO" value={invoiceSerial}
+                onChange={e => setInvoiceSerial(e.target.value.toUpperCase())} maxLength={10} />
+            </div>
+            <div>
+              <label style={labelStyle}>Numar factura (gol = automat)</label>
+              <input type="text" style={inputStyle} placeholder="ex: 00042" value={invoiceNo}
+                onChange={e => setInvoiceNo(e.target.value)} maxLength={20} />
+            </div>
+            <div>
+              <label style={labelStyle}>TVA implicit %</label>
               <input type="number" min="0" max="100" step="1" style={inputStyle}
-                value={vatPercent} onChange={e => setVatPercent(+e.target.value)} />
+                value={vatPercent} onChange={e => { const v = +e.target.value; setVatPercent(v); setLines(prev => prev.map(l => ({ ...l, vatPct: v }))); }} />
             </div>
 
             <div>
               <label style={labelStyle}>Perioada de la</label>
               <input type="date" style={inputStyle} value={periodStart} onChange={e => setPeriodStart(e.target.value)} />
             </div>
-
             <div>
               <label style={labelStyle}>Perioada pana la</label>
               <input type="date" style={inputStyle} value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} />
             </div>
+            <div style={{ gridColumn: '3 / 4' }} />
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Notite</label>
-              <textarea style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }}
-                value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notite optionale pe factura..." />
+              <label style={labelStyle}>Notite (optionale)</label>
+              <textarea style={{ ...inputStyle, minHeight: '55px', resize: 'vertical' }}
+                value={notes} onChange={e => setNotes(e.target.value)} placeholder="Conditii de plata, mentiuni speciale..." />
             </div>
           </div>
 
-          {/* ── Section 2: Cheltuieli ── */}
-          <div style={sectionTitle}>Cheltuieli facturabile ({filteredExpenses.length})</div>
-          {filteredExpenses.length === 0 ? (
-            <div style={{ fontSize: '0.82rem', color: '#aaa', padding: '0.5rem 0' }}>
-              Nu exista cheltuieli aprobate{caseId ? ' pentru dosarul selectat' : ''}. Aprobati cheltuielile din tab-ul Cheltuieli.
-            </div>
-          ) : (
-            <div style={{ border: '1px solid #e8eaf6', borderRadius: '8px', overflow: 'hidden' }}>
-              {filteredExpenses.map((exp, idx) => {
-                const checked = selectedExpenses.includes(exp.id);
-                return (
-                  <div key={exp.id}
-                    onClick={() => toggleExpense(exp.id)}
-                    style={{ ...checkRow, background: checked ? '#f0f4ff' : idx % 2 === 0 ? '#fafafa' : 'white', borderBottom: idx < filteredExpenses.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-                    <input type="checkbox" checked={checked} onChange={() => toggleExpense(exp.id)} onClick={e => e.stopPropagation()} />
-                    <span style={{ flex: 1 }}>
-                      <strong>{EXPENSE_CATEGORIES.find(c => c.value === exp.category)?.label ?? exp.category}</strong>
-                      {exp.description ? ` — ${exp.description}` : ''}
-                    </span>
-                    <span style={{ fontSize: '0.78rem', color: '#666', whiteSpace: 'nowrap' }}>
-                      {fmtDate(exp.expenseDate)}
-                    </span>
-                    <span style={{ fontWeight: 700, color: '#1a237e', whiteSpace: 'nowrap', minWidth: 80, textAlign: 'right' }}>
-                      {fmtMoney(exp.amount, exp.currency)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ── Section 3: Pontaj ── */}
-          <div style={sectionTitle}>Pontaj facturat ({filteredTimeEntries.length})</div>
-          {filteredTimeEntries.length === 0 ? (
-            <div style={{ fontSize: '0.82rem', color: '#aaa', padding: '0.5rem 0' }}>
-              Nu exista inregistrari de pontaj aprobate{caseId ? ' pentru dosarul selectat' : ''}.
-            </div>
-          ) : (
-            <div style={{ border: '1px solid #e8eaf6', borderRadius: '8px', overflow: 'hidden' }}>
-              {filteredTimeEntries.map((te, idx) => {
-                const checked = selectedTimeEntries.includes(te.id);
-                return (
-                  <div key={te.id}
-                    onClick={() => toggleTimeEntry(te.id)}
-                    style={{ ...checkRow, background: checked ? '#f0f4ff' : idx % 2 === 0 ? '#fafafa' : 'white', borderBottom: idx < filteredTimeEntries.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-                    <input type="checkbox" checked={checked} onChange={() => toggleTimeEntry(te.id)} onClick={e => e.stopPropagation()} />
-                    <span style={{ flex: 1 }}>
-                      <strong>{fmtHours(te.durationHours)}</strong>
-                      {te.description ? ` — ${te.description}` : ''}
-                    </span>
-                    <span style={{ fontSize: '0.78rem', color: '#666', whiteSpace: 'nowrap' }}>
-                      {fmtDate(te.workDate)}
-                    </span>
-                    <span style={{ fontWeight: 700, color: '#1a237e', whiteSpace: 'nowrap', minWidth: 80, textAlign: 'right' }}>
-                      {fmtMoney(te.totalAmount, te.currency)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ── Section 4: Manual lines ── */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={sectionTitle}>Linii manuale</div>
-            <button style={{ ...btnOutline, padding: '0.25rem 0.75rem', fontSize: '0.8rem' }} onClick={addManualLine}>+ Adauga linie</button>
+          {/* ── Linii factura ── */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', ...sec, margin: '1.25rem 0 0.5rem' }}>
+            <span>Linii factura</span>
+            <button style={{ ...btnOutline, padding: '0.2rem 0.65rem', fontSize: '0.78rem' }} onClick={addLine}>+ Adauga</button>
           </div>
-          {manualLines.map((l, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 100px 100px 32px', gap: '0.5rem', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <input style={inputStyle} placeholder="Descriere *" value={l.description}
-                onChange={e => patchManualLine(i, { description: e.target.value })} />
-              <input type="number" style={inputStyle} placeholder="Cant." min="0.01" step="0.01" value={l.quantity}
-                onChange={e => patchManualLine(i, { quantity: parseFloat(e.target.value) || 0 })} />
-              <input type="number" style={inputStyle} placeholder="Pret unit." min="0" step="0.01" value={l.unitPrice}
-                onChange={e => patchManualLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} />
-              <select style={selectStyle} value={l.lineType} onChange={e => patchManualLine(i, { lineType: e.target.value })}>
-                <option value="FlatFee">Onorariu fix</option>
-                <option value="Discount">Discount</option>
-                <option value="Other">Altul</option>
-              </select>
-              <button onClick={() => removeManualLine(i)}
-                style={{ border: '1px solid #ffcdd2', borderRadius: '5px', background: '#fff5f5', color: '#c62828', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, padding: '0.3rem 0.4rem' }}>
-                ×
-              </button>
-            </div>
-          ))}
 
-          {/* ── Totals preview ── */}
-          {(selectedExpenses.length > 0 || selectedTimeEntries.length > 0 || manualLines.length > 0) && (
-            <div style={{ marginTop: '1rem', background: '#f8f9ff', border: '1px solid #e8eaf6', borderRadius: '8px', padding: '0.875rem 1rem', fontSize: '0.88rem' }}>
-              {expenseTotal > 0    && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>Cheltuieli</span><span>{fmtMoney(expenseTotal, currency)}</span></div>}
-              {timeTotal > 0       && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>Pontaj</span><span>{fmtMoney(timeTotal, currency)}</span></div>}
-              {manualTotal > 0     && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>Linii manuale</span><span>{fmtMoney(manualTotal, currency)}</span></div>}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', borderTop: '1px solid #e0e0e0', paddingTop: '0.35rem' }}><span>Subtotal</span><span>{fmtMoney(subTotal, currency)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}><span>TVA {vatPercent}%</span><span>{fmtMoney(vatAmount, currency)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '0.95rem', color: '#1a237e' }}><span>Total</span><span>{fmtMoney(total, currency)}</span></div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+              <thead>
+                <tr>
+                  {['Denumire produs sau serviciu *', 'Cod', 'UM', 'Cant. *', 'TVA %', 'Pret (fara TVA) *', 'Valoare', ''].map(h => (
+                    <th key={h} style={thI}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map((l, i) => {
+                  const { valFaraTVA, tvaVal, valoare } = lineCalc(l);
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #f0f0f0', background: i % 2 === 0 ? '#fafafa' : 'white' }}>
+                      <td style={tdI}><input style={inpS} value={l.description} placeholder="ex: Consultanta juridica" onChange={e => patchLine(i, { description: e.target.value })} /></td>
+                      <td style={tdI}><input style={{ ...inpS, width: 70 }} value={l.cod} placeholder="CPV..." onChange={e => patchLine(i, { cod: e.target.value })} /></td>
+                      <td style={tdI}>
+                        <select style={{ ...inpS, width: 68 }} value={l.um} onChange={e => patchLine(i, { um: e.target.value })}>
+                          {['ora', 'buc', 'km', 'zi', 'luna', 'set', 'pag'].map(u => <option key={u} value={u}>{u}</option>)}
+                        </select>
+                      </td>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 68 }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></td>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 62 }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></td>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
+                      <td style={{ ...tdI, whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', textAlign: 'right', minWidth: 100 }}>
+                        <div>{fmtMoney(valFaraTVA, currency)}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#888' }}>+TVA {fmtMoney(tvaVal, currency)}</div>
+                        <div style={{ color: '#1a237e' }}>{fmtMoney(valoare, currency)}</div>
+                      </td>
+                      <td style={tdI}>
+                        {lines.length > 1 && (
+                          <button onClick={() => removeLine(i)} style={{ border: 'none', background: 'none', color: '#c62828', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0.2rem' }}>×</button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Totals ── */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+            <div style={{ background: '#f8f9ff', border: '1px solid #e8eaf6', borderRadius: '8px', padding: '0.75rem 1.25rem', fontSize: '0.88rem', minWidth: 260 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}><span style={{ color: '#666' }}>Total fara TVA:</span><span style={{ fontWeight: 600 }}>{fmtMoney(subTotal, currency)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}><span style={{ color: '#666' }}>Total TVA:</span><span style={{ fontWeight: 600 }}>{fmtMoney(totalTVA, currency)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #1a237e', paddingTop: '0.35rem', marginTop: '0.2rem' }}>
+                <span style={{ fontWeight: 700, color: '#1a237e' }}>Total de plata:</span>
+                <span style={{ fontWeight: 800, color: '#1a237e', fontSize: '1rem' }}>{fmtMoney(total, currency)}</span>
+              </div>
             </div>
-          )}
+          </div>
 
         </>}
 
-        {/* Footer */}
-        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+        {/* ── Footer ── */}
+        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button style={btnOutline} onClick={onClose} disabled={loading}>Anuleaza</button>
-          <button style={btnStyle} onClick={handleSubmit} disabled={loading || dataLoading}>
-            {loading ? <Spinner size={18} /> : 'Creaza factura'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button style={{ ...btnOutline, color: '#6a1b9a', borderColor: '#6a1b9a' }} disabled={dataLoading || lines.length === 0} onClick={() => setShowPreview(true)}>
+              🔍 Previzualizare
+            </button>
+            <button style={btnStyle} onClick={handleSubmit} disabled={loading || dataLoading}>
+              {loading ? <Spinner size={18} /> : '✓ Emite factura'}
+            </button>
+          </div>
         </div>
 
       </div>

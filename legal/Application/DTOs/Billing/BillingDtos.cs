@@ -179,8 +179,11 @@ public class InvoiceLineItemDto
     public Guid Id { get; set; }
     public int LineNumber { get; set; }
     public string Description { get; set; } = string.Empty;
+    public string? Cod { get; set; }
+    public string? UM { get; set; }
     public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal VatPercent { get; set; }
     public decimal Amount { get; set; }
     public string LineType { get; set; } = "Time";
     public Guid? TimeEntryId { get; set; }
@@ -191,6 +194,9 @@ public class CreateInvoiceRequest
 {
     [Required] public Guid ClientId { get; set; }
     public Guid? CaseId { get; set; }
+    public DateTime? InvoiceDate { get; set; }
+    [MaxLength(20)] public string? InvoiceSerial { get; set; }
+    [MaxLength(50)] public string? InvoiceNumberOverride { get; set; }
     [Required] public DateTime DueDate { get; set; }
     public Currency Currency { get; set; } = Currency.RON;
     [Range(0, 100)] public decimal VatPercent { get; set; } = 19m;
@@ -217,8 +223,11 @@ public class CreateInvoiceRequest
 public class ManualLineItemRequest
 {
     [Required][MaxLength(1000)] public string Description { get; set; } = string.Empty;
+    [MaxLength(50)] public string? Cod { get; set; }
+    [MaxLength(20)] public string? UM { get; set; }
     [Required] public decimal Quantity { get; set; } = 1;
     [Required] public decimal UnitPrice { get; set; }
+    [Range(0, 100)] public decimal VatPercent { get; set; } = 19m;
     public string LineType { get; set; } = "FlatFee";
 }
 

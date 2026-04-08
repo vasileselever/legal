@@ -349,18 +349,21 @@ public class BillingService : IBillingService
 
     public async Task<InvoiceDto> CreateInvoiceAsync(Guid firmId, Guid userId, CreateInvoiceRequest request)
     {
-        // Generate sequential invoice number
-        var year = DateTime.UtcNow.Year;
+        var invoiceDate = request.InvoiceDate?.ToUniversalTime() ?? DateTime.UtcNow;
+        var year = invoiceDate.Year;
         var count = await _db.Invoices.CountAsync(i => i.FirmId == firmId && i.InvoiceDate.Year == year);
-        var invoiceNumber = $"LRO-{year}-{(count + 1):D5}";
+        var serial = !string.IsNullOrWhiteSpace(request.InvoiceSerial) ? request.InvoiceSerial.Trim() : "LRO";
+        var number = !string.IsNullOrWhiteSpace(request.InvoiceNumberOverride)
+            ? request.InvoiceNumberOverride.Trim()
+            : $"{serial}-{year}-{(count + 1):D5}";
 
         var invoice = new Invoice
         {
             FirmId = firmId,
             ClientId = request.ClientId,
             CaseId = request.CaseId,
-            InvoiceNumber = invoiceNumber,
-            InvoiceDate = DateTime.UtcNow,
+            InvoiceNumber = number,
+            InvoiceDate = invoiceDate,
             DueDate = request.DueDate,
             Currency = request.Currency,
             VatPercent = request.VatPercent,
@@ -441,6 +444,8 @@ public class BillingService : IBillingService
                     InvoiceId = invoice.Id,
                     LineNumber = lineNum,
                     Description = ml.Description,
+                    Cod = ml.Cod,
+                    UM = ml.UM,
                     Quantity = ml.Quantity,
                     UnitPrice = ml.UnitPrice,
                     Amount = ml.Quantity * ml.UnitPrice,
@@ -458,7 +463,7 @@ public class BillingService : IBillingService
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("Invoice {Number} created by {UserId} for client {ClientId}",
-            invoiceNumber, userId, request.ClientId);
+            number, userId, request.ClientId);
 
         return await GetInvoiceAsync(firmId, invoice.Id);
     }
@@ -1103,8 +1108,11 @@ public class BillingService : IBillingService
             Id = l.Id,
             LineNumber = l.LineNumber,
             Description = l.Description,
+            Cod = l.Cod,
+            UM = l.UM,
             Quantity = l.Quantity,
             UnitPrice = l.UnitPrice,
+            VatPercent = inv.VatPercent,
             Amount = l.Amount,
             LineType = l.LineType,
             TimeEntryId = l.TimeEntryId,
