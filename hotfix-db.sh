@@ -30,56 +30,98 @@ fi
 
 echo -e "${YELLOW}Applying missing DB columns to legalro-db...${NC}"
 
-echo -e "${YELLOW}Applying missing DB columns to legalro-db...${NC}"
-
-docker exec legalro-db /opt/mssql-tools18/bin/sqlcmd \
+docker exec legalro-db
     -S localhost -U sa -P "$DB_PASSWORD" -C -d "LegalRO_CaseManagement" -Q "
 -- 1. TimeEntries.RejectionReason
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='TimeEntries' AND COLUMN_NAME='RejectionReason')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='TimeEntries' AND COLUMN_NAME='RejectionReason')
 BEGIN
-    DECLARE @s1 NVARCHAR(50); SELECT @s1=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='TimeEntries';
-    EXEC sp_executesql N'ALTER TABLE [' + @s1 + '].[TimeEntries] ADD [RejectionReason] nvarchar(500) NULL';
+    ALTER TABLE [legal].[TimeEntries] ADD [RejectionReason] nvarchar(500) NULL;
     PRINT 'Added TimeEntries.RejectionReason';
 END
 
 -- 2. InvoiceLineItems.Cod
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='InvoiceLineItems' AND COLUMN_NAME='Cod')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='InvoiceLineItems' AND COLUMN_NAME='Cod')
 BEGIN
-    DECLARE @s2 NVARCHAR(50); SELECT @s2=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='InvoiceLineItems';
-    EXEC sp_executesql N'ALTER TABLE [' + @s2 + '].[InvoiceLineItems] ADD [Cod] nvarchar(50) NULL';
+    ALTER TABLE [legal].[InvoiceLineItems] ADD [Cod] nvarchar(50) NULL;
     PRINT 'Added InvoiceLineItems.Cod';
 END
 
 -- 3. InvoiceLineItems.UM
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='InvoiceLineItems' AND COLUMN_NAME='UM')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='InvoiceLineItems' AND COLUMN_NAME='UM')
 BEGIN
-    DECLARE @s3 NVARCHAR(50); SELECT @s3=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='InvoiceLineItems';
-    EXEC sp_executesql N'ALTER TABLE [' + @s3 + '].[InvoiceLineItems] ADD [UM] nvarchar(20) NULL';
+    ALTER TABLE [legal].[InvoiceLineItems] ADD [UM] nvarchar(20) NULL;
     PRINT 'Added InvoiceLineItems.UM';
 END
 
 -- 4. Firms: RegistrationCode, Bank, BankAccount
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Firms' AND COLUMN_NAME='RegistrationCode')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Firms' AND COLUMN_NAME='RegistrationCode')
 BEGIN
-    DECLARE @s4 NVARCHAR(50); SELECT @s4=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Firms';
-    EXEC sp_executesql N'ALTER TABLE [' + @s4 + '].[Firms] ADD [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
-    PRINT 'Added Firms.RegistrationCode/Bank/BankAccount';
+    ALTER TABLE [legal].[Firms] ADD [RegistrationCode] nvarchar(50) NULL;
+    PRINT 'Added Firms.RegistrationCode';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Firms' AND COLUMN_NAME='Bank')
+BEGIN
+    ALTER TABLE [legal].[Firms] ADD [Bank] nvarchar(100) NULL;
+    PRINT 'Added Firms.Bank';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Firms' AND COLUMN_NAME='BankAccount')
+BEGIN
+    ALTER TABLE [legal].[Firms] ADD [BankAccount] nvarchar(50) NULL;
+    PRINT 'Added Firms.BankAccount';
 END
 
 -- 5. Clients: RegistrationCode, Bank, BankAccount
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Clients' AND COLUMN_NAME='RegistrationCode')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Clients' AND COLUMN_NAME='RegistrationCode')
 BEGIN
-    DECLARE @s5 NVARCHAR(50); SELECT @s5=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Clients';
-    EXEC sp_executesql N'ALTER TABLE [' + @s5 + '].[Clients] ADD [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
-    PRINT 'Added Clients.RegistrationCode/Bank/BankAccount';
+    ALTER TABLE [legal].[Clients] ADD [RegistrationCode] nvarchar(50) NULL;
+    PRINT 'Added Clients.RegistrationCode';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Clients' AND COLUMN_NAME='Bank')
+BEGIN
+    ALTER TABLE [legal].[Clients] ADD [Bank] nvarchar(100) NULL;
+    PRINT 'Added Clients.Bank';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Clients' AND COLUMN_NAME='BankAccount')
+BEGIN
+    ALTER TABLE [legal].[Clients] ADD [BankAccount] nvarchar(50) NULL;
+    PRINT 'Added Clients.BankAccount';
 END
 
 -- 6. Leads: IsCorporate, Address, City, FiscalCode, RegistrationCode, Bank, BankAccount
-IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Leads' AND COLUMN_NAME='IsCorporate')
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='IsCorporate')
 BEGIN
-    DECLARE @s6 NVARCHAR(50); SELECT @s6=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Leads';
-    EXEC sp_executesql N'ALTER TABLE [' + @s6 + '].[Leads] ADD [IsCorporate] bit NOT NULL DEFAULT 0, [Address] nvarchar(300) NULL, [City] nvarchar(100) NULL, [FiscalCode] nvarchar(50) NULL, [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
-    PRINT 'Added Leads fiscal/address columns';
+    ALTER TABLE [legal].[Leads] ADD [IsCorporate] bit NOT NULL DEFAULT 0;
+    PRINT 'Added Leads.IsCorporate';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='Address')
+BEGIN
+    ALTER TABLE [legal].[Leads] ADD [Address] nvarchar(300) NULL;
+    PRINT 'Added Leads.Address';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='City')
+BEGIN
+    ALTER TABLE [legal].[Leads] ADD [City] nvarchar(100) NULL;
+    PRINT 'Added Leads.City';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='FiscalCode')
+BEGIN
+    ALTER TABLE [legal].[Leads] ADD [FiscalCode] nvarchar(50) NULL;
+    PRINT 'Added Leads.FiscalCode';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='RegistrationCode')
+BEGIN
+    ALTER TABLE [legal].[Leads] ADD [RegistrationCode] nvarchar(50) NULL;
+    PRINT 'Added Leads.RegistrationCode';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='Bank')
+BEGIN
+    ALTER TABLE [legal].[Leads] ADD [Bank] nvarchar(100) NULL;
+    PRINT 'Added Leads.Bank';
+END
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Leads' AND COLUMN_NAME='BankAccount')
+BEGIN
+    ALTER TABLE [legal].[Leads] ADD [BankAccount] nvarchar(50) NULL;
+    PRINT 'Added Leads.BankAccount';
 END
 
 -- 7. Register migrations in __EFMigrationsHistory so EF does not re-run them
