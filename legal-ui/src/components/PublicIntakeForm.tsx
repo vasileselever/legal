@@ -1,4 +1,4 @@
-import { useState } from 'react';
+ï»¿import { useState } from 'react';
 import { leadService, PRACTICE_AREAS, LEAD_SOURCES } from '../api/leadService';
 
 const URGENCY = [
@@ -179,17 +179,17 @@ export function PublicIntakeForm() {
             <strong>Operator de date:</strong> Cabinetul de avocatura inregistrat conform Legii nr. 51/1995.<br />
             <strong>Date prelucrate:</strong> Nume, prenume, adresa de email, numarul de telefon, informatii privind situatia juridica descrisa.<br />
             <strong>Scopul prelucrarii:</strong> Evaluarea cererii de consultanta si contactarea dumneavoastra in vederea furnizarii de servicii juridice.<br />
-            <strong>Temeiul juridic:</strong> Art. 6 alin. (1) lit. b) GDPR — masuri precontractuale la cererea persoanei vizate; art. 6 alin. (1) lit. c) GDPR — obligatii legale ale avocatului.<br />
+            <strong>Temeiul juridic:</strong> Art. 6 alin. (1) lit. b) GDPR â€” masuri precontractuale la cererea persoanei vizate; art. 6 alin. (1) lit. c) GDPR â€” obligatii legale ale avocatului.<br />
             <strong>Destinatari:</strong> Datele nu sunt transmise tertilor, cu exceptia cazurilor prevazute de lege sau a expertilor implicati in dosar cu acordul dvs.<br />
             <strong>Perioada de stocare:</strong> Datele sunt pastrate pe durata relatiei contractuale si cel putin 5 ani ulterior, conform obligatiilor legale de arhivare.<br />
-            <strong>Drepturile dvs. (GDPR):</strong> Aveti dreptul de acces, rectificare, stergere (in limitele obligatiilor legale), restrictionare, portabilitate si opozitie. Puteti exercita aceste drepturi scriind la adresa cabinetului sau la Autoritatea Nationala de Supraveghere (ANSPDCP — <em>www.dataprotection.ro</em>).
+            <strong>Drepturile dvs. (GDPR):</strong> Aveti dreptul de acces, rectificare, stergere (in limitele obligatiilor legale), restrictionare, portabilitate si opozitie. Puteti exercita aceste drepturi scriind la adresa cabinetului sau la Autoritatea Nationala de Supraveghere (ANSPDCP â€” <em>www.dataprotection.ro</em>).
           </div>
 
           <label style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', cursor: 'pointer', marginBottom: '0.65rem' }}>
             <input type="checkbox" checked={form.consentToDataProcessing} onChange={e => set('consentToDataProcessing', e.target.checked)}
               style={{ marginTop: '0.25rem', flexShrink: 0, width: '16px', height: '16px' }} />
             <span style={{ fontSize: '0.85rem', color: '#222', lineHeight: 1.5 }}>
-              <strong>* Obligatoriu —</strong> Am citit informarea de mai sus si <strong>sunt de acord cu prelucrarea datelor mele cu caracter personal</strong> in scopul obtinerii unei consultatii juridice, conform Regulamentului UE 2016/679 (GDPR).
+              <strong>* Obligatoriu â€”</strong> Am citit informarea de mai sus si <strong>sunt de acord cu prelucrarea datelor mele cu caracter personal</strong> in scopul obtinerii unei consultatii juridice, conform Regulamentului UE 2016/679 (GDPR).
             </span>
           </label>
           {errors.consent && <p style={errT}>{errors.consent}</p>}
@@ -198,7 +198,7 @@ export function PublicIntakeForm() {
             <input type="checkbox" checked={form.consentToMarketing} onChange={e => set('consentToMarketing', e.target.checked)}
               style={{ marginTop: '0.25rem', flexShrink: 0, width: '16px', height: '16px' }} />
             <span style={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.5 }}>
-              <em>Optional —</em> Sunt de acord sa primesc informatii despre servicii juridice, noutati legislative si oferte ale cabinetului. Imi pot retrage oricand consimtamantul.
+              <em>Optional â€”</em> Sunt de acord sa primesc informatii despre servicii juridice, noutati legislative si oferte ale cabinetului. Imi pot retrage oricand consimtamantul.
             </span>
           </label>
         </div>
