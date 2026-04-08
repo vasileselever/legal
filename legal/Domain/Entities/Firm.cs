@@ -20,7 +20,22 @@ public class Firm : BaseEntity
     /// CUI (Cod Unic de Inregistrare) - Romanian tax identification number
     /// </summary>
     public string? FiscalCode { get; set; }
-    
+
+    /// <summary>
+    /// Trade register registration code (e.g. J40/1234/2020)
+    /// </summary>
+    public string? RegistrationCode { get; set; }
+
+    /// <summary>
+    /// Bank name
+    /// </summary>
+    public string? Bank { get; set; }
+
+    /// <summary>
+    /// IBAN / bank account number
+    /// </summary>
+    public string? BankAccount { get; set; }
+
     /// <summary>
     /// Bar association registration number
     /// </summary>

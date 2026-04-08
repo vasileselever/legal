@@ -135,8 +135,27 @@ public class InvoiceDto
 {
     public Guid Id { get; set; }
     public string InvoiceNumber { get; set; } = string.Empty;
+
+    // Client info
     public Guid ClientId { get; set; }
     public string? ClientName { get; set; }
+    public string? ClientAddress { get; set; }
+    public string? ClientCity { get; set; }
+    public string? ClientFiscalCode { get; set; }
+    public string? ClientRegistrationCode { get; set; }
+    public string? ClientBank { get; set; }
+    public string? ClientBankAccount { get; set; }
+    public bool ClientIsCorporate { get; set; }
+
+    // Issuing firm info
+    public string? FirmName { get; set; }
+    public string? FirmAddress { get; set; }
+    public string? FirmCity { get; set; }
+    public string? FirmFiscalCode { get; set; }
+    public string? FirmRegistrationCode { get; set; }
+    public string? FirmBank { get; set; }
+    public string? FirmBankAccount { get; set; }
+
     public Guid? CaseId { get; set; }
     public string? CaseNumber { get; set; }
     public DateTime InvoiceDate { get; set; }

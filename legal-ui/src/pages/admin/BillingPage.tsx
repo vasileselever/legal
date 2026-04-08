@@ -1843,15 +1843,16 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
   const removeLine = (i: number) => setLines(prev => prev.filter((_, idx) => idx !== i));
 
   // ── data ────────────────────────────────────────────────────────────
-  const [clients,     setClients]     = useState<{ id: string; name: string }[]>([]);
+  const [clients,     setClients]     = useState<any[]>([]);
   const [cases,       setCases]       = useState<CaseItem[]>([]);
+  const [firmInfo,    setFirmInfo]    = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
 
   useEffect(() => {
-    Promise.all([billingService.getClients(), billingService.getCases()])
-      .then(([cls, c]) => { setClients(cls); setCases(c); })
+    Promise.all([billingService.getClients(), billingService.getCases(), billingService.getFirmInfo()])
+      .then(([cls, c, firm]) => { setClients(cls); setCases(c); setFirmInfo(firm); })
       .catch((e: any) => setError(e.message))
       .finally(() => setDataLoading(false));
   }, []);
@@ -1868,7 +1869,6 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
   const totalTVA  = lines.reduce((s, l) => s + lineCalc(l).tvaVal, 0);
   const total     = subTotal + totalTVA;
 
-  const clientName = clients.find(c => c.id === clientId)?.name ?? '—';
   const caseLabel  = cases.find(c => c.id === caseId)?.caseNumber;
 
   // ── submit ──────────────────────────────────────────────────────────
@@ -1920,52 +1920,92 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
 
   // ── Preview ──────────────────────────────────────────────────────────
   if (showPreview) {
-    const invoiceLabel = invoiceNo
-      ? `${invoiceSerial} ${invoiceNo}`
-      : `${invoiceSerial}-${new Date(invoiceDate).getFullYear()}-XXXXX`;
+    const selectedClient = clients.find(c => c.id === clientId);
+    const isCorporate = selectedClient?.isCorporate ?? false;
+    const pRow = (label: string, val?: string) => val
+      ? <div style={{ fontSize: '0.78rem', marginBottom: '0.15rem' }}><span style={{ color: '#666' }}>{label}: </span><span style={{ fontWeight: 600 }}>{val}</span></div>
+      : null;
+
     return (
       <div className="lro-overlay" style={overlayStyle} onClick={() => setShowPreview(false)}>
-        <div className="lro-modal" style={{ ...modalStyle, maxWidth: 780, maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-          {/* Preview header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div className="lro-modal" style={{ ...modalStyle, maxWidth: 860, maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h2 style={{ margin: 0, fontSize: '1.05rem', color: '#1a237e' }}>Previzualizare factura</h2>
             <button onClick={() => setShowPreview(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.4rem', color: '#888' }}>✕</button>
           </div>
-          {/* Invoice preview body */}
-          <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', fontFamily: 'serif', fontSize: '0.9rem', color: '#222' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1a237e' }}>FACTURA FISCALA</div>
-                <div style={{ fontWeight: 700, marginTop: '0.25rem' }}>Seria: {invoiceSerial} | Nr: {invoiceNo || 'AUTO'}</div>
+
+          {/* ── Invoice document ── */}
+          <div style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '1.5rem', fontFamily: 'Arial, sans-serif', fontSize: '0.88rem', color: '#222', background: '#fff' }}>
+
+            {/* Title bar */}
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem', borderBottom: '2px solid #1a237e', paddingBottom: '0.75rem' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1a237e', letterSpacing: '0.05em' }}>FACTURA FISCALA</div>
+            </div>
+
+            {/* ── 3-column header: Emitent | Invoice meta | Client ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '1rem', marginBottom: '1.25rem', alignItems: 'start' }}>
+
+              {/* LEFT — Emitent (issuing firm) */}
+              <div style={{ background: '#f0f4ff', borderRadius: '6px', padding: '0.75rem', borderLeft: '3px solid #1a237e' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#1a237e', textTransform: 'uppercase', marginBottom: '0.4rem', letterSpacing: '0.06em' }}>Furnizor</div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{firmInfo?.name ?? '—'}</div>
+                {pRow('Adresa', [firmInfo?.address, firmInfo?.city].filter(Boolean).join(', '))}
+                {pRow('CIF', firmInfo?.fiscalCode)}
+                {pRow('Nr. Reg. Com.', firmInfo?.registrationCode)}
+                {pRow('Banca', firmInfo?.bank)}
+                {pRow('IBAN', firmInfo?.bankAccount)}
+                {pRow('Tel.', firmInfo?.phone)}
+                {pRow('Email', firmInfo?.email)}
               </div>
-              <div style={{ textAlign: 'right', fontSize: '0.85rem' }}>
-                <div>Data emiterii: <strong>{fmtDate(invoiceDate)}</strong></div>
-                <div>Data scadentei: <strong>{fmtDate(dueDate)}</strong></div>
-                {caseLabel && <div>Dosar: <strong>{caseLabel}</strong></div>}
+
+              {/* CENTRE — Invoice meta */}
+              <div style={{ textAlign: 'center', minWidth: 180, padding: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.2rem' }}>Seria / Nr.</div>
+                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1a237e', marginBottom: '0.75rem' }}>
+                  {invoiceSerial} / {invoiceNo || <span style={{ color: '#aaa' }}>AUTO</span>}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#888' }}>Data emiterii</div>
+                <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>{fmtDate(invoiceDate)}</div>
+                <div style={{ fontSize: '0.75rem', color: '#888' }}>Data scadentei</div>
+                <div style={{ fontWeight: 700, color: '#c62828', marginBottom: '0.5rem' }}>{fmtDate(dueDate)}</div>
+                {caseLabel && <>
+                  <div style={{ fontSize: '0.75rem', color: '#888' }}>Dosar</div>
+                  <div style={{ fontWeight: 700 }}>{caseLabel}</div>
+                </>}
+              </div>
+
+              {/* RIGHT — Client */}
+              <div style={{ background: '#fff8e1', borderRadius: '6px', padding: '0.75rem', borderLeft: '3px solid #f57c00' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#e65100', textTransform: 'uppercase', marginBottom: '0.4rem', letterSpacing: '0.06em' }}>Beneficiar / Client</div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{selectedClient?.name ?? '—'}</div>
+                {pRow('Adresa', [selectedClient?.address, selectedClient?.city].filter(Boolean).join(', '))}
+                {isCorporate && pRow('CIF', selectedClient?.fiscalCode)}
+                {isCorporate && pRow('Nr. Reg. Com.', selectedClient?.registrationCode)}
+                {isCorporate && pRow('Banca', selectedClient?.bank)}
+                {isCorporate && pRow('IBAN', selectedClient?.bankAccount)}
               </div>
             </div>
-            <div style={{ marginBottom: '1.25rem', padding: '0.75rem', background: '#f8f9ff', borderRadius: '6px', fontSize: '0.85rem' }}>
-              <strong>Client:</strong> {clientName}
-            </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', marginBottom: '1rem' }}>
+
+            {/* ── Line items table ── */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginBottom: '1rem' }}>
               <thead>
                 <tr style={{ background: '#1a237e', color: 'white' }}>
-                  {['Nr.', 'Denumire produs/serviciu', 'Cod', 'UM', 'Cant.', 'TVA%', 'Pret (fara TVA)', 'Val. TVA', 'Valoare'].map(h => (
-                    <th key={h} style={{ padding: '0.45rem 0.5rem', textAlign: h === 'Cant.' || h === 'TVA%' || h === 'Nr.' ? 'center' : 'left', fontWeight: 600, fontSize: '0.75rem' }}>{h}</th>
+                  {['Nr.', 'Denumire produs/serviciu', 'Cod', 'UM', 'Cant.', 'TVA%', 'Pret (fara TVA)', 'Val. TVA', 'Valoare totala'].map(h => (
+                    <th key={h} style={{ padding: '0.45rem 0.5rem', textAlign: ['Cant.', 'TVA%', 'Nr.', 'Pret (fara TVA)', 'Val. TVA', 'Valoare totala'].includes(h) ? 'right' : 'left', fontWeight: 600, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {lines.map((l, i) => {
-                  const { valFaraTVA, tvaVal, valoare } = lineCalc(l);
+                  const { tvaVal, valoare } = lineCalc(l);
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #eee', background: i % 2 === 0 ? '#fafafa' : 'white' }}>
-                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{i + 1}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{i + 1}</td>
                       <td style={{ padding: '0.4rem 0.5rem' }}>{l.description}</td>
                       <td style={{ padding: '0.4rem 0.5rem', color: '#666' }}>{l.cod || '-'}</td>
                       <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.um}</td>
-                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.quantity}</td>
-                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.vatPct}%</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{l.quantity}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{l.vatPct}%</td>
                       <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{fmtMoney(l.unitPrice, currency)}</td>
                       <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{fmtMoney(tvaVal, currency)}</td>
                       <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right', fontWeight: 700 }}>{fmtMoney(valoare, currency)}</td>
@@ -1974,20 +2014,24 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
                 })}
               </tbody>
             </table>
+
+            {/* ── Totals ── */}
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <table style={{ fontSize: '0.88rem', borderCollapse: 'collapse' }}>
+              <table style={{ fontSize: '0.88rem', borderCollapse: 'collapse', minWidth: 280 }}>
                 <tbody>
                   <tr><td style={{ padding: '0.2rem 1rem 0.2rem 0', color: '#555' }}>Total fara TVA:</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtMoney(subTotal, currency)}</td></tr>
                   <tr><td style={{ padding: '0.2rem 1rem 0.2rem 0', color: '#555' }}>Total TVA:</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtMoney(totalTVA, currency)}</td></tr>
                   <tr style={{ borderTop: '2px solid #1a237e' }}>
-                    <td style={{ padding: '0.4rem 1rem 0.2rem 0', fontWeight: 700, fontSize: '1rem', color: '#1a237e' }}>TOTAL DE PLATA:</td>
+                    <td style={{ padding: '0.5rem 1rem 0.2rem 0', fontWeight: 700, fontSize: '1rem', color: '#1a237e' }}>TOTAL DE PLATA:</td>
                     <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '1rem', color: '#1a237e' }}>{fmtMoney(total, currency)}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            {notes && <div style={{ marginTop: '1rem', fontSize: '0.82rem', color: '#555', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>Notite: {notes}</div>}
+
+            {notes && <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#555', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}><strong>Mentiuni:</strong> {notes}</div>}
           </div>
+
           <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
             <button style={btnOutline} onClick={() => setShowPreview(false)}>← Inapoi la editare</button>
             <button style={btnStyle} onClick={handleSubmit} disabled={loading}>

@@ -89,6 +89,16 @@ export interface InvoiceListItemDto {
 
 export interface InvoiceDto extends InvoiceListItemDto {
   clientId: string; caseId?: string;
+  // Client details
+  clientAddress?: string; clientCity?: string;
+  clientFiscalCode?: string; clientRegistrationCode?: string;
+  clientBank?: string; clientBankAccount?: string;
+  clientIsCorporate: boolean;
+  // Firm details
+  firmName?: string; firmAddress?: string; firmCity?: string;
+  firmFiscalCode?: string; firmRegistrationCode?: string;
+  firmBank?: string; firmBankAccount?: string;
+  // Financials
   subTotal: number; vatPercent: number; vatAmount: number;
   paidAmount: number; writeOffAmount: number;
   periodStart?: string; periodEnd?: string; notes?: string;
@@ -100,6 +110,7 @@ export interface InvoiceDto extends InvoiceListItemDto {
 
 export interface InvoiceLineItemDto {
   id: string; lineNumber: number; description: string;
+  cod?: string; um?: string; vatPercent: number;
   quantity: number; unitPrice: number; amount: number;
   lineType: string; timeEntryId?: string; expenseId?: string;
 }
@@ -268,9 +279,17 @@ export const billingService = {
   },
 
   // Clients
-  getClients: async (): Promise<{ id: string; name: string }[]> => {
+  getClients: async (): Promise<{ id: string; name: string; isCorporate: boolean; fiscalCode?: string; registrationCode?: string; address?: string; city?: string; bank?: string; bankAccount?: string }[]> => {
     const { data } = await apiClient.get('/v1/clients');
-    return (data as any[]).map(c => ({ id: c.id, name: c.name }));
+    return data;
+  },
+  getClient: async (id: string) => {
+    const { data } = await apiClient.get(`/v1/clients/${id}`);
+    return data;
+  },
+  getFirmInfo: async () => {
+    const { data } = await apiClient.get('/v1/auth/firm');
+    return data;
   },
   getInvoices: async (params?: Record<string, any>): Promise<PagedResponse<InvoiceListItemDto>> => {
     const { data } = await apiClient.get(`${B}/invoices`, { params });

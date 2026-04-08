@@ -275,6 +275,27 @@ public class AuthController : ControllerBase
 
     /// <summary>
     /// Get all users in the firm
+    [HttpGet("firm")]
+    [Authorize]
+    public async Task<ActionResult> GetFirmInfo()
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var firm = await _context.Firms.FirstOrDefaultAsync(f => f.Id == firmId);
+        if (firm == null) return NotFound();
+        return Ok(new {
+            id               = firm.Id,
+            name             = firm.Name,
+            address          = firm.Address,
+            city             = firm.City,
+            fiscalCode       = firm.FiscalCode,
+            registrationCode = firm.RegistrationCode,
+            bank             = firm.Bank,
+            bankAccount      = firm.BankAccount,
+            phone            = firm.Phone,
+            email            = firm.Email,
+        });
+    }
+
     /// </summary>
     [HttpGet("users")]
     [Authorize]

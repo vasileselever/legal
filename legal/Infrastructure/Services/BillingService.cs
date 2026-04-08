@@ -471,6 +471,7 @@ public class BillingService : IBillingService
     public async Task<InvoiceDto> GetInvoiceAsync(Guid firmId, Guid id)
     {
         var inv = await _db.Invoices
+            .Include(i => i.Firm)
             .Include(i => i.Client)
             .Include(i => i.Case)
             .Include(i => i.LineItems.OrderBy(l => l.LineNumber))
@@ -1085,6 +1086,24 @@ public class BillingService : IBillingService
         InvoiceNumber = inv.InvoiceNumber,
         ClientId = inv.ClientId,
         ClientName = inv.Client?.Name,
+        ClientAddress = inv.Client?.Address != null
+            ? $"{inv.Client.Address}{(inv.Client.City != null ? ", " + inv.Client.City : "")}"
+            : inv.Client?.City,
+        ClientCity = inv.Client?.City,
+        ClientFiscalCode = inv.Client?.FiscalCode,
+        ClientRegistrationCode = inv.Client?.RegistrationCode,
+        ClientBank = inv.Client?.Bank,
+        ClientBankAccount = inv.Client?.BankAccount,
+        ClientIsCorporate = inv.Client?.IsCorporate ?? false,
+        FirmName = inv.Firm?.Name,
+        FirmAddress = inv.Firm?.Address != null
+            ? $"{inv.Firm.Address}{(inv.Firm.City != null ? ", " + inv.Firm.City : "")}"
+            : inv.Firm?.City,
+        FirmCity = inv.Firm?.City,
+        FirmFiscalCode = inv.Firm?.FiscalCode,
+        FirmRegistrationCode = inv.Firm?.RegistrationCode,
+        FirmBank = inv.Firm?.Bank,
+        FirmBankAccount = inv.Firm?.BankAccount,
         CaseId = inv.CaseId,
         CaseNumber = inv.Case?.CaseNumber,
         InvoiceDate = inv.InvoiceDate,

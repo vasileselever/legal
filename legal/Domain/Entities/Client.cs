@@ -19,7 +19,22 @@ public class Client : BaseEntity
     /// For corporate clients - CUI (Romanian tax ID)
     /// </summary>
     public string? FiscalCode { get; set; }
-    
+
+    /// <summary>
+    /// For corporate clients - Trade register code (e.g. J40/1234/2020)
+    /// </summary>
+    public string? RegistrationCode { get; set; }
+
+    /// <summary>
+    /// Bank name
+    /// </summary>
+    public string? Bank { get; set; }
+
+    /// <summary>
+    /// IBAN / bank account number
+    /// </summary>
+    public string? BankAccount { get; set; }
+
     /// <summary>
     /// For individual clients - CNP (Romanian personal ID)
     /// </summary>
