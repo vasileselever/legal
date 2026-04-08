@@ -17,7 +17,7 @@ APP_DIR="/opt/legalro"
 
 # Load DB_PASSWORD from .env
 if [ -f "$APP_DIR/.env" ]; then
-    export $(grep -v '^#' "$APP_DIR/.env" | grep DB_PASSWORD | xargs)
+    DB_PASSWORD=$(grep -v '^#' "$APP_DIR/.env" | grep '^DB_PASSWORD=' | cut -d'=' -f2- | tr -d '"' | tr -d "'")
 else
     echo -e "${RED}? .env not found at $APP_DIR/.env${NC}"
     exit 1
@@ -30,8 +30,8 @@ fi
 
 echo -e "${YELLOW}Applying missing DB columns to legalro-db...${NC}"
 
-docker exec legalro-db
-    -S localhost -U sa -P "$DB_PASSWORD" -C -d "LegalRO_CaseManagement" -Q "
+docker exec legalro-db /opt/mssql-tools18/bin/sqlcmd \
+    -S localhost -U sa -P "${DB_PASSWORD}" -C -d "LegalRO_CaseManagement" -Q "
 -- 1. TimeEntries.RejectionReason
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='TimeEntries' AND COLUMN_NAME='RejectionReason')
 BEGIN
