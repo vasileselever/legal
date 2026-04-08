@@ -19,6 +19,10 @@ export interface LeadDetailItem extends LeadItem {
   description: string; budgetRange?: string; lastActivityAt?: string;
   consultations?: any[]; activities?: any[];
   consentToMarketing: boolean; consentToDataProcessing: boolean;
+  isCorporate: boolean;
+  address?: string; city?: string;
+  fiscalCode?: string; registrationCode?: string;
+  bank?: string; bankAccount?: string;
 }
 
 export interface ConversationItem {
@@ -175,8 +179,14 @@ export const leadService = {
     return data.data;
   },
 
-  convertToClient: async (id: string, clientName: string, notes?: string): Promise<string> => {
-    const { data } = await apiClient.post('/leads/' + id + '/convert', { clientName, notes });
+  convertToClient: async (id: string, dto: {
+    clientName: string; notes?: string;
+    isCorporate?: boolean;
+    address?: string; city?: string;
+    fiscalCode?: string; registrationCode?: string;
+    bank?: string; bankAccount?: string;
+  }): Promise<string> => {
+    const { data } = await apiClient.post('/leads/' + id + '/convert', dto);
     if (!data.success) throw new Error(data.message);
     return data.data;
   },

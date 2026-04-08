@@ -163,13 +163,33 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
 
   const navigate = useNavigate();
 
-  const handleConvert = async () => {
-    if (!lead || !window.confirm('Convertiti ' + lead.name + ' in client si creati un dosar?')) return;
+  // ── Convert to client: review/complete fiscal data first ──────────
+  const [showConvertModal, setShowConvertModal] = useState(false);
+
+  const handleConvert = () => {
+    if (!lead) return;
+    setShowConvertModal(true);
+  };
+
+  const handleConvertConfirm = async (dto: {
+    isCorporate: boolean; address: string; city: string;
+    fiscalCode: string; registrationCode: string; bank: string; bankAccount: string;
+  }) => {
+    if (!lead) return;
+    setShowConvertModal(false);
     try {
-      const clientId = await leadService.convertToClient(leadId, lead.name);
+      const clientId = await leadService.convertToClient(leadId, {
+        clientName: lead.name,
+        isCorporate: dto.isCorporate,
+        address: dto.address || undefined,
+        city: dto.city || undefined,
+        fiscalCode: dto.fiscalCode || undefined,
+        registrationCode: dto.registrationCode || undefined,
+        bank: dto.bank || undefined,
+        bankAccount: dto.bankAccount || undefined,
+      });
       onStatusChanged();
       onClose();
-      // Navigate to Cases page with state so CreateCaseModal opens pre-filled
       navigate('/admin/cases', {
         state: {
           openCreate: true,
@@ -180,8 +200,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
           assignedToName: lead.assignedToName,
         }
       });
-    }
-    catch (e: any) { setError(e.message); }
+    } catch (e: any) { setError(e.message); }
   };
 
   if (loading) return <Overlay onClose={onClose}><div style={{ padding: '3rem' }}><Spinner /></div></Overlay>;
@@ -189,6 +208,13 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
 
   return (
     <Overlay onClose={onClose}>
+      {showConvertModal && (
+        <ConvertToClientModal
+          lead={lead}
+          onCancel={() => setShowConvertModal(false)}
+          onConfirm={handleConvertConfirm}
+        />
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Header */}
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #e8eaf6',
@@ -539,6 +565,101 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
       <div style={{ width: '100%', maxWidth: '780px', background: 'white',
         display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', boxShadow: '-4px 0 24px rgba(0,0,0,0.15)' }}>
         {children}
+      </div>
+    </div>
+  );
+}
+
+// ── ConvertToClientModal ─────────────────────────────────────────────
+function ConvertToClientModal({ lead, onCancel, onConfirm }: {
+  lead: LeadDetailItem;
+  onCancel: () => void;
+  onConfirm: (dto: { isCorporate: boolean; address: string; city: string; fiscalCode: string; registrationCode: string; bank: string; bankAccount: string }) => void;
+}) {
+  const [isCorporate,     setIsCorporate]     = useState(lead.isCorporate ?? false);
+  const [address,         setAddress]         = useState(lead.address ?? '');
+  const [city,            setCity]            = useState(lead.city ?? '');
+  const [fiscalCode,      setFiscalCode]      = useState(lead.fiscalCode ?? '');
+  const [registrationCode,setRegistrationCode]= useState(lead.registrationCode ?? '');
+  const [bank,            setBank]            = useState(lead.bank ?? '');
+  const [bankAccount,     setBankAccount]     = useState(lead.bankAccount ?? '');
+
+  const inp: React.CSSProperties = { width: '100%', padding: '0.45rem 0.65rem', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.88rem', boxSizing: 'border-box' };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#444', marginBottom: '0.2rem' };
+  const G2: React.CSSProperties  = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}
+      onClick={onCancel}>
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', width: '540px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.25)' }}
+        onClick={e => e.stopPropagation()}>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', color: '#1a237e' }}>⚖️ Convertire in client — {lead.name}</h3>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#888' }}>✕</button>
+        </div>
+
+        <p style={{ fontSize: '0.83rem', color: '#555', margin: '0 0 1.1rem', lineHeight: 1.6 }}>
+          Verificati si completati datele clientului. Acestea vor fi salvate in fisa clientului si folosite la facturare.
+        </p>
+
+        {/* Type toggle */}
+        <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem' }}>
+          {[{ v: false, label: '👤 Persoana fizica' }, { v: true, label: '🏢 Firma / PJ' }].map(({ v, label }) => (
+            <button key={String(v)} type="button" onClick={() => setIsCorporate(v)} style={{
+              flex: 1, padding: '0.5rem', border: '2px solid', borderRadius: '7px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.85rem',
+              borderColor: isCorporate === v ? '#1a237e' : '#ddd',
+              background: isCorporate === v ? '#e8eaf6' : '#fafafa',
+              color: isCorporate === v ? '#1a237e' : '#666',
+            }}>{label}</button>
+          ))}
+        </div>
+
+        {/* Common fields */}
+        <div style={G2}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={lbl}>Adresa</label>
+            <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder="Str. Exemplu nr. 1" />
+          </div>
+          <div>
+            <label style={lbl}>Oras / Localitate</label>
+            <input style={inp} value={city} onChange={e => setCity(e.target.value)} placeholder="Bucuresti" />
+          </div>
+        </div>
+
+        {/* Firm-only fiscal fields */}
+        {isCorporate && (
+          <div style={{ background: '#f0f4ff', border: '1px solid #c5cae9', borderRadius: '8px', padding: '1rem', marginTop: '0.9rem' }}>
+            <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.65rem' }}>Date fiscale firma</div>
+            <div style={G2}>
+              <div>
+                <label style={lbl}>CUI / CIF</label>
+                <input style={inp} value={fiscalCode} onChange={e => setFiscalCode(e.target.value)} placeholder="RO12345678" />
+              </div>
+              <div>
+                <label style={lbl}>Nr. Reg. Comertului</label>
+                <input style={inp} value={registrationCode} onChange={e => setRegistrationCode(e.target.value)} placeholder="J40/1234/2020" />
+              </div>
+              <div>
+                <label style={lbl}>Banca</label>
+                <input style={inp} value={bank} onChange={e => setBank(e.target.value)} placeholder="BCR / BRD / ING..." />
+              </div>
+              <div>
+                <label style={lbl}>IBAN</label>
+                <input style={inp} value={bankAccount} onChange={e => setBankAccount(e.target.value)} placeholder="RO49AAAA1B31007593840000" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+          <button onClick={onCancel} style={{ padding: '0.5rem 1.1rem', background: '#eee', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.88rem' }}>Anuleaza</button>
+          <button onClick={() => onConfirm({ isCorporate, address, city, fiscalCode, registrationCode, bank, bankAccount })}
+            style={{ padding: '0.5rem 1.25rem', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}>
+            ✓ Converteste in client
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -37,7 +37,16 @@ public class LeadDetailDto
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-    
+
+    // Client type & fiscal details
+    public bool IsCorporate { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? FiscalCode { get; set; }
+    public string? RegistrationCode { get; set; }
+    public string? Bank { get; set; }
+    public string? BankAccount { get; set; }
+
     // Lead Details
     public LeadSource Source { get; set; }
     public string? SourceDetails { get; set; }
