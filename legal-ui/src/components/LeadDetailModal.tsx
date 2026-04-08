@@ -584,31 +584,80 @@ function ConvertToClientModal({ lead, onCancel, onConfirm }: {
   const [bank,             setBank]             = useState(lead.bank ?? '');
   const [bankAccount,      setBankAccount]      = useState(lead.bankAccount ?? '');
   const [gdprAccepted,     setGdprAccepted]     = useState(lead.consentToDataProcessing ?? false);
-  const [gdprErr,          setGdprErr]          = useState('');
+  const [submitted,        setSubmitted]        = useState(false);
 
-  const inp: React.CSSProperties = { width: '100%', padding: '0.45rem 0.65rem', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.88rem', boxSizing: 'border-box' };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#444', marginBottom: '0.2rem' };
-  const G2: React.CSSProperties  = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' };
+  // ── Validation rules ───────────────────────────────────────────────
+  const missing = {
+    address:          !address.trim(),
+    city:             !city.trim(),
+    fiscalCode:       isCorporate && !fiscalCode.trim(),
+    registrationCode: isCorporate && !registrationCode.trim(),
+    bank:             !bank.trim(),
+    bankAccount:      !bankAccount.trim(),
+    gdpr:             !gdprAccepted,
+  };
+  const missingCount = Object.values(missing).filter(Boolean).length;
+  const isComplete   = missingCount === 0;
+
+  const inp = (err: boolean): React.CSSProperties => ({
+    width: '100%', padding: '0.45rem 0.65rem', fontSize: '0.88rem', boxSizing: 'border-box',
+    borderRadius: '6px', border: `1.5px solid ${submitted && err ? '#ef5350' : err && !submitted ? '#ffb74d' : '#ddd'}`,
+    background: submitted && err ? '#fff8f8' : 'white',
+  });
+  const lbl = (_required: boolean): React.CSSProperties => ({
+    display: 'block', fontSize: '0.78rem', fontWeight: 600,
+    color: '#444', marginBottom: '0.2rem',
+  });
+  const errMsg: React.CSSProperties = { color: '#c62828', fontSize: '0.72rem', marginTop: '0.18rem' };
+  const G2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' };
 
   const handleConfirm = () => {
-    if (!gdprAccepted) { setGdprErr('Consimtamantul GDPR este obligatoriu pentru a crea fisa clientului.'); return; }
+    setSubmitted(true);
+    if (!isComplete) return;
     onConfirm({ isCorporate, address, city, fiscalCode, registrationCode, bank, bankAccount });
   };
+
+  // ── Checklist item ─────────────────────────────────────────────────
+  const Check = ({ ok, label }: { ok: boolean; label: string }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: ok ? '#2e7d32' : '#c62828' }}>
+      <span style={{ fontSize: '0.85rem' }}>{ok ? '✅' : '❌'}</span>
+      <span style={{ fontWeight: ok ? 400 : 600 }}>{label}</span>
+    </div>
+  );
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}
       onClick={onCancel}>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', width: '540px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.25)' }}
+      <div style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', width: '580px', maxWidth: '95vw', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.25)' }}
         onClick={e => e.stopPropagation()}>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <h3 style={{ margin: 0, fontSize: '1rem', color: '#1a237e' }}>⚖️ Convertire in client — {lead.name}</h3>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#888' }}>✕</button>
         </div>
 
-        <p style={{ fontSize: '0.83rem', color: '#555', margin: '0 0 1.1rem', lineHeight: 1.6 }}>
-          Verificati si completati datele clientului. Acestea vor fi salvate in fisa clientului si folosite la facturare.
-        </p>
+        {/* Progress banner */}
+        <div style={{
+          borderRadius: '8px', padding: '0.65rem 1rem', marginBottom: '1.1rem',
+          background: isComplete ? '#e8f5e9' : '#fff8e1',
+          border: `1px solid ${isComplete ? '#a5d6a7' : '#ffe082'}`,
+          display: 'flex', alignItems: 'center', gap: '0.6rem',
+        }}>
+          <span style={{ fontSize: '1.1rem' }}>{isComplete ? '✅' : '⚠️'}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: isComplete ? '#2e7d32' : '#f57c00' }}>
+              {isComplete
+                ? 'Toate datele necesare pentru facturare sunt completate'
+                : `${missingCount} ${missingCount === 1 ? 'camp necesar lipseste' : 'campuri necesare lipsesc'} pentru facturare`}
+            </div>
+            {!isComplete && (
+              <div style={{ fontSize: '0.75rem', color: '#795548', marginTop: '0.15rem' }}>
+                Completati campurile marcate cu rosu pentru a putea emite facturi acestui client.
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Type toggle */}
         <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1rem' }}>
@@ -623,79 +672,111 @@ function ConvertToClientModal({ lead, onCancel, onConfirm }: {
           ))}
         </div>
 
-        {/* Common fields */}
+        {/* ── Contact & address ── */}
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1a237e', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Date contact & adresa</div>
         <div style={G2}>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={lbl}>Adresa</label>
-            <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder="Str. Exemplu nr. 1" />
+            <label style={lbl(true)}>Adresa <span style={{ color: '#ef5350' }}>*</span></label>
+            <input style={inp(missing.address)} value={address} onChange={e => setAddress(e.target.value)} placeholder="Str. Exemplu nr. 1" />
+            {submitted && missing.address && <p style={errMsg}>Adresa este obligatorie pentru facturare</p>}
           </div>
           <div>
-            <label style={lbl}>Oras / Localitate</label>
-            <input style={inp} value={city} onChange={e => setCity(e.target.value)} placeholder="Bucuresti" />
+            <label style={lbl(true)}>Oras / Localitate <span style={{ color: '#ef5350' }}>*</span></label>
+            <input style={inp(missing.city)} value={city} onChange={e => setCity(e.target.value)} placeholder="Bucuresti" />
+            {submitted && missing.city && <p style={errMsg}>Orasul este obligatoriu</p>}
           </div>
         </div>
 
-        {/* Firm-only fiscal fields */}
+        {/* ── Firm fiscal fields ── */}
         {isCorporate && (
-          <div style={{ background: '#f0f4ff', border: '1px solid #c5cae9', borderRadius: '8px', padding: '1rem', marginTop: '0.9rem' }}>
+          <div style={{ background: '#f0f4ff', border: `1px solid ${submitted && (missing.fiscalCode || missing.registrationCode) ? '#ef9a9a' : '#c5cae9'}`, borderRadius: '8px', padding: '1rem', marginTop: '0.9rem' }}>
             <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.65rem' }}>Date fiscale firma</div>
             <div style={G2}>
               <div>
-                <label style={lbl}>CUI / CIF</label>
-                <input style={inp} value={fiscalCode} onChange={e => setFiscalCode(e.target.value)} placeholder="RO12345678" />
+                <label style={lbl(true)}>CUI / CIF <span style={{ color: '#ef5350' }}>*</span></label>
+                <input style={inp(missing.fiscalCode)} value={fiscalCode} onChange={e => setFiscalCode(e.target.value)} placeholder="RO12345678" />
+                {submitted && missing.fiscalCode && <p style={errMsg}>CUI obligatoriu pentru firme</p>}
               </div>
               <div>
-                <label style={lbl}>Nr. Reg. Comertului</label>
-                <input style={inp} value={registrationCode} onChange={e => setRegistrationCode(e.target.value)} placeholder="J40/1234/2020" />
-              </div>
-              <div>
-                <label style={lbl}>Banca</label>
-                <input style={inp} value={bank} onChange={e => setBank(e.target.value)} placeholder="BCR / BRD / ING..." />
-              </div>
-              <div>
-                <label style={lbl}>IBAN</label>
-                <input style={inp} value={bankAccount} onChange={e => setBankAccount(e.target.value)} placeholder="RO49AAAA1B31007593840000" />
+                <label style={lbl(true)}>Nr. Reg. Comertului <span style={{ color: '#ef5350' }}>*</span></label>
+                <input style={inp(missing.registrationCode)} value={registrationCode} onChange={e => setRegistrationCode(e.target.value)} placeholder="J40/1234/2020" />
+                {submitted && missing.registrationCode && <p style={errMsg}>Nr. Reg. Com. obligatoriu</p>}
               </div>
             </div>
           </div>
         )}
 
-        {/* ── GDPR ── */}
-        <div style={{ background: '#fafafa', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '1rem', marginTop: '1rem' }}>
-          <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.82rem', marginBottom: '0.55rem' }}>
-            🔒 Informare GDPR
+        {/* ── Banking ── */}
+        <div style={{ background: '#f9f9f9', border: `1px solid ${submitted && (missing.bank || missing.bankAccount) ? '#ef9a9a' : '#e0e0e0'}`, borderRadius: '8px', padding: '1rem', marginTop: '0.9rem' }}>
+          <div style={{ fontWeight: 700, color: '#333', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.65rem' }}>Date bancare <span style={{ color: '#ef5350' }}>*</span></div>
+          <div style={G2}>
+            <div>
+              <label style={lbl(true)}>Banca</label>
+              <input style={inp(missing.bank)} value={bank} onChange={e => setBank(e.target.value)} placeholder="BCR / BRD / ING..." />
+              {submitted && missing.bank && <p style={errMsg}>Banca este obligatorie</p>}
+            </div>
+            <div>
+              <label style={lbl(true)}>IBAN</label>
+              <input style={inp(missing.bankAccount)} value={bankAccount} onChange={e => setBankAccount(e.target.value)} placeholder="RO49AAAA1B31007593840000" />
+              {submitted && missing.bankAccount && <p style={errMsg}>IBAN este obligatoriu</p>}
+            </div>
           </div>
+        </div>
+
+        {/* ── Checklist summary ── */}
+        <div style={{ background: '#fafafa', border: '1px solid #e8eaf6', borderRadius: '8px', padding: '0.85rem 1rem', marginTop: '1rem' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.78rem', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Sumar date facturare</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem 1rem' }}>
+            <Check ok={!missing.address}  label="Adresa" />
+            <Check ok={!missing.city}     label="Localitate" />
+            {isCorporate && <Check ok={!missing.fiscalCode}       label="CUI / CIF" />}
+            {isCorporate && <Check ok={!missing.registrationCode} label="Nr. Reg. Comertului" />}
+            <Check ok={!missing.bank}        label="Banca" />
+            <Check ok={!missing.bankAccount} label="IBAN" />
+            <Check ok={!missing.gdpr}        label="Consimtamant GDPR" />
+          </div>
+        </div>
+
+        {/* ── GDPR ── */}
+        <div style={{ background: '#fafafa', border: `1px solid ${submitted && missing.gdpr ? '#ef9a9a' : '#e0e0e0'}`, borderRadius: '8px', padding: '1rem', marginTop: '0.9rem' }}>
+          <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.82rem', marginBottom: '0.55rem' }}>🔒 Informare GDPR</div>
           <div style={{ fontSize: '0.76rem', color: '#444', lineHeight: 1.6, background: '#fff', border: '1px solid #e8eaf6', borderRadius: '6px', padding: '0.7rem', maxHeight: '100px', overflowY: 'auto', marginBottom: '0.75rem' }}>
             {isCorporate ? (<>
               <strong>Operator:</strong> Cabinetul de avocatura.<br />
               <strong>Date prelucrate:</strong> Denumire, CUI, nr. Reg. Comertului, adresa sediului, date de contact ale reprezentantilor, informatii referitoare la situatia juridica.<br />
-              <strong>Scop:</strong> Furnizarea de servicii juridice si gestionarea relatiei contractuale.<br />
               <strong>Temei:</strong> Art. 6 alin. (1) lit. b) si c) GDPR (executarea contractului; obligatii legale — Legea nr. 51/1995).<br />
-              <strong>Stocare:</strong> Pe durata contractului + minim 5 ani. <strong>Drepturi:</strong> Acces, rectificare, stergere (cu exceptiile legale), opozitie — la adresa cabinetului sau ANSPDCP (dataprotection.ro).
+              <strong>Stocare:</strong> Pe durata contractului + minim 5 ani. <strong>Drepturi:</strong> Acces, rectificare, stergere, opozitie — la adresa cabinetului sau ANSPDCP (dataprotection.ro).
             </>) : (<>
               <strong>Operator:</strong> Cabinetul de avocatura.<br />
               <strong>Date prelucrate:</strong> Nume, adresa, date de contact, informatii privind situatia juridica.<br />
-              <strong>Scop:</strong> Furnizarea de servicii juridice si gestionarea relatiei contractuale.<br />
               <strong>Temei:</strong> Art. 6 alin. (1) lit. b) si c) GDPR (executarea contractului; obligatii legale — Legea nr. 51/1995).<br />
-              <strong>Stocare:</strong> Pe durata contractului + minim 5 ani. <strong>Drepturi:</strong> Acces, rectificare, stergere (cu exceptiile legale), opozitie — la adresa cabinetului sau ANSPDCP (dataprotection.ro).
+              <strong>Stocare:</strong> Pe durata contractului + minim 5 ani. <strong>Drepturi:</strong> Acces, rectificare, stergere, opozitie — la adresa cabinetului sau ANSPDCP (dataprotection.ro).
             </>)}
           </div>
           <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', cursor: 'pointer' }}>
-            <input type="checkbox" checked={gdprAccepted} onChange={e => { setGdprAccepted(e.target.checked); setGdprErr(''); }}
+            <input type="checkbox" checked={gdprAccepted} onChange={e => { setGdprAccepted(e.target.checked); }}
               style={{ marginTop: '0.25rem', flexShrink: 0, width: '15px', height: '15px' }} />
             <span style={{ fontSize: '0.82rem', color: '#222', lineHeight: 1.5 }}>
               <strong>* Obligatoriu —</strong> Clientul a fost informat si <strong>si-a dat consimtamantul</strong> pentru prelucrarea datelor cu caracter personal conform GDPR.
             </span>
           </label>
-          {gdprErr && <p style={{ color: '#c62828', fontSize: '0.76rem', margin: '0.35rem 0 0' }}>{gdprErr}</p>}
+          {submitted && missing.gdpr && <p style={{ color: '#c62828', fontSize: '0.76rem', margin: '0.35rem 0 0' }}>Consimtamantul GDPR este obligatoriu</p>}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+        {/* Footer */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', gap: '0.75rem' }}>
           <button onClick={onCancel} style={{ padding: '0.5rem 1.1rem', background: '#eee', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.88rem' }}>Anuleaza</button>
-          <button onClick={handleConfirm}
-            style={{ padding: '0.5rem 1.25rem', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}>
-            ✓ Converteste in client
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {submitted && !isComplete && (
+              <span style={{ fontSize: '0.78rem', color: '#c62828', fontWeight: 600 }}>
+                ❌ {missingCount} {missingCount === 1 ? 'camp incomplet' : 'campuri incomplete'}
+              </span>
+            )}
+            <button onClick={handleConfirm}
+              style={{ padding: '0.5rem 1.4rem', background: isComplete ? '#2e7d32' : '#1a237e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}>
+              {isComplete ? '✓ Converteste in client' : '⚠️ Verifica si converteste'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
