@@ -100,6 +100,15 @@ public class CreateLeadDto
     [MaxLength(20)]
     public string Phone { get; set; } = string.Empty;
 
+    // Client type & fiscal details
+    public bool IsCorporate { get; set; } = false;
+    [MaxLength(300)] public string? Address { get; set; }
+    [MaxLength(100)] public string? City { get; set; }
+    [MaxLength(50)]  public string? FiscalCode { get; set; }
+    [MaxLength(50)]  public string? RegistrationCode { get; set; }
+    [MaxLength(100)] public string? Bank { get; set; }
+    [MaxLength(50)]  public string? BankAccount { get; set; }
+
     [Required]
     public LeadSource Source { get; set; }
 
@@ -353,6 +362,14 @@ public class ConvertToClientDto
 
     [MaxLength(20)]
     public string? ClientPhone { get; set; }
+
+    public bool IsCorporate { get; set; } = false;
+    [MaxLength(300)] public string? Address { get; set; }
+    [MaxLength(100)] public string? City { get; set; }
+    [MaxLength(50)]  public string? FiscalCode { get; set; }
+    [MaxLength(50)]  public string? RegistrationCode { get; set; }
+    [MaxLength(100)] public string? Bank { get; set; }
+    [MaxLength(50)]  public string? BankAccount { get; set; }
 
     [MaxLength(500)]
     public string? Notes { get; set; }

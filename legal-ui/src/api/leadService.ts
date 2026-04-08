@@ -43,6 +43,11 @@ export interface CreateLeadDto {
   budgetRange?: string; preferredContactMethod?: string;
   assignedTo?: string;
   consentToMarketing: boolean; consentToDataProcessing: boolean;
+  // Client type & fiscal details
+  isCorporate?: boolean;
+  address?: string; city?: string;
+  fiscalCode?: string; registrationCode?: string;
+  bank?: string; bankAccount?: string;
 }
 
 export interface ActivityItem {

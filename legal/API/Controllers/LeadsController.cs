@@ -296,6 +296,13 @@ public class LeadsController : ControllerBase
                 Name = dto.Name,
                 Email = dto.Email,
                 Phone = dto.Phone,
+                IsCorporate = dto.IsCorporate,
+                Address = dto.Address,
+                City = dto.City,
+                FiscalCode = dto.FiscalCode,
+                RegistrationCode = dto.RegistrationCode,
+                Bank = dto.Bank,
+                BankAccount = dto.BankAccount,
                 Source = dto.Source,
                 SourceDetails = dto.SourceDetails,
                 Status = LeadStatus.New,
@@ -549,7 +556,21 @@ public class LeadsController : ControllerBase
             if (lead.ConvertedToClientId.HasValue)
                 return BadRequest(new ApiResponse<Guid> { Success = false, Message = "Lead has already been converted to a client" });
 
-            var client = new Client { FirmId = firmId, Name = dto.ClientName, Email = dto.ClientEmail ?? lead.Email, Phone = dto.ClientPhone ?? lead.Phone };
+            var client = new Client
+            {
+                FirmId = firmId,
+                Name = dto.ClientName,
+                Email = dto.ClientEmail ?? lead.Email,
+                Phone = dto.ClientPhone ?? lead.Phone,
+                IsCorporate = dto.IsCorporate,
+                Address = dto.Address ?? lead.Address,
+                City = dto.City ?? lead.City,
+                FiscalCode = dto.FiscalCode ?? lead.FiscalCode,
+                RegistrationCode = dto.RegistrationCode ?? lead.RegistrationCode,
+                Bank = dto.Bank ?? lead.Bank,
+                BankAccount = dto.BankAccount ?? lead.BankAccount,
+                Notes = dto.Notes,
+            };
             _context.Clients.Add(client);
 
             lead.Status = LeadStatus.Converted;

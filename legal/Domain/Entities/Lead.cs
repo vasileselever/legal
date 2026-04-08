@@ -14,6 +14,15 @@ public class Lead : BaseEntity
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
+
+    // Client type & fiscal details (populated during intake)
+    public bool IsCorporate { get; set; } = false;
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? FiscalCode { get; set; }        // CUI for firms
+    public string? RegistrationCode { get; set; }  // J-code for firms
+    public string? Bank { get; set; }
+    public string? BankAccount { get; set; }
     
     // Lead Details
     public LeadSource Source { get; set; }

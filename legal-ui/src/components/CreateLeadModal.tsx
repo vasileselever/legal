@@ -11,8 +11,10 @@ const EMPTY: CreateLeadDto = {
   name: '', email: '', phone: '', source: 1, practiceArea: 1,
   description: '', urgency: 2, budgetRange: '', preferredContactMethod: '',
   assignedTo: '', consentToMarketing: false, consentToDataProcessing: false,
+  isCorporate: false, address: '', city: '',
+  fiscalCode: '', registrationCode: '', bank: '', bankAccount: '',
 };
-const STEPS = ['Date contact', 'Detalii caz', 'Alocare'];
+const STEPS = ['Date contact', 'Detalii caz', 'Alocare & GDPR'];
 
 const PRACTICE_AREA_LABELS: Record<number, string> = Object.fromEntries(PRACTICE_AREAS.map(p => [p.value, p.label]));
 const STATUS_LABELS: Record<number, string> = {
@@ -181,17 +183,35 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
         <form onSubmit={handleSubmit} style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-            {/* ?? Step 0: Contact details ?? */}
+            {/* ── Step 0: Contact details ── */}
             {step === 0 && (<>
+
+              {/* Client type toggle */}
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                {[{ v: false, label: '👤 Persoana fizica' }, { v: true, label: '🏢 Firma / Persoana juridica' }].map(({ v, label }) => (
+                  <button key={String(v)} type="button"
+                    onClick={() => set('isCorporate', v)}
+                    style={{
+                      flex: 1, padding: '0.6rem', border: '2px solid', borderRadius: '8px',
+                      cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem', transition: 'all 0.15s',
+                      borderColor: form.isCorporate === v ? '#1a237e' : '#ddd',
+                      background: form.isCorporate === v ? '#e8eaf6' : '#fafafa',
+                      color: form.isCorporate === v ? '#1a237e' : '#555',
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               <div style={G2}>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={LBL}>Nume complet *</label>
-                  <input style={mkInp(!!errors.name)} placeholder="Ion Popescu" value={form.name} onChange={e => set('name', e.target.value)} />
+                  <label style={LBL}>{form.isCorporate ? 'Denumire firma *' : 'Nume complet *'}</label>
+                  <input style={mkInp(!!errors.name)} placeholder={form.isCorporate ? 'SC Exemplu SRL' : 'Ion Popescu'} value={form.name} onChange={e => set('name', e.target.value)} />
                   {errors.name && <p style={ERR}>{errors.name}</p>}
                 </div>
                 <div>
                   <label style={LBL}>Email *</label>
-                  <input style={mkInp(!!errors.email)} type="email" placeholder="ion@exemplu.ro" value={form.email} onChange={e => set('email', e.target.value)} />
+                  <input style={mkInp(!!errors.email)} type="email" placeholder="contact@exemplu.ro" value={form.email} onChange={e => set('email', e.target.value)} />
                   {errors.email && <p style={ERR}>{errors.email}</p>}
                 </div>
                 <div>
@@ -199,47 +219,71 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
                   <input style={mkInp(!!errors.phone)} type="tel" placeholder="+40721000000" value={form.phone} onChange={e => set('phone', e.target.value)} />
                   {errors.phone && <p style={ERR}>{errors.phone}</p>}
                 </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={LBL}>Adresa</label>
+                  <input style={mkInp()} placeholder={form.isCorporate ? 'Str. Exemplu nr. 1' : 'Str. Exemplu nr. 1, Ap. 2'} value={form.address ?? ''} onChange={e => set('address', e.target.value)} />
+                </div>
+                <div>
+                  <label style={LBL}>Oras / Localitate</label>
+                  <input style={mkInp()} placeholder="Bucuresti" value={form.city ?? ''} onChange={e => set('city', e.target.value)} />
+                </div>
+                <div>
+                  <label style={LBL}>Sursa lead</label>
+                  <select style={mkInp()} value={form.source} onChange={e => set('source', Number(e.target.value))}>
+                    {LEAD_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </div>
               </div>
 
-              {/* Prior-leads banner — shown while looking up or when results found */}
-              {lookingUp && (
-                <div style={{ background: '#f5f5f5', borderRadius: '8px', padding: '0.6rem 0.85rem', fontSize: '0.82rem', color: '#888' }}>
-                  ?? Se cauta lead-uri existente...
+              {/* Firm-only fiscal fields */}
+              {form.isCorporate && (
+                <div style={{ background: '#f0f4ff', border: '1px solid #c5cae9', borderRadius: '8px', padding: '1rem' }}>
+                  <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.82rem', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date fiscale firma</div>
+                  <div style={G2}>
+                    <div>
+                      <label style={LBL}>CUI / CIF</label>
+                      <input style={mkInp()} placeholder="RO12345678" value={form.fiscalCode ?? ''} onChange={e => set('fiscalCode', e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={LBL}>Nr. Reg. Comertului</label>
+                      <input style={mkInp()} placeholder="J40/1234/2020" value={form.registrationCode ?? ''} onChange={e => set('registrationCode', e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={LBL}>Banca</label>
+                      <input style={mkInp()} placeholder="BCR / BRD / ING..." value={form.bank ?? ''} onChange={e => set('bank', e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={LBL}>IBAN</label>
+                      <input style={mkInp()} placeholder="RO49AAAA1B31007593840000" value={form.bankAccount ?? ''} onChange={e => set('bankAccount', e.target.value)} />
+                    </div>
+                  </div>
                 </div>
               )}
 
+              {/* Prior-leads banner */}
+              {lookingUp && (
+                <div style={{ background: '#f5f5f5', borderRadius: '8px', padding: '0.6rem 0.85rem', fontSize: '0.82rem', color: '#888' }}>
+                  🔍 Se cauta lead-uri existente...
+                </div>
+              )}
               {!lookingUp && priorLeads.length > 0 && (
                 <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '0.85rem 1rem' }}>
                   <div style={{ fontWeight: 700, color: '#f57f17', fontSize: '0.88rem', marginBottom: '0.5rem' }}>
-                    ?? Contact cunoscut — {priorLeads.length} lead{priorLeads.length > 1 ? '-uri' : ''} anterioare pentru acest email/telefon
+                    ⚠️ Contact cunoscut — {priorLeads.length} lead{priorLeads.length > 1 ? '-uri' : ''} anterioare
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#666', marginBottom: '0.6rem', lineHeight: 1.5 }}>
-                    Aceeasi persoana poate deschide mai multe dosare (domenii diferite). Continua daca este un caz nou.
+                    Aceeasi persoana poate deschide mai multe dosare. Continua daca este un caz nou.
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {priorLeads.map(pl => (
-                      <div key={pl.id} style={{
-                        display: 'flex', alignItems: 'center', gap: '0.6rem',
-                        background: 'white', borderRadius: '6px', padding: '0.45rem 0.75rem',
-                        border: '1px solid #ffe082', fontSize: '0.82rem',
-                      }}>
-                        <span style={{ fontSize: '1rem' }}>{pl.isConverted ? '?' : '??'}</span>
-                        <span style={{ fontWeight: 600, color: '#333' }}>
-                          {PRACTICE_AREA_LABELS[pl.practiceArea] ?? `Domeniu ${pl.practiceArea}`}
-                        </span>
-                        <span style={{
-                          background: pl.status === 7 ? '#e8f5e9' : pl.status === 8 ? '#ffebee' : '#e8eaf6',
-                          color:      pl.status === 7 ? '#2e7d32' : pl.status === 8 ? '#c62828' : '#3949ab',
-                          borderRadius: '4px', padding: '0.1rem 0.45rem', fontSize: '0.75rem', fontWeight: 600,
-                        }}>
+                      <div key={pl.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', background: 'white', borderRadius: '6px', padding: '0.45rem 0.75rem', border: '1px solid #ffe082', fontSize: '0.82rem' }}>
+                        <span>{pl.isConverted ? '✅' : '📋'}</span>
+                        <span style={{ fontWeight: 600, color: '#333' }}>{PRACTICE_AREA_LABELS[pl.practiceArea] ?? `Domeniu ${pl.practiceArea}`}</span>
+                        <span style={{ background: pl.status === 7 ? '#e8f5e9' : pl.status === 8 ? '#ffebee' : '#e8eaf6', color: pl.status === 7 ? '#2e7d32' : pl.status === 8 ? '#c62828' : '#3949ab', borderRadius: '4px', padding: '0.1rem 0.45rem', fontSize: '0.75rem', fontWeight: 600 }}>
                           {STATUS_LABELS[pl.status] ?? pl.status}
                         </span>
-                        <span style={{ color: '#999', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                          {new Date(pl.createdAt).toLocaleDateString('ro-RO')}
-                        </span>
-                        {pl.assignedToName && (
-                          <span style={{ color: '#666', fontSize: '0.78rem' }}>· {pl.assignedToName}</span>
-                        )}
+                        <span style={{ color: '#999', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{new Date(pl.createdAt).toLocaleDateString('ro-RO')}</span>
+                        {pl.assignedToName && <span style={{ color: '#666', fontSize: '0.78rem' }}>· {pl.assignedToName}</span>}
                       </div>
                     ))}
                   </div>
@@ -247,12 +291,6 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
               )}
 
               <div style={G2}>
-                <div>
-                  <label style={LBL}>Sursa lead</label>
-                  <select style={mkInp()} value={form.source} onChange={e => set('source', Number(e.target.value))}>
-                    {LEAD_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                  </select>
-                </div>
                 <div>
                   <label style={LBL}>Contact preferat</label>
                   <select style={mkInp()} value={form.preferredContactMethod ?? ''} onChange={e => set('preferredContactMethod', e.target.value)}>
@@ -294,7 +332,7 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
               </div>
             </>)}
 
-            {/* ?? Step 2: Assignment & consent ?? */}
+            {/* ── Step 2: Assignment & GDPR ── */}
             {step === 2 && (<>
               <div>
                 <label style={LBL}>Asigneaza avocatul</label>
@@ -305,37 +343,67 @@ export function CreateLeadModal({ onClose, onCreated }: Props) {
                 <p style={{ color: '#888', fontSize: '0.78rem', marginTop: '0.3rem' }}>Poti aloca un avocat mai tarziu din detaliile lead-ului.</p>
               </div>
 
-              {/* Prior leads reminder on final step too */}
               {priorLeads.length > 0 && (
                 <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '0.75rem 1rem', fontSize: '0.82rem' }}>
-                  <span style={{ fontWeight: 700, color: '#f57f17' }}>?? Amintire:</span>
+                  <span style={{ fontWeight: 700, color: '#f57f17' }}>⚠️ Amintire:</span>
                   {' '}Acest contact are {priorLeads.length} lead{priorLeads.length > 1 ? '-uri' : ''} anterioare.
-                  Lead-urile multiple pentru aceeasi persoana sunt permise si normale.
                 </div>
               )}
 
-              <div style={{ background: '#f8f9ff', border: '1px solid #e8eaf6', borderRadius: '8px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ fontWeight: 600, color: '#1a237e', fontSize: '0.88rem' }}>Consimtamant</div>
+              {/* ── GDPR Disclaimer ── */}
+              <div style={{ background: '#fafafa', border: '1px solid #e0e0e0', borderRadius: '10px', padding: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.9rem', borderBottom: '1px solid #e8eaf6', paddingBottom: '0.5rem' }}>
+                  🔒 Informare privind prelucrarea datelor cu caracter personal (GDPR)
+                </div>
+
+                <div style={{ fontSize: '0.8rem', color: '#444', lineHeight: 1.65, background: '#fff', border: '1px solid #e8eaf6', borderRadius: '6px', padding: '0.85rem', maxHeight: '130px', overflowY: 'auto' }}>
+                  {form.isCorporate ? (<>
+                    <strong>Operator de date:</strong> Cabinetul de avocatura inregistrat conform legii.<br />
+                    <strong>Date prelucrate:</strong> Denumirea firmei, CUI, nr. Reg. Comertului, adresa sediului, date de contact ale reprezentantilor, informatii referitoare la situatia juridica.<br />
+                    <strong>Scopul prelucrarii:</strong> Furnizarea de servicii juridice, gestionarea relatiei contractuale, indeplinirea obligatiilor legale ale avocatului, comunicari legate de dosar.<br />
+                    <strong>Temeiul juridic:</strong> Art. 6 alin. (1) lit. b) GDPR — executarea unui contract; art. 6 alin. (1) lit. c) GDPR — obligatie legala (Legea nr. 51/1995, Statutul profesiei de avocat).<br />
+                    <strong>Destinatari:</strong> Instantele judecatoresti, autoritati publice, experti si alti profesionisti implicati in dosar, in limitele mandatului acordat.<br />
+                    <strong>Perioada de stocare:</strong> Pe durata relatiei contractuale si cel putin 5 ani de la incetarea acesteia, conform obligatiilor legale de arhivare.<br />
+                    <strong>Drepturi GDPR:</strong> Dreptul de acces, rectificare, stergere (cu exceptia obligatiilor legale), restrictionare, portabilitate si opozitie. Cereri la adresa cabinetului sau la ANSPDCP (www.dataprotection.ro).
+                  </>) : (<>
+                    <strong>Operator de date:</strong> Cabinetul de avocatura inregistrat conform legii.<br />
+                    <strong>Date prelucrate:</strong> Nume, prenume, adresa, date de contact, informatii referitoare la situatia juridica prezentata.<br />
+                    <strong>Scopul prelucrarii:</strong> Furnizarea de servicii juridice, gestionarea relatiei contractuale si de consultanta, indeplinirea obligatiilor legale ale avocatului, comunicari legate de dosar.<br />
+                    <strong>Temeiul juridic:</strong> Art. 6 alin. (1) lit. b) GDPR — executarea unui contract sau masuri precontractuale la cererea persoanei vizate; art. 6 alin. (1) lit. c) GDPR — obligatie legala (Legea nr. 51/1995).<br />
+                    <strong>Destinatari:</strong> Instantele judecatoresti, autoritati publice, experti si alti profesionisti implicati in dosar, in limitele mandatului acordat.<br />
+                    <strong>Perioada de stocare:</strong> Pe durata relatiei contractuale si cel putin 5 ani de la incetarea acesteia, conform obligatiilor legale de arhivare.<br />
+                    <strong>Drepturi GDPR:</strong> Aveti dreptul de acces, rectificare, stergere (in limitele legii), restrictionare, portabilitate si opozitie. Cereri la adresa cabinetului sau la ANSPDCP (www.dataprotection.ro).
+                  </>)}
+                </div>
+
                 <label style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.consentToMarketing} onChange={e => set('consentToMarketing', e.target.checked)} style={{ marginTop: '0.2rem', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}>Clientul accepta sa primeasca oferte si informatii (optional)</span>
+                  <input type="checkbox" checked={form.consentToDataProcessing} onChange={e => set('consentToDataProcessing', e.target.checked)} style={{ marginTop: '0.25rem', flexShrink: 0, width: '16px', height: '16px' }} />
+                  <span style={{ fontSize: '0.85rem', color: '#222', lineHeight: 1.5 }}>
+                    <strong>* Obigatoriu —</strong> Am citit informatiile de mai sus si <strong>sunt de acord cu prelucrarea datelor cu caracter personal</strong> in scopul furnizarii serviciilor juridice solicitate, conform GDPR (Regulamentul UE 2016/679).
+                  </span>
                 </label>
+                {errors.consent && <p style={{ ...ERR, marginTop: 0 }}>{errors.consent}</p>}
+
                 <label style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.consentToDataProcessing} onChange={e => set('consentToDataProcessing', e.target.checked)} style={{ marginTop: '0.2rem', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.5 }}><strong>*</strong> Clientul accepta prelucrarea datelor cu caracter personal conform GDPR.</span>
+                  <input type="checkbox" checked={form.consentToMarketing} onChange={e => set('consentToMarketing', e.target.checked)} style={{ marginTop: '0.25rem', flexShrink: 0, width: '16px', height: '16px' }} />
+                  <span style={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.5 }}>
+                    <em>Optional —</em> Sunt de acord sa primesc informatii despre servicii juridice, noutati legislative si oferte ale cabinetului prin email sau telefon. Imi pot retrage oricand consimtamantul.
+                  </span>
                 </label>
-                {errors.consent && <p style={{ ...ERR, marginTop: 0 }}>Eroare: {errors.consent}</p>}
               </div>
 
+              {/* Summary */}
               <div style={{ background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '8px', padding: '1rem', fontSize: '0.87rem' }}>
                 <div style={{ fontWeight: 700, color: '#2e7d32', marginBottom: '0.6rem' }}>Rezumat lead</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.35rem 1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.3rem 1.25rem' }}>
+                  <span style={{ color: '#666' }}>Tip:</span><span style={{ fontWeight: 600 }}>{form.isCorporate ? '🏢 Firma' : '👤 Persoana fizica'}</span>
                   <span style={{ color: '#666' }}>Nume:</span><span style={{ fontWeight: 600 }}>{form.name}</span>
                   <span style={{ color: '#666' }}>Email:</span><span>{form.email}</span>
                   <span style={{ color: '#666' }}>Telefon:</span><span>{form.phone}</span>
+                  {form.address && <><span style={{ color: '#666' }}>Adresa:</span><span>{form.address}{form.city ? `, ${form.city}` : ''}</span></>}
+                  {form.isCorporate && form.fiscalCode && <><span style={{ color: '#666' }}>CUI:</span><span>{form.fiscalCode}</span></>}
                   <span style={{ color: '#666' }}>Domeniu:</span><span>{PRACTICE_AREAS.find(p => p.value === form.practiceArea)?.label}</span>
                   <span style={{ color: '#666' }}>Urgenta:</span><span>{URGENCY_LABELS[form.urgency]}</span>
-                  <span style={{ color: '#666' }}>Sursa:</span><span>{LEAD_SOURCES.find(s => s.value === form.source)?.label}</span>
                 </div>
               </div>
             </>)}

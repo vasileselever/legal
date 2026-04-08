@@ -73,6 +73,14 @@ BEGIN
     EXEC sp_executesql N'ALTER TABLE [' + @s5 + '].[Clients] ADD [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
     PRINT 'Added Clients.RegistrationCode/Bank/BankAccount';
 END
+
+-- 6. Leads: IsCorporate, Address, City, FiscalCode, RegistrationCode, Bank, BankAccount
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Leads' AND COLUMN_NAME='IsCorporate')
+BEGIN
+    DECLARE @s6 NVARCHAR(50); SELECT @s6=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Leads';
+    EXEC sp_executesql N'ALTER TABLE [' + @s6 + '].[Leads] ADD [IsCorporate] bit NOT NULL DEFAULT 0, [Address] nvarchar(300) NULL, [City] nvarchar(100) NULL, [FiscalCode] nvarchar(50) NULL, [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
+    PRINT 'Added Leads fiscal/address columns';
+END
 "
 
 echo -e "${GREEN}? DB hotfix complete.${NC}"
