@@ -30,34 +30,48 @@ fi
 
 echo -e "${YELLOW}Applying missing DB columns to legalro-db...${NC}"
 
-echo -e "${YELLOW}Checking existing tables...${NC}"
-docker exec legalro-db /opt/mssql-tools18/bin/sqlcmd \
-    -S localhost -U sa -P "$DB_PASSWORD" -C -d "LegalRO_CaseManagement" -Q "
-SELECT TABLE_SCHEMA, TABLE_NAME
-FROM INFORMATION_SCHEMA.TABLES
-WHERE TABLE_TYPE='BASE TABLE'
-ORDER BY TABLE_SCHEMA, TABLE_NAME;
-"
+echo -e "${YELLOW}Applying missing DB columns to legalro-db...${NC}"
 
-echo ""
-echo -e "${YELLOW}Applying missing DB columns...${NC}"
 docker exec legalro-db /opt/mssql-tools18/bin/sqlcmd \
     -S localhost -U sa -P "$DB_PASSWORD" -C -d "LegalRO_CaseManagement" -Q "
-IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME='TimeEntries'
-      AND COLUMN_NAME='RejectionReason'
-)
+-- 1. TimeEntries.RejectionReason
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='TimeEntries' AND COLUMN_NAME='RejectionReason')
 BEGIN
-    DECLARE @schema NVARCHAR(50);
-    SELECT @schema = TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='TimeEntries';
-    DECLARE @sql NVARCHAR(500) = 'ALTER TABLE [' + @schema + '].[TimeEntries] ADD [RejectionReason] nvarchar(500) NULL';
-    EXEC sp_executesql @sql;
-    PRINT 'Column RejectionReason added to ' + @schema + '.TimeEntries';
+    DECLARE @s1 NVARCHAR(50); SELECT @s1=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='TimeEntries';
+    EXEC sp_executesql N'ALTER TABLE [' + @s1 + '].[TimeEntries] ADD [RejectionReason] nvarchar(500) NULL';
+    PRINT 'Added TimeEntries.RejectionReason';
 END
-ELSE
+
+-- 2. InvoiceLineItems.Cod
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='InvoiceLineItems' AND COLUMN_NAME='Cod')
 BEGIN
-    PRINT 'Column RejectionReason already exists.';
+    DECLARE @s2 NVARCHAR(50); SELECT @s2=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='InvoiceLineItems';
+    EXEC sp_executesql N'ALTER TABLE [' + @s2 + '].[InvoiceLineItems] ADD [Cod] nvarchar(50) NULL';
+    PRINT 'Added InvoiceLineItems.Cod';
+END
+
+-- 3. InvoiceLineItems.UM
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='InvoiceLineItems' AND COLUMN_NAME='UM')
+BEGIN
+    DECLARE @s3 NVARCHAR(50); SELECT @s3=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='InvoiceLineItems';
+    EXEC sp_executesql N'ALTER TABLE [' + @s3 + '].[InvoiceLineItems] ADD [UM] nvarchar(20) NULL';
+    PRINT 'Added InvoiceLineItems.UM';
+END
+
+-- 4. Firms: RegistrationCode, Bank, BankAccount
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Firms' AND COLUMN_NAME='RegistrationCode')
+BEGIN
+    DECLARE @s4 NVARCHAR(50); SELECT @s4=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Firms';
+    EXEC sp_executesql N'ALTER TABLE [' + @s4 + '].[Firms] ADD [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
+    PRINT 'Added Firms.RegistrationCode/Bank/BankAccount';
+END
+
+-- 5. Clients: RegistrationCode, Bank, BankAccount
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Clients' AND COLUMN_NAME='RegistrationCode')
+BEGIN
+    DECLARE @s5 NVARCHAR(50); SELECT @s5=TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Clients';
+    EXEC sp_executesql N'ALTER TABLE [' + @s5 + '].[Clients] ADD [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
+    PRINT 'Added Clients.RegistrationCode/Bank/BankAccount';
 END
 "
 
