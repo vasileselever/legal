@@ -15,6 +15,7 @@ import {
   EXPENSE_STATUS, EXPENSE_STATUS_COLORS, EXPENSE_CATEGORIES,
   INVOICE_STATUS, INVOICE_STATUS_COLORS,
   CURRENCY_LABELS, PAYMENT_METHODS, TRUST_TX_TYPES,
+  type InvoiceDto, type InvoiceLineItemDto,
   type TimeEntryDto, type ExpenseDto, type InvoiceListItemDto,
   type TrustAccountDto, type TrustTransactionDto,
   type BillingRateDto, type BillingSummaryDto, type LawyerProductivityDto,
@@ -580,6 +581,7 @@ function InvoicesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [viewId, setViewId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -615,8 +617,12 @@ function InvoicesTab() {
               </thead>
               <tbody>
                 {items.map(e => (
-                  <tr key={e.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{e.invoiceNumber}</td>
+                  <tr key={e.id}
+                    onClick={() => setViewId(e.id)}
+                    style={{ borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+                    onMouseEnter={ev => (ev.currentTarget.style.background = '#f8f9ff')}
+                    onMouseLeave={ev => (ev.currentTarget.style.background = '')}>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: '#1a237e' }}>{e.invoiceNumber}</td>
                     <td style={tdStyle}>{fmtDate(e.invoiceDate)}</td>
                     <td style={tdStyle}>{fmtDate(e.dueDate)}</td>
                     <td style={tdStyle}>{e.clientName || '-'}</td>
@@ -634,6 +640,7 @@ function InvoicesTab() {
       )}
 
       {showCreate && <CreateInvoiceModal onClose={() => setShowCreate(false)} onCreated={load} />}
+      {viewId && <ViewInvoiceModal id={viewId} onClose={() => setViewId(null)} onChanged={load} />}
     </div>
   );
 }
@@ -1814,6 +1821,214 @@ function CreateExpenseModal({ onClose, onCreated }: { onClose: () => void, onCre
 //  CREATE INVOICE MODAL
 // =====================================================================
 
+// =====================================================================
+//  VIEW INVOICE MODAL
+// =====================================================================
+
+function ViewInvoiceModal({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
+  const [inv, setInv]     = useState<InvoiceDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [acting, setActing] = useState(false);
+
+  useEffect(() => {
+    billingService.getInvoice(id)
+      .then(setInv)
+      .catch((e: any) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  const handleAction = async (action: 'send' | 'cancel') => {
+    if (!inv) return;
+    if (!window.confirm(action === 'cancel' ? 'Anulati factura?' : 'Trimiteti factura pe email clientului?')) return;
+    setActing(true);
+    try {
+      if (action === 'send')   await billingService.sendInvoice(id);
+      if (action === 'cancel') await billingService.cancelInvoice(id);
+      const updated = await billingService.getInvoice(id);
+      setInv(updated);
+      onChanged();
+    } catch (e: any) { setError(e.message); }
+    finally { setActing(false); }
+  };
+
+  const pRow = (label: string, val?: string | null) => val
+    ? <div style={{ fontSize: '0.78rem', marginBottom: '0.18rem' }}><span style={{ color: '#666' }}>{label}: </span><span style={{ fontWeight: 600 }}>{val}</span></div>
+    : null;
+
+  const overlayS: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' };
+  const modalS:   React.CSSProperties = { background: 'white', borderRadius: '12px', width: '100%', maxWidth: 860, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' };
+
+  return (
+    <div style={overlayS} onClick={onClose}>
+      <div style={modalS} onClick={e => e.stopPropagation()}>
+
+        {/* ── Modal toolbar ── */}
+        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #e8eaf6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg,#1a237e,#3949ab)', borderRadius: '12px 12px 0 0' }}>
+          <div style={{ color: 'white', fontWeight: 700, fontSize: '1rem' }}>
+            {inv ? `Factura ${inv.invoiceNumber}` : 'Detalii factura'}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {inv && inv.status === 1 && (
+              <button onClick={() => handleAction('send')} disabled={acting}
+                style={{ padding: '0.35rem 0.85rem', background: '#1565c0', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
+                📧 Trimite
+              </button>
+            )}
+            {inv && (inv.status === 1 || inv.status === 2) && (
+              <button onClick={() => handleAction('cancel')} disabled={acting}
+                style={{ padding: '0.35rem 0.85rem', background: '#c62828', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
+                🚫 Anuleaza
+              </button>
+            )}
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '1.1rem' }}>✕</button>
+          </div>
+        </div>
+
+        {error && <div style={{ background: '#ffebee', padding: '0.75rem 1.5rem', color: '#c62828', fontSize: '0.85rem' }}>⚠️ {error}</div>}
+        {loading && <div style={{ padding: '3rem', textAlign: 'center' }}><Spinner /></div>}
+
+        {inv && (
+          <div style={{ padding: '1.5rem', fontFamily: 'Arial, sans-serif', fontSize: '0.88rem', color: '#222' }}>
+
+            {/* Status badge */}
+            <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Badge label={INVOICE_STATUS[inv.status] ?? '-'} color={INVOICE_STATUS_COLORS[inv.status] ?? '#999'} />
+              {inv.caseNumber && <span style={{ fontSize: '0.8rem', color: '#555' }}>Dosar: <strong>{inv.caseNumber}</strong></span>}
+            </div>
+
+            {/* Title */}
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem', borderBottom: '2px solid #1a237e', paddingBottom: '0.75rem' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1a237e', letterSpacing: '0.05em' }}>FACTURA FISCALA</div>
+            </div>
+
+            {/* ── 3-column header ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '1rem', marginBottom: '1.25rem', alignItems: 'start' }}>
+
+              {/* LEFT — Furnizor */}
+              <div style={{ background: '#f0f4ff', borderRadius: '6px', padding: '0.75rem', borderLeft: '3px solid #1a237e' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#1a237e', textTransform: 'uppercase', marginBottom: '0.4rem', letterSpacing: '0.06em' }}>Furnizor</div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{inv.firmName ?? '—'}</div>
+                {pRow('Adresa', inv.firmAddress)}
+                {pRow('CIF', inv.firmFiscalCode)}
+                {pRow('Nr. Reg. Com.', inv.firmRegistrationCode)}
+                {pRow('Banca', inv.firmBank)}
+                {pRow('IBAN', inv.firmBankAccount)}
+              </div>
+
+              {/* CENTRE — Invoice meta */}
+              <div style={{ textAlign: 'center', minWidth: 175, padding: '0.5rem' }}>
+                <div style={{ fontSize: '0.72rem', color: '#888', marginBottom: '0.15rem' }}>Seria / Nr.</div>
+                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1a237e', marginBottom: '0.75rem' }}>{inv.invoiceNumber}</div>
+                <div style={{ fontSize: '0.72rem', color: '#888' }}>Data emiterii</div>
+                <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>{fmtDate(inv.invoiceDate)}</div>
+                <div style={{ fontSize: '0.72rem', color: '#888' }}>Data scadentei</div>
+                <div style={{ fontWeight: 700, color: '#c62828', marginBottom: '0.5rem' }}>{fmtDate(inv.dueDate)}</div>
+                {inv.caseNumber && <>
+                  <div style={{ fontSize: '0.72rem', color: '#888' }}>Dosar</div>
+                  <div style={{ fontWeight: 700 }}>{inv.caseNumber}</div>
+                </>}
+                {(inv.periodStart || inv.periodEnd) && (
+                  <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '0.4rem' }}>
+                    Perioada: {fmtDate(inv.periodStart)} — {fmtDate(inv.periodEnd)}
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT — Client */}
+              <div style={{ background: '#fff8e1', borderRadius: '6px', padding: '0.75rem', borderLeft: '3px solid #f57c00' }}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#e65100', textTransform: 'uppercase', marginBottom: '0.4rem', letterSpacing: '0.06em' }}>
+                  {inv.clientIsCorporate ? 'Beneficiar (Firma)' : 'Beneficiar (Persoana fizica)'}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{inv.clientName ?? '—'}</div>
+                {pRow('Adresa', inv.clientAddress)}
+                {inv.clientIsCorporate && pRow('CIF', inv.clientFiscalCode)}
+                {inv.clientIsCorporate && pRow('Nr. Reg. Com.', inv.clientRegistrationCode)}
+                {inv.clientIsCorporate && pRow('Banca', inv.clientBank)}
+                {inv.clientIsCorporate && pRow('IBAN', inv.clientBankAccount)}
+              </div>
+            </div>
+
+            {/* ── Line items ── */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginBottom: '1rem' }}>
+              <thead>
+                <tr style={{ background: '#1a237e', color: 'white' }}>
+                  {['Nr.', 'Denumire produs/serviciu', 'Cod', 'UM', 'Cant.', 'TVA%', 'Pret (fara TVA)', 'Val. TVA', 'Valoare totala'].map(h => (
+                    <th key={h} style={{ padding: '0.45rem 0.5rem', textAlign: ['Nr.', 'Cant.', 'TVA%', 'Pret (fara TVA)', 'Val. TVA', 'Valoare totala'].includes(h) ? 'right' : 'left', fontWeight: 600, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(inv.lineItems ?? []).map((l: InvoiceLineItemDto, i: number) => {
+                  const tvaVal  = l.unitPrice * l.quantity * (l.vatPercent / 100);
+                  const valoare = l.unitPrice * l.quantity + tvaVal;
+                  return (
+                    <tr key={l.id} style={{ borderBottom: '1px solid #eee', background: i % 2 === 0 ? '#fafafa' : 'white' }}>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{l.lineNumber}</td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>{l.description}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', color: '#666' }}>{l.cod || '-'}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>{l.um || '-'}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{l.quantity}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{l.vatPercent}%</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{fmtMoney(l.unitPrice, inv.currency)}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{fmtMoney(tvaVal, inv.currency)}</td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right', fontWeight: 700 }}>{fmtMoney(valoare, inv.currency)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* ── Totals ── */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+              <table style={{ fontSize: '0.88rem', borderCollapse: 'collapse', minWidth: 300 }}>
+                <tbody>
+                  <tr><td style={{ padding: '0.22rem 1.25rem 0.22rem 0', color: '#555' }}>Total fara TVA:</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtMoney(inv.subTotal, inv.currency)}</td></tr>
+                  <tr><td style={{ padding: '0.22rem 1.25rem 0.22rem 0', color: '#555' }}>Total TVA ({inv.vatPercent}%):</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtMoney(inv.vatAmount, inv.currency)}</td></tr>
+                  <tr style={{ borderTop: '2px solid #1a237e' }}>
+                    <td style={{ padding: '0.5rem 1.25rem 0.22rem 0', fontWeight: 700, fontSize: '1rem', color: '#1a237e' }}>TOTAL:</td>
+                    <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '1rem', color: '#1a237e' }}>{fmtMoney(inv.totalAmount, inv.currency)}</td>
+                  </tr>
+                  {inv.paidAmount > 0 && <tr>
+                    <td style={{ padding: '0.22rem 1.25rem 0.22rem 0', color: '#2e7d32' }}>Achitat:</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600, color: '#2e7d32' }}>{fmtMoney(inv.paidAmount, inv.currency)}</td>
+                  </tr>}
+                  {inv.balanceDue > 0 && <tr style={{ borderTop: '1px solid #e8eaf6' }}>
+                    <td style={{ padding: '0.35rem 1.25rem 0.22rem 0', fontWeight: 700, color: '#c62828' }}>Rest de plata:</td>
+                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#c62828' }}>{fmtMoney(inv.balanceDue, inv.currency)}</td>
+                  </tr>}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Payments ── */}
+            {inv.payments && inv.payments.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1a237e', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', borderTop: '1px solid #e8eaf6', paddingTop: '0.75rem' }}>Plati inregistrate</div>
+                {inv.payments.map(p => (
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '0.25rem 0', borderBottom: '1px solid #f5f5f5' }}>
+                    <span>{fmtDate(p.paymentDate)} — {PAYMENT_METHODS[p.method] ?? '-'}</span>
+                    <span style={{ fontWeight: 600, color: '#2e7d32' }}>{fmtMoney(p.amount, inv.currency)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {inv.notes && (
+              <div style={{ fontSize: '0.82rem', color: '#555', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>
+                <strong>Mentiuni:</strong> {inv.notes}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+//  CREATE INVOICE MODAL
+// =====================================================================
 function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
   // ── header state ───────────────────────────────────────────────────
   const [clientId,      setClientId]      = useState('');
