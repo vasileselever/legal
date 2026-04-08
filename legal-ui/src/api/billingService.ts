@@ -288,7 +288,7 @@ export const billingService = {
     return data;
   },
   getFirmInfo: async () => {
-    const { data } = await apiClient.get('/v1/auth/firm');
+    const { data } = await apiClient.get('/auth/firm');
     return data;
   },
   getInvoices: async (params?: Record<string, any>): Promise<PagedResponse<InvoiceListItemDto>> => {
