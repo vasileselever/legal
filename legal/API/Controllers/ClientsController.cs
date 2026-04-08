@@ -1,5 +1,4 @@
 using LegalRO.CaseManagement.API.Helpers;
-using LegalRO.CaseManagement.API.Helpers;
 using LegalRO.CaseManagement.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
