@@ -576,17 +576,24 @@ function ConvertToClientModal({ lead, onCancel, onConfirm }: {
   onCancel: () => void;
   onConfirm: (dto: { isCorporate: boolean; address: string; city: string; fiscalCode: string; registrationCode: string; bank: string; bankAccount: string }) => void;
 }) {
-  const [isCorporate,     setIsCorporate]     = useState(lead.isCorporate ?? false);
-  const [address,         setAddress]         = useState(lead.address ?? '');
-  const [city,            setCity]            = useState(lead.city ?? '');
-  const [fiscalCode,      setFiscalCode]      = useState(lead.fiscalCode ?? '');
-  const [registrationCode,setRegistrationCode]= useState(lead.registrationCode ?? '');
-  const [bank,            setBank]            = useState(lead.bank ?? '');
-  const [bankAccount,     setBankAccount]     = useState(lead.bankAccount ?? '');
+  const [isCorporate,      setIsCorporate]      = useState(lead.isCorporate ?? false);
+  const [address,          setAddress]          = useState(lead.address ?? '');
+  const [city,             setCity]             = useState(lead.city ?? '');
+  const [fiscalCode,       setFiscalCode]       = useState(lead.fiscalCode ?? '');
+  const [registrationCode, setRegistrationCode] = useState(lead.registrationCode ?? '');
+  const [bank,             setBank]             = useState(lead.bank ?? '');
+  const [bankAccount,      setBankAccount]      = useState(lead.bankAccount ?? '');
+  const [gdprAccepted,     setGdprAccepted]     = useState(lead.consentToDataProcessing ?? false);
+  const [gdprErr,          setGdprErr]          = useState('');
 
   const inp: React.CSSProperties = { width: '100%', padding: '0.45rem 0.65rem', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.88rem', boxSizing: 'border-box' };
   const lbl: React.CSSProperties = { display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#444', marginBottom: '0.2rem' };
   const G2: React.CSSProperties  = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' };
+
+  const handleConfirm = () => {
+    if (!gdprAccepted) { setGdprErr('Consimtamantul GDPR este obligatoriu pentru a crea fisa clientului.'); return; }
+    onConfirm({ isCorporate, address, city, fiscalCode, registrationCode, bank, bankAccount });
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}
@@ -653,9 +660,39 @@ function ConvertToClientModal({ lead, onCancel, onConfirm }: {
           </div>
         )}
 
+        {/* ── GDPR ── */}
+        <div style={{ background: '#fafafa', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '1rem', marginTop: '1rem' }}>
+          <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.82rem', marginBottom: '0.55rem' }}>
+            🔒 Informare GDPR
+          </div>
+          <div style={{ fontSize: '0.76rem', color: '#444', lineHeight: 1.6, background: '#fff', border: '1px solid #e8eaf6', borderRadius: '6px', padding: '0.7rem', maxHeight: '100px', overflowY: 'auto', marginBottom: '0.75rem' }}>
+            {isCorporate ? (<>
+              <strong>Operator:</strong> Cabinetul de avocatura.<br />
+              <strong>Date prelucrate:</strong> Denumire, CUI, nr. Reg. Comertului, adresa sediului, date de contact ale reprezentantilor, informatii referitoare la situatia juridica.<br />
+              <strong>Scop:</strong> Furnizarea de servicii juridice si gestionarea relatiei contractuale.<br />
+              <strong>Temei:</strong> Art. 6 alin. (1) lit. b) si c) GDPR (executarea contractului; obligatii legale — Legea nr. 51/1995).<br />
+              <strong>Stocare:</strong> Pe durata contractului + minim 5 ani. <strong>Drepturi:</strong> Acces, rectificare, stergere (cu exceptiile legale), opozitie — la adresa cabinetului sau ANSPDCP (dataprotection.ro).
+            </>) : (<>
+              <strong>Operator:</strong> Cabinetul de avocatura.<br />
+              <strong>Date prelucrate:</strong> Nume, adresa, date de contact, informatii privind situatia juridica.<br />
+              <strong>Scop:</strong> Furnizarea de servicii juridice si gestionarea relatiei contractuale.<br />
+              <strong>Temei:</strong> Art. 6 alin. (1) lit. b) si c) GDPR (executarea contractului; obligatii legale — Legea nr. 51/1995).<br />
+              <strong>Stocare:</strong> Pe durata contractului + minim 5 ani. <strong>Drepturi:</strong> Acces, rectificare, stergere (cu exceptiile legale), opozitie — la adresa cabinetului sau ANSPDCP (dataprotection.ro).
+            </>)}
+          </div>
+          <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', cursor: 'pointer' }}>
+            <input type="checkbox" checked={gdprAccepted} onChange={e => { setGdprAccepted(e.target.checked); setGdprErr(''); }}
+              style={{ marginTop: '0.25rem', flexShrink: 0, width: '15px', height: '15px' }} />
+            <span style={{ fontSize: '0.82rem', color: '#222', lineHeight: 1.5 }}>
+              <strong>* Obligatoriu —</strong> Clientul a fost informat si <strong>si-a dat consimtamantul</strong> pentru prelucrarea datelor cu caracter personal conform GDPR.
+            </span>
+          </label>
+          {gdprErr && <p style={{ color: '#c62828', fontSize: '0.76rem', margin: '0.35rem 0 0' }}>{gdprErr}</p>}
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
           <button onClick={onCancel} style={{ padding: '0.5rem 1.1rem', background: '#eee', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.88rem' }}>Anuleaza</button>
-          <button onClick={() => onConfirm({ isCorporate, address, city, fiscalCode, registrationCode, bank, bankAccount })}
+          <button onClick={handleConfirm}
             style={{ padding: '0.5rem 1.25rem', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}>
             ✓ Converteste in client
           </button>

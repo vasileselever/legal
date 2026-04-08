@@ -169,21 +169,38 @@ export function PublicIntakeForm() {
           </div>
         </div>
 
-        <div style={{ marginBottom: '0.75rem' }}>
-          <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.consentToMarketing} onChange={e => set('consentToMarketing', e.target.checked)} style={{ marginTop: '0.2rem', flexShrink: 0 }} />
-            <span style={{ color: '#555', fontSize: '0.85rem', lineHeight: 1.5 }}>Sunt de acord sa primesc informatii si oferte (optional)</span>
-          </label>
-        </div>
+        {/* ?? GDPR Disclaimer ?? */}
+        <div style={{ background: '#fafafa', border: '1px solid #e0e0e0', borderRadius: '10px', padding: '1.1rem', marginBottom: '1.25rem' }}>
+          <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.92rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            ?? Informare privind prelucrarea datelor cu caracter personal (GDPR)
+          </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.consentToDataProcessing} onChange={e => set('consentToDataProcessing', e.target.checked)} style={{ marginTop: '0.2rem', flexShrink: 0 }} />
-            <span style={{ color: '#555', fontSize: '0.85rem', lineHeight: 1.5 }}>
-              <strong>*</strong> Sunt de acord cu prelucrarea datelor cu caracter personal conform GDPR.
+          <div style={{ fontSize: '0.78rem', color: '#444', lineHeight: 1.65, background: '#fff', border: '1px solid #e8eaf6', borderRadius: '6px', padding: '0.85rem', maxHeight: '120px', overflowY: 'auto', marginBottom: '0.9rem' }}>
+            <strong>Operator de date:</strong> Cabinetul de avocatura inregistrat conform Legii nr. 51/1995.<br />
+            <strong>Date prelucrate:</strong> Nume, prenume, adresa de email, numarul de telefon, informatii privind situatia juridica descrisa.<br />
+            <strong>Scopul prelucrarii:</strong> Evaluarea cererii de consultanta si contactarea dumneavoastra in vederea furnizarii de servicii juridice.<br />
+            <strong>Temeiul juridic:</strong> Art. 6 alin. (1) lit. b) GDPR — masuri precontractuale la cererea persoanei vizate; art. 6 alin. (1) lit. c) GDPR — obligatii legale ale avocatului.<br />
+            <strong>Destinatari:</strong> Datele nu sunt transmise tertilor, cu exceptia cazurilor prevazute de lege sau a expertilor implicati in dosar cu acordul dvs.<br />
+            <strong>Perioada de stocare:</strong> Datele sunt pastrate pe durata relatiei contractuale si cel putin 5 ani ulterior, conform obligatiilor legale de arhivare.<br />
+            <strong>Drepturile dvs. (GDPR):</strong> Aveti dreptul de acces, rectificare, stergere (in limitele obligatiilor legale), restrictionare, portabilitate si opozitie. Puteti exercita aceste drepturi scriind la adresa cabinetului sau la Autoritatea Nationala de Supraveghere (ANSPDCP — <em>www.dataprotection.ro</em>).
+          </div>
+
+          <label style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', cursor: 'pointer', marginBottom: '0.65rem' }}>
+            <input type="checkbox" checked={form.consentToDataProcessing} onChange={e => set('consentToDataProcessing', e.target.checked)}
+              style={{ marginTop: '0.25rem', flexShrink: 0, width: '16px', height: '16px' }} />
+            <span style={{ fontSize: '0.85rem', color: '#222', lineHeight: 1.5 }}>
+              <strong>* Obligatoriu —</strong> Am citit informarea de mai sus si <strong>sunt de acord cu prelucrarea datelor mele cu caracter personal</strong> in scopul obtinerii unei consultatii juridice, conform Regulamentului UE 2016/679 (GDPR).
             </span>
           </label>
           {errors.consent && <p style={errT}>{errors.consent}</p>}
+
+          <label style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.consentToMarketing} onChange={e => set('consentToMarketing', e.target.checked)}
+              style={{ marginTop: '0.25rem', flexShrink: 0, width: '16px', height: '16px' }} />
+            <span style={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.5 }}>
+              <em>Optional —</em> Sunt de acord sa primesc informatii despre servicii juridice, noutati legislative si oferte ale cabinetului. Imi pot retrage oricand consimtamantul.
+            </span>
+          </label>
         </div>
 
         <button type="submit" disabled={loading} style={{

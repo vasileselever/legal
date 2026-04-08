@@ -81,6 +81,13 @@ BEGIN
     EXEC sp_executesql N'ALTER TABLE [' + @s6 + '].[Leads] ADD [IsCorporate] bit NOT NULL DEFAULT 0, [Address] nvarchar(300) NULL, [City] nvarchar(100) NULL, [FiscalCode] nvarchar(50) NULL, [RegistrationCode] nvarchar(50) NULL, [Bank] nvarchar(100) NULL, [BankAccount] nvarchar(50) NULL';
     PRINT 'Added Leads fiscal/address columns';
 END
+
+-- 7. Register migrations in __EFMigrationsHistory so EF does not re-run them
+IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260408073212_AddFirmClientBankRegistration')
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20260408073212_AddFirmClientBankRegistration', '8.0.0');
+
+IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260408081554_AddLeadFiscalFields')
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20260408081554_AddLeadFiscalFields', '8.0.0');
 "
 
 echo -e "${GREEN}? DB hotfix complete.${NC}"
