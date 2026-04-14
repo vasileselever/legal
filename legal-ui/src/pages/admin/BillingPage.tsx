@@ -2447,7 +2447,7 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+            <table className="inv-line-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
               <thead>
                 <tr>
                   {['Denumire produs sau serviciu *', 'Cod', 'UM', 'Cant. *', 'TVA %', 'Pret (fara TVA) *', 'Valoare', ''].map(h => (
@@ -2460,22 +2460,22 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
                   const { valFaraTVA, tvaVal, valoare } = lineCalc(l);
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f0f0f0', background: i % 2 === 0 ? '#fafafa' : 'white' }}>
-                      <td style={tdI}><input style={inpS} value={l.description} placeholder="ex: Consultanta juridica" onChange={e => patchLine(i, { description: e.target.value })} /></td>
-                      <td style={tdI}><input style={{ ...inpS, width: 70 }} value={l.cod} placeholder="CPV..." onChange={e => patchLine(i, { cod: e.target.value })} /></td>
-                      <td style={tdI}>
+                      <td data-label="Denumire *" style={tdI}><input style={inpS} value={l.description} placeholder="ex: Consultanta juridica" onChange={e => patchLine(i, { description: e.target.value })} /></td>
+                      <td data-label="Cod" style={tdI}><input style={{ ...inpS, width: 70 }} value={l.cod} placeholder="CPV..." onChange={e => patchLine(i, { cod: e.target.value })} /></td>
+                      <td data-label="UM" style={tdI}>
                         <select style={{ ...inpS, width: 68 }} value={l.um} onChange={e => patchLine(i, { um: e.target.value })}>
                           {['ora', 'buc', 'km', 'zi', 'luna', 'set', 'pag'].map(u => <option key={u} value={u}>{u}</option>)}
                         </select>
                       </td>
-                      <td style={tdI}><input type="number" style={{ ...inpS, width: 68 }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></td>
-                      <td style={tdI}><input type="number" style={{ ...inpS, width: 62 }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></td>
-                      <td style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice || ''} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
-                      <td style={{ ...tdI, whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', textAlign: 'right', minWidth: 100 }}>
+                      <td data-label="Cantitate *" style={tdI}><input type="number" style={{ ...inpS, width: 68 }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></td>
+                      <td data-label="TVA %" style={tdI}><input type="number" style={{ ...inpS, width: 62 }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></td>
+                      <td data-label="Pret (fara TVA) *" style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice || ''} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
+                      <td data-label="Valoare" className="inv-line-value" style={{ ...tdI, whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', textAlign: 'right', minWidth: 100 }}>
                         <div>{fmtMoney(valFaraTVA, currency)}</div>
                         <div style={{ fontSize: '0.72rem', color: '#888' }}>+TVA {fmtMoney(tvaVal, currency)}</div>
                         <div style={{ color: '#1a237e' }}>{fmtMoney(valoare, currency)}</div>
                       </td>
-                      <td style={tdI}>
+                      <td className="inv-line-remove" style={tdI}>
                         {lines.length > 1 && (
                           <button onClick={() => removeLine(i)} style={{ border: 'none', background: 'none', color: '#c62828', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0.2rem' }}>×</button>
                         )}
