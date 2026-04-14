@@ -2446,8 +2446,9 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
             <button style={{ ...btnOutline, padding: '0.2rem 0.65rem', fontSize: '0.78rem' }} onClick={addLine}>+ Adauga</button>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table className="inv-line-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+          {/* Desktop table */}
+          <div className="inv-table-wrap">
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
               <thead>
                 <tr>
                   {['Denumire produs sau serviciu *', 'Cod', 'UM', 'Cant. *', 'TVA %', 'Pret (fara TVA) *', 'Valoare', ''].map(h => (
@@ -2460,22 +2461,22 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
                   const { valFaraTVA, tvaVal, valoare } = lineCalc(l);
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid #f0f0f0', background: i % 2 === 0 ? '#fafafa' : 'white' }}>
-                      <td data-label="Denumire *" style={tdI}><input style={inpS} value={l.description} placeholder="ex: Consultanta juridica" onChange={e => patchLine(i, { description: e.target.value })} /></td>
-                      <td data-label="Cod" style={tdI}><input style={{ ...inpS, width: 70 }} value={l.cod} placeholder="CPV..." onChange={e => patchLine(i, { cod: e.target.value })} /></td>
-                      <td data-label="UM" style={tdI}>
+                      <td style={tdI}><input style={inpS} value={l.description} placeholder="ex: Consultanta juridica" onChange={e => patchLine(i, { description: e.target.value })} /></td>
+                      <td style={tdI}><input style={{ ...inpS, width: 70 }} value={l.cod} placeholder="CPV..." onChange={e => patchLine(i, { cod: e.target.value })} /></td>
+                      <td style={tdI}>
                         <select style={{ ...inpS, width: 68 }} value={l.um} onChange={e => patchLine(i, { um: e.target.value })}>
                           {['ora', 'buc', 'km', 'zi', 'luna', 'set', 'pag'].map(u => <option key={u} value={u}>{u}</option>)}
                         </select>
                       </td>
-                      <td data-label="Cantitate *" style={tdI}><input type="number" style={{ ...inpS, width: 68 }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></td>
-                      <td data-label="TVA %" style={tdI}><input type="number" style={{ ...inpS, width: 62 }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></td>
-                      <td data-label="Pret (fara TVA) *" style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice || ''} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
-                      <td data-label="Valoare" className="inv-line-value" style={{ ...tdI, whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', textAlign: 'right', minWidth: 100 }}>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 68 }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></td>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 62 }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></td>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice || ''} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
+                      <td style={{ ...tdI, whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', textAlign: 'right', minWidth: 100 }}>
                         <div>{fmtMoney(valFaraTVA, currency)}</div>
                         <div style={{ fontSize: '0.72rem', color: '#888' }}>+TVA {fmtMoney(tvaVal, currency)}</div>
                         <div style={{ color: '#1a237e' }}>{fmtMoney(valoare, currency)}</div>
                       </td>
-                      <td className="inv-line-remove" style={tdI}>
+                      <td style={tdI}>
                         {lines.length > 1 && (
                           <button onClick={() => removeLine(i)} style={{ border: 'none', background: 'none', color: '#c62828', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0.2rem' }}>×</button>
                         )}
@@ -2485,6 +2486,42 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="inv-cards-wrap">
+            {lines.map((l, i) => {
+              const { valFaraTVA, tvaVal, valoare } = lineCalc(l);
+              const lbl: React.CSSProperties = { fontSize: '0.72rem', fontWeight: 700, color: '#555', marginBottom: '0.2rem', display: 'block' };
+              const row: React.CSSProperties = { marginBottom: '0.55rem' };
+              return (
+                <div key={i} style={{ border: '1px solid #e0e0e0', borderRadius: '8px', padding: '0.75rem', marginBottom: '0.75rem', background: i % 2 === 0 ? '#fafafa' : '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1a237e' }}>Rand {i + 1}</span>
+                    {lines.length > 1 && (
+                      <button onClick={() => removeLine(i)} style={{ border: 'none', background: 'none', color: '#c62828', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1, padding: '0.1rem 0.3rem' }}>×</button>
+                    )}
+                  </div>
+                  <div style={row}><label style={lbl}>Denumire *</label><input style={{ ...inpS, width: '100%' }} value={l.description} placeholder="ex: Consultanta juridica" onChange={e => patchLine(i, { description: e.target.value })} /></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <div style={row}><label style={lbl}>Cod</label><input style={{ ...inpS, width: '100%' }} value={l.cod} placeholder="CPV..." onChange={e => patchLine(i, { cod: e.target.value })} /></div>
+                    <div style={row}><label style={lbl}>UM</label>
+                      <select style={{ ...inpS, width: '100%' }} value={l.um} onChange={e => patchLine(i, { um: e.target.value })}>
+                        {['ora', 'buc', 'km', 'zi', 'luna', 'set', 'pag'].map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                    <div style={row}><label style={lbl}>Cantitate *</label><input type="number" style={{ ...inpS, width: '100%' }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></div>
+                    <div style={row}><label style={lbl}>TVA %</label><input type="number" style={{ ...inpS, width: '100%' }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></div>
+                    <div style={{ ...row, gridColumn: '1 / -1' }}><label style={lbl}>Pret (fara TVA) *</label><input type="number" style={{ ...inpS, width: '100%' }} min="0" step="0.01" value={l.unitPrice || ''} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></div>
+                  </div>
+                  <div style={{ marginTop: '0.4rem', fontSize: '0.82rem', fontWeight: 600, textAlign: 'right', color: '#1a237e' }}>
+                    <span style={{ color: '#555', fontWeight: 400 }}>fara TVA: </span>{fmtMoney(valFaraTVA, currency)}
+                    {'  '}<span style={{ color: '#888', fontWeight: 400, fontSize: '0.72rem' }}>+TVA {fmtMoney(tvaVal, currency)}</span>
+                    {'  '}Total: {fmtMoney(valoare, currency)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* ── Totals ── */}
