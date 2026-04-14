@@ -2469,7 +2469,7 @@ function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void, onCre
                       </td>
                       <td style={tdI}><input type="number" style={{ ...inpS, width: 68 }} min="0.01" step="0.01" value={l.quantity} onChange={e => patchLine(i, { quantity: parseFloat(e.target.value) || 0 })} /></td>
                       <td style={tdI}><input type="number" style={{ ...inpS, width: 62 }} min="0" max="100" step="1" value={l.vatPct} onChange={e => patchLine(i, { vatPct: +e.target.value })} /></td>
-                      <td style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
+                      <td style={tdI}><input type="number" style={{ ...inpS, width: 100 }} min="0" step="0.01" value={l.unitPrice || ''} onChange={e => patchLine(i, { unitPrice: parseFloat(e.target.value) || 0 })} /></td>
                       <td style={{ ...tdI, whiteSpace: 'nowrap', fontWeight: 600, fontSize: '0.82rem', textAlign: 'right', minWidth: 100 }}>
                         <div>{fmtMoney(valFaraTVA, currency)}</div>
                         <div style={{ fontSize: '0.72rem', color: '#888' }}>+TVA {fmtMoney(tvaVal, currency)}</div>
