@@ -76,7 +76,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .inv-cards-wrap { display: none; }
 .inv-table-wrap { overflow-x: auto; }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .inv-table-wrap { display: none; }
   .inv-cards-wrap { display: block; }
 }
