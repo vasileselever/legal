@@ -4,7 +4,7 @@ export function DreptImobiliar() {
         { icon: "\u{1F4D1}", title: "Verificare Carte Funciara", desc: "Verificarea situatiei juridice a imobilului, a sarcinilor, ipotecilor si litigiilor existente inainte de cumparare." },
         { icon: "\u{1F3D7}\uFE0F", title: "Contracte Constructii", desc: "Redactare si negociere contracte de antrepriza, subantrepriza si dirigentie de santier. Solutionare litigii constructori." },
         { icon: "\u{1F4DC}", title: "Drept de Superficie si Uzufruct", desc: "Constituire, modificare si stingere drepturi reale: superficie, uzufruct, uz, abitatie si servitute." },
-        { icon: "\u{1F511}", title: "Contracte Inchiriere", desc: "Redactare contracte de inchiriere si comodat, proceduri de evacuare, recuperare garantii si chirii restante." },
+        { icon: "\u{1F511}", title: "Contracte mnchiriere", desc: "Redactare contracte de inchiriere si comodat, proceduri de evacuare, recuperare garantii si chirii restante." },
         { icon: "\u2696\uFE0F", title: "Litigii Imobiliare", desc: "Reprezentare in actiuni de revendicare, granituire, iesire din indiviziune si litigii de vecinatate." },
         { icon: "\u{1F4CA}", title: "Partaje Imobiliare", desc: "Partaj bunuri imobile la divort sau succesiune. Iesire din indiviziune prin buna invoiala sau pe cale judiciara." },
         { icon: "\u{1F50D}", title: "Due Diligence Imobiliar", desc: "Analiza juridica completa a unui imobil inainte de achizitie: titlu, sarcini, litigii, autorizatii, urbanism." },
@@ -29,10 +29,10 @@ export function DreptImobiliar() {
         "Verificati daca imobilul este in zona protejata",
     ];
     const faqs = [
-        { q: "Ce verificari trebuie sa fac inainte sa cumpar un imobil?", a: "Este esential sa verificati Cartea Funciara, titlul de proprietate, existenta sarcinilor (ipoteci, sechestre), situatia fiscala si litigiile pe rol. Un avocat specializat poate efectua toate aceste verificari pentru dumneavoastra." },
-        { q: "Ce este antecontractul de vanzare-cumparare?", a: "Antecontractul (promisiunea de vanzare) este un contract prin care partile se obliga sa incheie contractul definitiv in viitor. Protejeaza cumparatorul (garanteaza pretul si conditiile) si vanzatorul (garanteaza plata)." },
-        { q: "Cat dureaza o tranzactie imobiliara?", a: "O tranzactie standard dureaza 2-4 saptamani. In cazul imobilelor cu probleme juridice sau cu finantare bancara, procesul poate dura 1-3 luni. Verificarile prealabile pot reduce riscurile si accelera procesul." },
-        { q: "Am nevoie de avocat daca am notar?", a: "Da, rolurile sunt diferite. Notarul autentifica actele si verifica identitatea partilor, dar nu reprezinta interesele niciuneia. Avocatul apara exclusiv interesele dumneavoastra si verifica aspecte juridice pe care notarul nu le analizeaza." },
+        { q: "Ce verificari trebuie sa fac inainte sa cumpar un imobila", a: "Este esential sa verificati Cartea Funciara, titlul de proprietate, existenta sarcinilor (ipoteci, sechestre), situatia fiscala si litigiile pe rol. Un avocat specializat poate efectua toate aceste verificari pentru dumneavoastra." },
+        { q: "Ce este antecontractul de vanzare-cumpararea", a: "Antecontractul (promisiunea de vanzare) este un contract prin care partile se obliga sa incheie contractul definitiv in viitor. Protejeaza cumparatorul (garanteaza pretul si conditiile) si vanzatorul (garanteaza plata)." },
+        { q: "Cat dureaza o tranzactie imobiliaraa", a: "O tranzactie standard dureaza 2-4 saptamani. In cazul imobilelor cu probleme juridice sau cu finantare bancara, procesul poate dura 1-3 luni. Verificarile prealabile pot reduce riscurile si accelera procesul." },
+        { q: "Am nevoie de avocat daca am notara", a: "Da, rolurile sunt diferite. Notarul autentifica actele si verifica identitatea partilor, dar nu reprezinta interesele niciuneia. Avocatul apara exclusiv interesele dumneavoastra si verifica aspecte juridice pe care notarul nu le analizeaza." },
     ];
     return (
         <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem", fontFamily: "sans-serif" }}>
@@ -46,7 +46,7 @@ export function DreptImobiliar() {
                 <div style={{ fontSize: "2rem", flexShrink: 0 }}>{"\u26A0\uFE0F"}</div>
                 <div>
                     <h3 style={{ color: "#1b5e20", margin: "0 0 0.5rem" }}>Nu Cumparati Fara Verificare Juridica!</h3>
-                    <p style={{ color: "#2e7d32", margin: 0 }}>O verificare juridica prealabila costa putin si va poate salva de pierderi majore. <strong>Investiti in siguranta!</strong></p>
+                    <p style={{ color: "#2e7d32", margin: 0 }}>O verificare juridica prealabila costa putin si va poate salva de pierderi majore. <strong>mnvestiti in siguranta!</strong></p>
                 </div>
             </div>
 

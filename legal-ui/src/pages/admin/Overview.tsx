@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, type ReactNode } from 'react';
 import { leadService } from '../../api/leadService';
 import { consultationService } from '../../api/consultationService';
 import type { LeadStats } from '../../api/leadService';
@@ -12,7 +12,24 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { CONSULTATION_STATUS_LABELS, CONSULTATION_STATUS_COLORS, CONSULTATION_TYPE_LABELS } from '../../api/consultationService';
 import { LeadDetailModal } from '../../components/LeadDetailModal';
 
-export function Overview() {
+class DashboardErrorBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
+  state = { error: null };
+  static getDerivedStateFromError(e: Error) { return { error: e.message }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <AdminLayout>
+          <div style={{ padding: '2rem' }}>
+            <ErrorBanner message={`Eroare la incarcarea dashboard-ului: ${this.state.error}`} onRetry={() => this.setState({ error: null })} />
+          </div>
+        </AdminLayout>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function OverviewInner() {
   const [stats, setStats]       = useState<LeadStats | null>(null);
   const [conss, setConss]       = useState<ConsultationItem[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -60,12 +77,12 @@ export function Overview() {
         {/* Stats */}
         {loading && !stats ? <Spinner /> : stats && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '1rem' }}>
-            {SC('👥', 'Total Leads',   stats.totalLeads,                '#1976d2')}
-            {SC('🆕', 'Noi',          stats.newLeads,                   '#7b1fa2')}
-            {SC('✅', 'Calificati',    stats.qualifiedLeads,             '#2e7d32')}
-            {SC('📅', 'Consultatii',  stats.consultationsScheduled,      '#f57c00')}
-            {SC('🔄', 'Convertiti',   stats.convertedLeads,              '#00838f')}
-            {SC('📈', 'Conversie',    stats.conversionRate.toFixed(1)+'%', '#c62828')}
+            {SC('👥', 'Total Leads',   stats.totalLeads ?? 0,                                         '#1976d2')}
+            {SC('🆕', 'Noi',          stats.newLeads ?? 0,                                           '#7b1fa2')}
+            {SC('✅', 'Calificati',    stats.qualifiedLeads ?? 0,                                     '#2e7d32')}
+            {SC('📅', 'Consultatii',  stats.consultationsScheduled ?? 0,                             '#f57c00')}
+            {SC('🔄', 'Convertiti',   stats.convertedLeads ?? 0,                                     '#00838f')}
+            {SC('📈', 'Conversie',    ((stats.conversionRate ?? 0) as number).toFixed(1) + '%',      '#c62828')}
           </div>
         )}
 
@@ -148,5 +165,13 @@ export function Overview() {
         <LeadDetailModal leadId={selectedLead} onClose={() => setSelectedLead(null)} onStatusChanged={load} />
       )}
     </AdminLayout>
+  );
+}
+
+export function Overview() {
+  return (
+    <DashboardErrorBoundary>
+      <OverviewInner />
+    </DashboardErrorBoundary>
   );
 }

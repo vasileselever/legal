@@ -1,25 +1,25 @@
 export function DreptCorporativ() {
   const services = [
-    { icon: '??', title: 'Constituire Societ??i', desc: 'Înfiin?are SRL, SA, SNC, asocia?ii ?i funda?ii. Redactarea actelor constitutive ?i înregistrarea la ONRC.' },
-    { icon: '??', title: 'Guvernan?? Corporativ?', desc: 'Regulamente interne, hot?râri AGA ?i CA, politici de conformitate ?i structuri de conducere.' },
-    { icon: '??', title: 'Fuziuni ?i Diviz?ri', desc: 'Asisten?? juridic? complet? în opera?iuni de fuziune, divizare ?i restructurare corporativ?.' },
-    { icon: '??', title: 'Due Diligence', desc: 'Audit juridic al companiilor în vederea tranzac?iilor de vânzare-cump?rare de ac?iuni sau active.' },
-    { icon: '??', title: 'Contracte între Asocia?i', desc: 'Pacte de ac?ionari, acorduri de tag-along, drag-along ?i alte mecanisme de protec?ie a investitorilor.' },
-    { icon: '??', title: 'Drept Corporativ Interna?ional', desc: 'Structuri holding, subsidiare interna?ionale ?i conformitate cu reglement?rile UE.' },
+    { icon: '', title: 'Constituire Societsti', desc: 'Infiintare SRL, SA, SNC, asociatii si fundatii. Redactarea actelor constitutive si inregistrarea la ONRC.' },
+    { icon: '', title: 'Guvernanta Corporativa', desc: 'Regulamente interne, hotarari AGA si CA, politici de conformitate si structuri de conducere.' },
+    { icon: '', title: 'Fuziuni si Divizari', desc: 'Asistenta juridica completa in operatiiuni de fuziune, divizare si restructurare corporativa.' },
+    { icon: '', title: 'Due Diligence', desc: 'Audit juridic al companiilor in vederea tranzactiilor de vanzare-cumparare de actiuni sau active.' },
+    { icon: '', title: 'Contracte intre Asociasi', desc: 'Pacte de actionari, acorduri de tag-along, drag-along si alte mecanisme de protectie a investitorilor.' },
+    { icon: '', title: 'Drept Corporativ International', desc: 'Structuri holding, subsidiare internationale si conformitate cu reglementarile UE.' },
   ];
-  const stats = [['50+', 'Companii Constituite'], ['30+', 'Fuziuni Asistate'], ['100%', 'Conformitate'], ['24h', 'Timp R?spuns']];
+  const stats = [['50+', 'Companii Constituite'], ['30+', 'Fuziuni Asistate'], ['100%', 'Conformitate'], ['24h', 'Timp Raspuns']];
   const steps = [
-    ['1', '#00695c', 'Analiza Structurii', 'Evalu?m cea mai potrivit? form? juridic? pentru obiectivele dumneavoastr? de business.'],
-    ['2', '#00796b', 'Redactare Acte', 'Preg?tim toate documentele necesare — act constitutiv, regulamente, procuri.'],
-    ['3', '#00897b', 'Înregistrare', 'Reprezent?m societatea în fa?a ONRC, ANAF ?i oric?ror alte autorit??i competente.'],
-    ['4', '#4caf50', 'Suport Continuu', 'Asigur?m conformitatea juridic? permanent? pe tot parcursul vie?ii companiei.'],
+    ['1', '#00695c', 'Analiza Structurii', 'Evaluam cea mai potrivita forma juridica pentru obiectivele dumneavoastra de business.'],
+    ['2', '#00796b', 'Redactare Acte', 'Pregatim toate documentele necesare - act constitutiv, regulamente, procuri.'],
+    ['3', '#00897b', 'Inregistrare', 'Reprezentam societatea in fata ONRC, ANAF si oricaror alte autoritsti competente.'],
+    ['4', '#4caf50', 'Suport Continuu', 'Asiguram conformitatea juridica permanenta pe tot parcursul vietii companiei.'],
   ];
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', fontFamily: 'sans-serif' }}>
       <div style={{ background: 'linear-gradient(135deg,#004d40,#00695c)', color: 'white', padding: '3rem 2rem', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>??</div>
+        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}></div>
         <h1 style={{ margin: '0 0 1rem', fontSize: '2.5rem' }}>Drept Corporativ</h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Consultan?? juridic? specializat? pentru structurarea ?i administrarea afacerilor</p>
+        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Consultanta juridica specializata pentru structurarea si administrarea afacerilor</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {services.map((s, i) => (
@@ -31,7 +31,7 @@ export function DreptCorporativ() {
         ))}
       </div>
       <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-        <h2 style={{ color: '#333', marginBottom: '1.5rem', textAlign: 'center' }}>Experien?a Noastr?</h2>
+        <h2 style={{ color: '#333', marginBottom: '1.5rem', textAlign: 'center' }}>Experientaa Noastra</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '1rem' }}>
           {stats.map((s, i) => (
             <div key={i} style={{ textAlign: 'center', padding: '1.5rem', background: '#e0f2f1', borderRadius: '8px' }}>
@@ -56,9 +56,9 @@ export function DreptCorporativ() {
         </div>
       </div>
       <div style={{ background: '#00695c', color: 'white', padding: '2.5rem', borderRadius: '8px', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Ave?i Nevoie de Consultan?? Corporativ??</h2>
-        <p style={{ marginBottom: '1.5rem', opacity: 0.9, fontSize: '1.1rem' }}>Contacta?i-ne ast?zi pentru o consulta?ie gratuit?!</p>
-        <a href="/contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', background: 'white', color: '#00695c', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.1rem' }}>Consulta?ie Gratuit?</a>
+        <h2 style={{ marginBottom: '1rem' }}>Avesi Nevoie de Consultanta Corporativta</h2>
+        <p style={{ marginBottom: '1.5rem', opacity: 0.9, fontSize: '1.1rem' }}>Contactati-ne astazi pentru o consultatie gratuita!</p>
+        <a href="/contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', background: 'white', color: '#00695c', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.1rem' }}>Consultatie Gratuita</a>
       </div>
     </div>
   );
