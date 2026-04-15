@@ -5,14 +5,14 @@ export function DreptPenal() {
     { icon: "\u{1F4B0}", title: "Infractiuni Economice", desc: "Aparare in dosare de evaziune fiscala, frauda, delapidare, spalare de bani si alte infractiuni economice." },
     { icon: "\u{1F4BB}", title: "Criminalitate Informatica", desc: "Consultanta si aparare in cazuri de frauda informatica, acces neautorizat la sisteme si alte infractiuni cibernetice." },
     { icon: "\u{1F697}", title: "Infractiuni Rutiere", desc: "Aparare in dosare de conducere sub influenta alcoolului, parasirea locului accidentului si alte infractiuni rutiere." },
-    { icon: "\u{1F464}", title: "Infractiuni contra Persoanei", desc: "Reprezentare in dosare de loviri, vatanari corporale, anenintare, tantaj si alte infractiuni inpotriva persoanei." },
+    { icon: "\u{1F464}", title: "Infractiuni contra Persoanei", desc: "Reprezentare in dosare de loviri, vatanari corporale, amenintare, santaj si alte infractiuni impotriva persoanei." },
     { icon: "\u{1F512}", title: "Infractiuni contra Patrimoniului", desc: "Aparare in dosare de furt, talharie, inselaciune, distrugere si alte infractiuni contra patrimoniului." },
     { icon: "\u{1F4D1}", title: "Constituire Parte Civila", desc: "Asistam victimele infractiunilor in constituirea ca parte civila si obtinerea de despagubiri in procesul penal." },
   ];
   const stats = [["15+","Ani Experienta"],["400+","Dosare Penale"],["92%","Achitari/Reduceri"],["24/7","Disponibil"]];
   const steps = [
     ["1","#c62828","Consultatie Urgenta","Contactati-ne imediat. In materie penala, asistentaa juridica pronpta este esentiala."],
-    ["2","#d32f2f","Analiza Dosarului","Studien cu atentie toate probele, declaratiile si actele din dosar pentru a construi cea nai buna aparare."],
+    ["2","#d32f2f","Analiza Dosarului","Studiem cu atentie toate probele, declaratiile si actele din dosar pentru a construi cea mai buna aparare."],
     ["3","#e53935","Strategie de Aparare","Elaboram o strategie de aparare personalizata bazata pe circumstantele specifice ale cazului."],
     ["4","#ef5350","Reprezentare in Instanta","Va reprezentam cu profesionalism in fata tuturor organelor judiciare pana la solutionarea definitiva."],
   ];
