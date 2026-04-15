@@ -1,25 +1,25 @@
 export function AlteServicii() {
   const services = [
     { icon: '', title: 'Drept Fiscal', desc: 'Contestatii decizii ANAF, optimizare fiscala, litigii cu organele fiscale si asistenta in inspectii fiscale.' },
-    { icon: '', title: 'Drept International Privat', desc: 'Recunoasterea hotararilor strtine, conflicte de legi, divorturi internationale si adoptii transfrontaliere.' },
+    { icon: '', title: 'Drept International Privat', desc: 'Recunoasterea hotararilor straine, conflicte de legi, divorturi internationale si adoptii transfrontaliere.' },
     { icon: '', title: 'Drept IT si GDPR', desc: 'Conformitate GDPR, politici de confidentialitate, contracte software si protectia datelor cu caracter personal.' },
-    { icon: '', title: 'Drept Medical', desc: 'Malpraxis medical, raspunderea spitalelor si medicilor, contracte in domeniul sanatstii.' },
+    { icon: '', title: 'Drept Medical', desc: 'Malpraxis medical, raspunderea spitalelor si medicilor, contracte in domeniul sanatatii.' },
     { icon: '', title: 'Drept Mediu', desc: 'Litigii de mediu, autorizatii de mediu, raspundere pentru poluare si consultanta pentru proiecte verzi.' },
     { icon: '', title: 'Dreptul Transporturilor', desc: 'Litigii in transporturi rutiere, aeriene si maritime, raspundere transportatori, asigurari cargo.' },
   ];
-  const stats = [['15+', 'Ani Experienta'], ['300+', 'Cazuri Solutionate'], ['98%', 'Cliensi Multumiti'], ['24h', 'Timp Raspuns']];
+  const stats = [['15+', 'Ani Experienta'], ['300+', 'Cazuri Solutionate'], ['98%', 'Clienti Multumiti'], ['24h', 'Timp Raspuns']];
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', fontFamily: 'sans-serif' }}>
       <div style={{ background: 'linear-gradient(135deg,#37474f,#546e7a)', color: 'white', padding: '3rem 2rem', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
         <div style={{ fontSize: '4rem', marginBottom: '1rem' }}></div>
         <h1 style={{ margin: '0 0 1rem', fontSize: '2.5rem' }}>Alte Servicii Juridice</h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Consultanta specializata in domenii juridice de nita si interdisciplinare</p>
+        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Consultanta specializata in domenii juridice de nisa si interdisciplinare</p>
       </div>
 
       <div style={{ background: '#fff8e1', border: '2px solid #ffcc02', padding: '1.25rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
         <div style={{ fontSize: '2rem', flexShrink: 0 }}></div>
         <div>
-          <h3 style={{ color: '#f57f17', margin: '0 0 0.5rem' }}>Nu gasiti domeniul potrivita</h3>
+          <h3 style={{ color: '#f57f17', margin: '0 0 0.5rem' }}>Nu gasiti domeniul potrivit?</h3>
           <p style={{ color: '#795548', margin: 0 }}>Daca problema dumneavoastra juridica nu se incadreaza in categoriile principale, contactati-ne oricum. Cabinetul nostru acopera o gama larga de domenii sau va poate indruma catre specialisti din reteaua noastra.</p>
         </div>
       </div>

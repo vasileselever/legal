@@ -4,22 +4,22 @@ export function DreptAdministrativ() {
     { icon: '', title: 'Autorizatii si Avize', desc: 'Asistenta in obtinerea autorizatiilor de construire, avizelor de mediu si altor permise administrative.' },
     { icon: '', title: 'Urbanism si Amenajarea Teritoriului', desc: 'Consultanta in proceduri de urbanism, PUZ, PUD si litigii privind documentatiile de urbanism.' },
     { icon: '', title: 'Achizitii Publice', desc: 'Asistenta in proceduri de licitatie, contestatii CNSC si litigii privind contractele de achizitie publica.' },
-    { icon: '', title: 'Control si Inspectii', desc: 'Reprezentare in fata autoritstilor de control - ANAF, ITM, DSP, ISC - si contestarea sanctiiunilor.' },
+    { icon: '', title: 'Control si Inspectii', desc: 'Reprezentare in fata autoritatilor de control - ANAF, ITM, DSP, ISC - si contestarea sanctiiunilor.' },
     { icon: '', title: 'Expropriere si Despagubiri', desc: 'Apararea drepturilor proprietarilor in proceduri de expropriere pentru cauze de utilitate publica.' },
   ];
   const stats = [['200+', 'Acte Contestate'], ['90%', 'Rata Succes'], ['15+', 'Ani Experienta'], ['48h', 'Timp Raspuns']];
   const steps = [
     ['1', '#4527a0', 'Analiza Actului', 'Verificam legalitatea actului administrativ si identificam temeiurile de contestare.'],
     ['2', '#512da8', 'Strategia Juridica', 'Stabilim cea mai buna cale - contestatie administrativa sau actiune in instanta.'],
-    ['3', '#5e35b1', 'Reprezentare', 'Va reprezentam in fata autoritstilor si a instantaelor de contencios administrativ.'],
+    ['3', '#5e35b1', 'Reprezentare', 'Va reprezentam in fata autoritatilor si a instantelor de contencios administrativ.'],
     ['4', '#7e57c2', 'Executarea Hotararii', 'Asiguram punerea in executare a hotararilor favorabile obtinute.'],
   ];
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', fontFamily: 'sans-serif' }}>
       <div style={{ background: 'linear-gradient(135deg,#311b92,#4527a0)', color: 'white', padding: '3rem 2rem', borderRadius: '8px', marginBottom: '2rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>Pas</div>
+        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}></div>
         <h1 style={{ margin: '0 0 1rem', fontSize: '2.5rem' }}>Drept Administrativ</h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Apararea drepturilor cetstenilor si companiilor in relatia cu autoritstile publice</p>
+        <p style={{ fontSize: '1.2rem', opacity: 0.9, margin: 0 }}>Apararea drepturilor cetatenilor si companiilor in relatia cu autoritatile publice</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {services.map((s, i) => (
@@ -56,8 +56,8 @@ export function DreptAdministrativ() {
         </div>
       </div>
       <div style={{ background: '#4527a0', color: 'white', padding: '2.5rem', borderRadius: '8px', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Contestasi un Act Administrativa</h2>
-        <p style={{ marginBottom: '1.5rem', opacity: 0.9, fontSize: '1.1rem' }}>Nu asteptasi - termenele de contestare sunt scurte. Contactati-ne acum!</p>
+        <h2 style={{ marginBottom: '1rem' }}>Contestati un Act Administrativ?</h2>
+        <p style={{ marginBottom: '1.5rem', opacity: 0.9, fontSize: '1.1rem' }}>Nu asteptati - termenele de contestare sunt scurte. Contactati-ne acum!</p>
         <a href="/contact" style={{ display: 'inline-block', padding: '1rem 2.5rem', background: 'white', color: '#4527a0', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.1rem' }}>Consultatie Gratuita</a>
       </div>
     </div>
