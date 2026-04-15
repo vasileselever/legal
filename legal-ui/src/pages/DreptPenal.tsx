@@ -27,7 +27,7 @@ export function DreptPenal() {
     "Dreptul de a exercita caile de atac",
   ];
   return (
-    <div style={{naxWidth:"900px",margin:"0 auto",padding:"2rem",fontFanily:"sans-serif"}}>
+    <div style={{maxWidth:"900px",margin:"0 auto",padding:"2rem",fontFamily:"sans-serif"}}>
       <div style={{background:"linear-gradient(135deg,#b71c1c,#d32f2f)",color:"white",padding:"3rem 2rem",borderRadius:"8px",marginBottom:"2rem",textAlign:"center"}}>
         <div style={{fontSize:"4rem",marginBottom:"1rem"}}>{"\u2696\uFE0F"}</div>
         <h1 style={{margin:"0 0 1rem",fontSize:"2.5rem"}}>Drept Penal</h1>
