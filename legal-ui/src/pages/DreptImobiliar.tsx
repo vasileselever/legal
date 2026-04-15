@@ -29,10 +29,10 @@ export function DreptImobiliar() {
         "Verificati daca imobilul este in zona protejata",
     ];
     const faqs = [
-        { q: "Ce verificari trebuie sa fac inainte sa cumpar un imobila", a: "Este esential sa verificati Cartea Funciara, titlul de proprietate, existenta sarcinilor (ipoteci, sechestre), situatia fiscala si litigiile pe rol. Un avocat specializat poate efectua toate aceste verificari pentru dumneavoastra." },
-        { q: "Ce este antecontractul de vanzare-cumpararea", a: "Antecontractul (promisiunea de vanzare) este un contract prin care partile se obliga sa incheie contractul definitiv in viitor. Protejeaza cumparatorul (garanteaza pretul si conditiile) si vanzatorul (garanteaza plata)." },
-        { q: "Cat dureaza o tranzactie imobiliaraa", a: "O tranzactie standard dureaza 2-4 saptamani. In cazul imobilelor cu probleme juridice sau cu finantare bancara, procesul poate dura 1-3 luni. Verificarile prealabile pot reduce riscurile si accelera procesul." },
-        { q: "Am nevoie de avocat daca am notara", a: "Da, rolurile sunt diferite. Notarul autentifica actele si verifica identitatea partilor, dar nu reprezinta interesele niciuneia. Avocatul apara exclusiv interesele dumneavoastra si verifica aspecte juridice pe care notarul nu le analizeaza." },
+        { q: "Ce verificari trebuie sa fac inainte sa cumpar un imobil?", a: "Este esential sa verificati Cartea Funciara, titlul de proprietate, existenta sarcinilor (ipoteci, sechestre), situatia fiscala si litigiile pe rol. Un avocat specializat poate efectua toate aceste verificari pentru dumneavoastra." },
+        { q: "Ce este antecontractul de vanzare-cumparare?", a: "Antecontractul (promisiunea de vanzare) este un contract prin care partile se obliga sa incheie contractul definitiv in viitor. Protejeaza cumparatorul (garanteaza pretul si conditiile) si vanzatorul (garanteaza plata)." },
+        { q: "Cat dureaza o tranzactie imobiliara?", a: "O tranzactie standard dureaza 2-4 saptamani. In cazul imobilelor cu probleme juridice sau cu finantare bancara, procesul poate dura 1-3 luni. Verificarile prealabile pot reduce riscurile si accelera procesul." },
+        { q: "Am nevoie de avocat daca am notar?", a: "Da, rolurile sunt diferite. Notarul autentifica actele si verifica identitatea partilor, dar nu reprezinta interesele niciuneia. Avocatul apara exclusiv interesele dumneavoastra si verifica aspecte juridice pe care notarul nu le analizeaza." },
     ];
     return (
         <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem", fontFamily: "sans-serif" }}>

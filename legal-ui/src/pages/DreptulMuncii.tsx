@@ -29,10 +29,10 @@ export function DreptulMuncii() {
     "Protectia maternitate si paternitate",
   ];
   const faqs = [
-    { q: "Pot fi concediat fara motiva", a: "Nu. Orice concediere trebuie sa fie motivata si sa respecte procedura legala: preaviz, decizie scrisa, motivare. O concediere fara motiv sau nemotivata corespunzator poate fi contestata in instanta." },
-    { q: "Cat timp am sa contest o concedierea", a: "Termenul de contestare a deciziei de concediere este de 30 de zile calendaristice de la data comunicarii deciziei. Este esential sa actionati rapid." },
-    { q: "Ce pot obtine daca caatig procesula", a: "Putesi obtine reintegrarea pe post si plata tuturor drepturilor salariale de la data concedierii pana la reintegrare, sau compensatii echivalente daca nu dorisi reintegrarea." },
-    { q: "Angajatorul imi poate reduce salariul unilaterala", a: "Nu. Modificarea salariului necesita acordul dumneavoastra printr-un act aditional la contractul de munca. Orice reducere unilaterala este ilegala si poate fi contestata." },
+    { q: "Pot fi concediat fara motiv?", a: "Nu. Orice concediere trebuie sa fie motivata si sa respecte procedura legala: preaviz, decizie scrisa, motivare. O concediere fara motiv sau nemotivata corespunzator poate fi contestata in instanta." },
+    { q: "Cat timp am sa contest o concediere?", a: "Termenul de contestare a deciziei de concediere este de 30 de zile calendaristice de la data comunicarii deciziei. Este esential sa actionati rapid." },
+    { q: "Ce pot obtine daca castig procesul?", a: "Puteti obtine reintegrarea pe post si plata tuturor drepturilor salariale de la data concedierii pana la reintegrare, sau compensatii echivalente daca nu doriti reintegrarea." },
+    { q: "Angajatorul imi poate reduce salariul unilateral?", a: "Nu. Modificarea salariului necesita acordul dumneavoastra printr-un act aditional la contractul de munca. Orice reducere unilaterala este ilegala si poate fi contestata." },
   ];
   return (
     <div style={{maxWidth:"900px",margin:"0 auto",padding:"2rem",fontFamily:"sans-serif"}}>
@@ -46,7 +46,7 @@ export function DreptulMuncii() {
         <div style={{fontSize:"2rem",flexShrink:0}}>{"\u26A0\uFE0F"}</div>
         <div>
           <h3 style={{color:"#e65100",margin:"0 0 0.5rem"}}>Atentie: Termen de 30 de Zile!</h3>
-          <p style={{color:"#bf360c",margin:0}}>Contestatia concedierii trebuie depusa in <strong>30 de zile</strong> de la primirea deciziei. Nu lasasi sa expire termenul legal. Contactati-ne imediat!</p>
+          <p style={{color:"#bf360c",margin:0}}>Contestatia concedierii trebuie depusa in <strong>30 de zile</strong> de la primirea deciziei. Nu lasati sa expire termenul legal. Contactati-ne imediat!</p>
         </div>
       </div>
 

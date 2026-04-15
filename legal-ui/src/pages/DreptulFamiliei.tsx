@@ -17,10 +17,10 @@ export function DreptulFamiliei() {
     ["4","#9c27b0","Protectia Intereselor","Ne asiguram ca drepturile dumneavoastra si ale copiilor sunt pe deplin protejate."],
   ];
   const faqs = [
-    { q: "Cat dureaza un divorta", a: "Un divort pe cale notariala dureaza aprox. 30 zile. Un divort in instanta dureaza 3-12 luni in functie de complexitate si daca exista copii minori." },
-    { q: "Cine obtine custodia copiluluia", a: "Instantaa decide in functie de interesul superior al copilului. De regula se instituie autoritatea parinteasca comuna, cu stabilirea locuintei la unul dintre parinsi." },
-    { q: "Cum se imparte casa in caz de divorta", a: "Bunurile comune se impart in cote egale (50/50), cu exceptia cazului in care exista o conventie matrimoniala sau se dovedesc contributii diferite." },
-    { q: "Ce se intampla cu pensia alimentarta", a: "Parintele la care nu locuieste copilul plateste pensie de intretinere. Cuantumul este stabilit de instanta, de regula intre 15-25% din venitul net." },
+    { q: "Cat dureaza un divort?", a: "Un divort pe cale notariala dureaza aprox. 30 zile. Un divort in instanta dureaza 3-12 luni in functie de complexitate si daca exista copii minori." },
+    { q: "Cine obtine custodia copilului?", a: "Instantaa decide in functie de interesul superior al copilului. De regula se instituie autoritatea parinteasca comuna, cu stabilirea locuintei la unul dintre parinsi." },
+    { q: "Cum se imparte casa in caz de divort?", a: "Bunurile comune se impart in cote egale (50/50), cu exceptia cazului in care exista o conventie matrimoniala sau se dovedesc contributii diferite." },
+    { q: "Ce se intampla cu pensia alimentara?", a: "Parintele la care nu locuieste copilul plateste pensie de intretinere. Cuantumul este stabilit de instanta, de regula intre 15-25% din venitul net." },
   ];
   return (
     <div style={{maxWidth:"900px",margin:"0 auto",padding:"2rem",fontFamily:"sans-serif"}}>

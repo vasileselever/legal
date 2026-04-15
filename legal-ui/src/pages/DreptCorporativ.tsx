@@ -4,7 +4,7 @@ export function DreptCorporativ() {
     { icon: '', title: 'Guvernanta Corporativa', desc: 'Regulamente interne, hotarari AGA si CA, politici de conformitate si structuri de conducere.' },
     { icon: '', title: 'Fuziuni si Divizari', desc: 'Asistenta juridica completa in operatiiuni de fuziune, divizare si restructurare corporativa.' },
     { icon: '', title: 'Due Diligence', desc: 'Audit juridic al companiilor in vederea tranzactiilor de vanzare-cumparare de actiuni sau active.' },
-    { icon: '', title: 'Contracte intre Asociasi', desc: 'Pacte de actionari, acorduri de tag-along, drag-along si alte mecanisme de protectie a investitorilor.' },
+    { icon: '', title: 'Contracte intre Asociati', desc: 'Pacte de actionari, acorduri de tag-along, drag-along si alte mecanisme de protectie a investitorilor.' },
     { icon: '', title: 'Drept Corporativ International', desc: 'Structuri holding, subsidiare internationale si conformitate cu reglementarile UE.' },
   ];
   const stats = [['50+', 'Companii Constituite'], ['30+', 'Fuziuni Asistate'], ['100%', 'Conformitate'], ['24h', 'Timp Raspuns']];
