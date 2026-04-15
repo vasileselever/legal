@@ -37,7 +37,7 @@ export function DreptPenal() {
       <div style={{background:"#fff3e0",border:"2px solid #f57c00",padding:"1.5rem",borderRadius:"8px",marginBottom:"2rem",display:"flex",gap:"1rem",alignItems:"flex-start"}}>
         <div style={{fontSize:"2rem",flexShrink:0}}>{"\u{1F6A8}"}</div>
         <div>
-          <h3 style={{color:"#e65100",margin:"0 0 0.5rem"}}>Retinere sau Aresta Sunati Imediat!</h3>
+          <h3 style={{color:"#e65100",margin:"0 0 0.5rem"}}>Retinere sau Arestare? Sunati Imediat!</h3>
           <p style={{color:"#bf360c",margin:0}}>In caz de retinere, arest preventiv sau audiere, aveti dreptul la un avocat inainte de orice declaratie. Nu faceti nicio declaratie fara avocat prezent.</p>
         </div>
       </div>
