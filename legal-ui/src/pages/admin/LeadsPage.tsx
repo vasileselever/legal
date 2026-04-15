@@ -152,7 +152,7 @@ export function LeadsPage() {
           )}
         </Card>
       </div>
-      {selected && <LeadDetailModal leadId={selected} onClose={handleCloseDetail} onStatusChanged={() => { load(); refreshUnread(); }} />}
+      {selected && <LeadDetailModal leadId={selected} onClose={handleCloseDetail} onStatusChanged={() => { load().then(refreshUnread); }} />}
       {showCreate && (
         <CreateLeadModal
           onClose={() => setShowCreate(false)}

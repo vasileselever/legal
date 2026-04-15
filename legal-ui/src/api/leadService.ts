@@ -153,11 +153,12 @@ export const leadService = {
     status?: number; name?: string; email?: string; phone?: string;
     practiceArea?: number; urgency?: number; assignedTo?: string;
     description?: string; budgetRange?: string; score?: number;
-  }): Promise<void> => {
+  }): Promise<boolean> => {
     // Strip undefined fields so they are not serialized as null and do not overwrite existing values
     const payload = Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined));
     const { data } = await apiClient.put('/leads/' + id, payload);
     if (!data.success) throw new Error(data.message);
+    return data.data as boolean; // true = saved, false = no changes detected
   },
 
   deleteLead: async (id: string): Promise<void> => {

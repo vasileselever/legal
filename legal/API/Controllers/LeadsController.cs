@@ -416,6 +416,7 @@ public class LeadsController : ControllerBase
             if (dto.Status.HasValue && dto.Status.Value != oldStatus) { lead.Status = dto.Status.Value; changes.Add($"Status: {oldStatus} -> {dto.Status.Value}"); }
 
             // When a lead is marked Lost or Disqualified, cancel all planned consultations
+            // and close any associated cases
             if (dto.Status.HasValue &&
                 (dto.Status.Value == LeadStatus.Lost || dto.Status.Value == LeadStatus.Disqualified))
             {
@@ -437,6 +438,30 @@ public class LeadsController : ControllerBase
                         UserId = userId
                     });
                 }
+
+                // Close active/pending cases linked to the converted client
+                if (lead.ConvertedToClientId.HasValue)
+                {
+                    var activeCases = await _context.Cases
+                        .Where(c => c.ClientId == lead.ConvertedToClientId.Value &&
+                                    c.FirmId == firmId &&
+                                    !c.IsDeleted &&
+                                    (c.Status == CaseStatus.Active || c.Status == CaseStatus.Pending || c.Status == CaseStatus.OnHold))
+                        .ToListAsync();
+
+                    foreach (var activeCase in activeCases)
+                    {
+                        activeCase.Status = CaseStatus.Closed;
+                        activeCase.ClosingDate = DateTime.UtcNow;
+                        _context.LeadActivities.Add(new LeadActivity
+                        {
+                            LeadId = lead.Id,
+                            ActivityType = "CaseClosed",
+                            Description = $"Case {activeCase.CaseNumber} auto-closed: lead marked as {dto.Status.Value}",
+                            UserId = userId
+                        });
+                    }
+                }
             }
             if (dto.PracticeArea.HasValue && dto.PracticeArea.Value != lead.PracticeArea) { lead.PracticeArea = dto.PracticeArea.Value; changes.Add("PracticeArea"); }
             if (!string.IsNullOrWhiteSpace(dto.Description)) { lead.Description = dto.Description; changes.Add("Description"); }
@@ -456,7 +481,12 @@ public class LeadsController : ControllerBase
                     UserId = userId
                 };
                 _context.LeadActivities.Add(activity);
+            }
 
+            // Always call SaveChanges — the Lost/Disqualified block may have modified
+            // consultations and cases even when `changes` only tracks lead-level fields.
+            if (changes.Any() || _context.ChangeTracker.HasChanges())
+            {
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Lead updated: {LeadId}, Changes: {Changes}", id, string.Join(", ", changes));
 

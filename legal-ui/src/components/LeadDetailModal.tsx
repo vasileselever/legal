@@ -123,8 +123,9 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
   const handleStatusChange = async (newStatus: number) => {
     if (!lead) return;
     try {
-      await leadService.updateLead(leadId, { status: newStatus });
-      setLead({ ...lead, status: newStatus });
+      const saved = await leadService.updateLead(leadId, { status: newStatus });
+      if (!saved) { setError('Statusul nu a fost modificat (nicio schimbare detectata).'); return; }
+      await load();
       onStatusChanged();
     } catch (e: any) { setError(e.message); }
   };
