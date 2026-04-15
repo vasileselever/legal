@@ -1,10 +1,10 @@
 export function DreptAdministrativ() {
   const services = [
-    { icon: '', title: 'Contencios Administrativ', desc: 'Contestarea actelor administrative ilegale in fata instantaelor de contencios administrativ.' },
+    { icon: '', title: 'Contencios Administrativ', desc: 'Contestarea actelor administrative ilegale in fata instantelor de contencios administrativ.' },
     { icon: '', title: 'Autorizatii si Avize', desc: 'Asistenta in obtinerea autorizatiilor de construire, avizelor de mediu si altor permise administrative.' },
     { icon: '', title: 'Urbanism si Amenajarea Teritoriului', desc: 'Consultanta in proceduri de urbanism, PUZ, PUD si litigii privind documentatiile de urbanism.' },
     { icon: '', title: 'Achizitii Publice', desc: 'Asistenta in proceduri de licitatie, contestatii CNSC si litigii privind contractele de achizitie publica.' },
-    { icon: '', title: 'Control si Inspectii', desc: 'Reprezentare in fata autoritatilor de control - ANAF, ITM, DSP, ISC - si contestarea sanctiiunilor.' },
+    { icon: '', title: 'Control si Inspectii', desc: 'Reprezentare in fata autoritatilor de control - ANAF, ITM, DSP, ISC - si contestarea sanctiunilor.' },
     { icon: '', title: 'Expropriere si Despagubiri', desc: 'Apararea drepturilor proprietarilor in proceduri de expropriere pentru cauze de utilitate publica.' },
   ];
   const stats = [['200+', 'Acte Contestate'], ['90%', 'Rata Succes'], ['15+', 'Ani Experienta'], ['48h', 'Timp Raspuns']];

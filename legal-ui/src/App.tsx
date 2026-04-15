@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+﻿import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PublicIntakeForm } from './components/PublicIntakeForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -39,17 +39,17 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
         <div className="nav-container">
           <Link to="/" className="nav-brand">LegalRO</Link>
           <div className="nav-links">
-            <Link to="/" className="nav-link">Acasa</Link>
-            <Link to="/servicii/drept-civil" className="nav-link">Civil</Link>
-            <Link to="/servicii/drept-comercial" className="nav-link">Comercial</Link>
-            <Link to="/servicii/drept-penal" className="nav-link">Penal</Link>
-            <Link to="/servicii/dreptul-familiei" className="nav-link">Familie</Link>
-            <Link to="/servicii/drept-imobiliar" className="nav-link">Imobiliar</Link>
-            <Link to="/servicii/dreptul-muncii" className="nav-link">Munca</Link>
-            <Link to="/servicii/drept-corporativ" className="nav-link">Corporativ</Link>
-            <Link to="/servicii/drept-administrativ" className="nav-link">Administrativ</Link>
-            <Link to="/servicii/alte-servicii" className="nav-link">Altele</Link>
-            <Link to="/contact" className="nav-link">Contact</Link>
+            <NavLink to="/" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')} end>Acasa</NavLink>
+            <NavLink to="/servicii/drept-civil" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Civil</NavLink>
+            <NavLink to="/servicii/drept-comercial" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Comercial</NavLink>
+            <NavLink to="/servicii/drept-penal" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Penal</NavLink>
+            <NavLink to="/servicii/dreptul-familiei" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Familie</NavLink>
+            <NavLink to="/servicii/drept-imobiliar" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Imobiliar</NavLink>
+            <NavLink to="/servicii/dreptul-muncii" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Munca</NavLink>
+            <NavLink to="/servicii/drept-corporativ" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Corporativ</NavLink>
+            <NavLink to="/servicii/drept-administrativ" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Administrativ</NavLink>
+            <NavLink to="/servicii/alte-servicii" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Altele</NavLink>
+            <NavLink to="/contact" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>Contact</NavLink>
             <Link to="/admin/login" className="nav-link" style={{ fontWeight:700, color:'#1976d2' }}>🔒 Admin</Link>
           </div>
         </div>

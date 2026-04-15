@@ -1,6 +1,6 @@
 export function DreptCorporativ() {
   const services = [
-    { icon: '', title: 'Constituire Societsti', desc: 'Infiintare SRL, SA, SNC, asociatii si fundatii. Redactarea actelor constitutive si inregistrarea la ONRC.' },
+    { icon: '', title: 'Constituire Societati', desc: 'Infiintare SRL, SA, SNC, asociatii si fundatii. Redactarea actelor constitutive si inregistrarea la ONRC.' },
     { icon: '', title: 'Guvernanta Corporativa', desc: 'Regulamente interne, hotarari AGA si CA, politici de conformitate si structuri de conducere.' },
     { icon: '', title: 'Fuziuni si Divizari', desc: 'Asistenta juridica completa in operatiiuni de fuziune, divizare si restructurare corporativa.' },
     { icon: '', title: 'Due Diligence', desc: 'Audit juridic al companiilor in vederea tranzactiilor de vanzare-cumparare de actiuni sau active.' },

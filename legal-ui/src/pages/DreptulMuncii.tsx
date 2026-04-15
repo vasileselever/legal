@@ -78,13 +78,13 @@ export function DreptulMuncii() {
       <div style={{background:"white",padding:"2rem",borderRadius:"8px",boxShadow:"0 2px 8px rgba(0,0,0,0.1)",marginBottom:"2rem"}}>
         <h2 style={{color:"#333",marginBottom:"1.5rem"}}>Intrebari Frecvente</h2>
         <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
-          {faqs.map((faq,i)=>(<div key={i} style={{padding:"1.25rem",background:"#f9f9f9",borderRadius:"8px",borderLeft:"4px solid #e64a19"}}><h4 style={{color:"#e64a19",margin:"0 0 0.5rem"}}>{"\u2753"} {faq.q}</h4><p style={{color:"#555",margin:0,lineHeight:1.6}}>{faq.a}</p></div>))}
+          {faqs.map((faq,i)=>(<div key={i} style={{padding:"1.25rem",background:"#f9f9f9",borderRadius:"8px",borderLeft:"4px solid #e64a19"}}><h4 style={{color:"#e64a19",margin:"0 0 0.5rem"}}>{"\u{1F4AC}"} {faq.q}</h4><p style={{color:"#555",margin:0,lineHeight:1.6}}>{faq.a}</p></div>))}
         </div>
       </div>
 
       <div style={{background:"#bf360c",color:"white",padding:"2.5rem",borderRadius:"8px",textAlign:"center"}}>
-        <h2 style={{marginBottom:"1rem"}}>Aveti Probleme la Locul de Muncta</h2>
-        <p style={{marginBottom:"1.5rem",opacity:0.9,fontSize:"1.1rem"}}>Nu acceptasi nedreptatea. Cunoasteti-va drepturile si luptasi pentru ele. Prima consultatie este gratuita!</p>
+        <h2 style={{marginBottom:"1rem"}}>Aveti Probleme la Locul de Munca?</h2>
+        <p style={{marginBottom:"1.5rem",opacity:0.9,fontSize:"1.1rem"}}>Nu acceptati nedreptatea. Cunoasteti-va drepturile si luptati pentru ele. Prima consultatie este gratuita!</p>
         <a href="/contact" style={{display:"inline-block",padding:"1rem 2.5rem",background:"white",color:"#bf360c",borderRadius:"4px",textDecoration:"none",fontWeight:"bold",fontSize:"1.1rem"}}>Consultatie Gratuita</a>
       </div>
     </div>

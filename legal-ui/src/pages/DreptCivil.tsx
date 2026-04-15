@@ -2,7 +2,7 @@ export function DreptCivil() {
   const services = [
     { icon: "\u{1F4DC}", title: "Contracte Civile", desc: "Redactare, revizuire si negociere contracte de vanzare-cumparare, donatie, imprumut si alte contracte civile." },
     { icon: "\u{2696}\uFE0F", title: "Litigii Civile", desc: "Reprezentare in instanta in procese civile, actiuni in pretentii si actiuni posesorii." },
-    { icon: "\u{1F4B0}", title: "Recuperare Creantae", desc: "Proceduri de recuperare a creantaelor, somatii de plata si executare silita." },
+    { icon: "\u{1F4B0}", title: "Recuperare Creante", desc: "Proceduri de recuperare a creantelor, somatii de plata si executare silita." },
     { icon: "\u{1F3DB}\uFE0F", title: "Drept Succesoral", desc: "Acceptare mostenire, partaj succesoral, testamente si litigii succesorale." },
     { icon: "\u{1F6E1}\uFE0F", title: "Raspundere Civila", desc: "Actiuni in despagubire pentru prejudicii materiale si morale." },
     { icon: "\u{1F4D1}", title: "Drept Procesual", desc: "Consultanta in proceduri civile, csi de atac si executare hotarari." },
@@ -11,7 +11,7 @@ export function DreptCivil() {
   const steps = [
     ["1","#1976d2","Consultatie Initiala","Discutam cazul dumneavoastra si evaluam situatia juridica in detaliu."],
     ["2","#42a5f5","Strategie Juridica","Stabilim cea mai buna strategie si va informam despre optiunile disponibile."],
-    ["3","#66bb6a","Reprezentare","Va reprezentam in fata instantaelor sau in negocieri cu cealalta parte."],
+    ["3","#66bb6a","Reprezentare","Va reprezentam in fata instantelor sau in negocieri cu cealalta parte."],
     ["4","#4caf50","Solutionare","Obtinem rezultatul dorit si va asistam pana la solutionarea completa a cazului."],
   ];
   return (
@@ -19,7 +19,7 @@ export function DreptCivil() {
       <div style={{background:"linear-gradient(135deg,#1976d2,#42a5f5)",color:"white",padding:"3rem 2rem",borderRadius:"8px",marginBottom:"2rem",textAlign:"center"}}>
         <div style={{fontSize:"4rem",marginBottom:"1rem"}}>{"\u2696\uFE0F"}</div>
         <h1 style={{margin:"0 0 1rem",fontSize:"2.5rem"}}>Drept Civil</h1>
-        <p style={{fontSize:"1.2rem",opacity:0.9,margin:0}}>Asistenta juridica completa in litigii civile, contracte si recuperari de creantae</p>
+        <p style={{fontSize:"1.2rem",opacity:0.9,margin:0}}>Asistenta juridica completa in litigii civile, contracte si recuperari de creante</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:"1.5rem",marginBottom:"2rem"}}>
         {services.map((s,i)=>(<div key={i} style={{background:"white",padding:"1.5rem",borderRadius:"8px",boxShadow:"0 2px 8px rgba(0,0,0,0.1)",borderTop:"4px solid #1976d2"}}><div style={{fontSize:"2.5rem",marginBottom:"0.75rem"}}>{s.icon}</div><h3 style={{color:"#1976d2",marginBottom:"0.5rem"}}>{s.title}</h3><p style={{color:"#666",lineHeight:1.6,margin:0}}>{s.desc}</p></div>))}

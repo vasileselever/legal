@@ -4,7 +4,7 @@ export function DreptImobiliar() {
         { icon: "\u{1F4D1}", title: "Verificare Carte Funciara", desc: "Verificarea situatiei juridice a imobilului, a sarcinilor, ipotecilor si litigiilor existente inainte de cumparare." },
         { icon: "\u{1F3D7}\uFE0F", title: "Contracte Constructii", desc: "Redactare si negociere contracte de antrepriza, subantrepriza si dirigentie de santier. Solutionare litigii constructori." },
         { icon: "\u{1F4DC}", title: "Drept de Superficie si Uzufruct", desc: "Constituire, modificare si stingere drepturi reale: superficie, uzufruct, uz, abitatie si servitute." },
-        { icon: "\u{1F511}", title: "Contracte mnchiriere", desc: "Redactare contracte de inchiriere si comodat, proceduri de evacuare, recuperare garantii si chirii restante." },
+        { icon: "\u{1F511}", title: "Contracte Inchiriere", desc: "Redactare contracte de inchiriere si comodat, proceduri de evacuare, recuperare garantii si chirii restante." },
         { icon: "\u2696\uFE0F", title: "Litigii Imobiliare", desc: "Reprezentare in actiuni de revendicare, granituire, iesire din indiviziune si litigii de vecinatate." },
         { icon: "\u{1F4CA}", title: "Partaje Imobiliare", desc: "Partaj bunuri imobile la divort sau succesiune. Iesire din indiviziune prin buna invoiala sau pe cale judiciara." },
         { icon: "\u{1F50D}", title: "Due Diligence Imobiliar", desc: "Analiza juridica completa a unui imobil inainte de achizitie: titlu, sarcini, litigii, autorizatii, urbanism." },

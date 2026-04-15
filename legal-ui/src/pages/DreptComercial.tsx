@@ -1,9 +1,9 @@
 export function DreptComercial() {
   const services = [
-    { icon: "\u{1F3E2}", title: "Infiintare Societsti", desc: "Asistenta completa la infiintarea SRL, SA, PFA si altor forme juridice. Redactarea actelor constitutive si inregistrarea la ONRC." },
+    { icon: "\u{1F3E2}", title: "Infiintare Societati", desc: "Asistenta completa la infiintarea SRL, SA, PFA si altor forme juridice. Redactarea actelor constitutive si inregistrarea la ONRC." },
     { icon: "\u{1F4DD}", title: "Contracte Comerciale", desc: "Redactare si negociere contracte de distributie, franciza, agentie, furnizare de servicii si parteneriat comercial." },
     { icon: "\u{1F91D}", title: "Fuziuni si Achizitii", desc: "Consultanta juridica in tranzactii M&A, due diligence, negociere si structurare tranzactii de vanzare-cumparare de actiuni sau active." },
-    { icon: "\u{2696}\uFE0F", title: "Litigii Comerciale", desc: "Reprezentare in litigii intre profesionisti, contestatii facturi, litigii contractuale si recuperare creantae comerciale." },
+    { icon: "\u{2696}\uFE0F", title: "Litigii Comerciale", desc: "Reprezentare in litigii intre profesionisti, contestatii facturi, litigii contractuale si recuperare creante comerciale." },
     { icon: "\u{1F6E1}\uFE0F", title: "Protectia Brandului", desc: "Inregistrare marci comerciale, protectia drepturilor de proprietate intelectuala si combaterea concurentei neloiale." },
     { icon: "\u{1F4CB}", title: "Guvernanta Corporativa", desc: "Consultanta privind structurile de conducere, regulamente interne, hotarari AGA si CA, si conformitate corporativa." },
     { icon: "\u{1F4C9}", title: "Insolventa", desc: "Reprezentare in proceduri de insolventa, reorganizare judiciara si faliment, atat pentru creditori cat si pentru debitori." },
@@ -13,7 +13,7 @@ export function DreptComercial() {
   const steps = [
     ["1","#1565c0","Analiza Business","Intelegem structura afacerii si identificam riscurile juridice specifice domeniului dumneavoastra."],
     ["2","#1976d2","Strategie Juridica","Propunem solutii juridice adaptate obiectivelor comerciale ale companiei."],
-    ["3","#42a5f5","Implementare","Redactam documentele necesare si reprezentam compania in negocieri sau in fata autoritstilor."],
+    ["3","#42a5f5","Implementare","Redactam documentele necesare si reprezentam compania in negocieri sau in fata autoritatilor."],
     ["4","#4caf50","Monitorizare","Asiguram conformitatea juridica continua si va informam despre modificarile legislative relevante."],
   ];
   const sectors = ["Retail si E-commerce","IT si Tehnologie","Constructii si Imobiliare","Productie si Industrie","Servicii Financiare","Sanatate si Farmacie","HoReCa","Transport si Logistica"];
