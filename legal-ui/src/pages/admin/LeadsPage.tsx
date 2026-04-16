@@ -26,6 +26,8 @@ export function LeadsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const { refresh: refreshUnread } = useUnreadMessages();
 
+  const CONVERTED_STATUS = 7;
+
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
@@ -34,6 +36,8 @@ export function LeadsPage() {
         search: search || undefined,
         status: statusFilter,
         practiceArea: areaFilter,
+        // When no status filter is active, exclude converted leads (status=7)
+        excludeStatus: statusFilter === undefined ? CONVERTED_STATUS : undefined,
       });
       setLeads(r.data); setTotal(r.pagination?.totalCount ?? 0);
     } catch (e: any) { setError(e.message); }

@@ -129,6 +129,7 @@ export const leadService = {
     status?: number; source?: number; practiceArea?: number;
     assignedTo?: string; minScore?: number; search?: string;
     page?: number; pageSize?: number; unreadOnly?: boolean;
+    excludeStatus?: number;
   }) => {
     const { data } = await apiClient.get('/leads', { params });
     return {

@@ -58,6 +58,7 @@ public class LeadsController : ControllerBase
         [FromQuery] int? minScore = null,
         [FromQuery] string? search = null,
         [FromQuery] bool unreadOnly = false,
+        [FromQuery] LeadStatus? excludeStatus = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
@@ -85,6 +86,8 @@ public class LeadsController : ControllerBase
                     l.Description.Contains(search));
             if (unreadOnly)
                 query = query.Where(l => l.Conversations.Any(c => !c.IsRead && c.IsFromLead));
+            if (excludeStatus.HasValue)
+                query = query.Where(l => l.Status != excludeStatus.Value);
 
             // Get total count for pagination
             var totalCount = await query.CountAsync();

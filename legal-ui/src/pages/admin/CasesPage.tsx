@@ -87,17 +87,32 @@ const sectionTitle: React.CSSProperties = {
 };
 
 // ?? Case Detail Modal ?????????????????????????????????????????????????
-function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
+function CaseDetailModal({ id, onClose, onStatusChanged }: { id: string; onClose: () => void; onStatusChanged?: () => void }) {
   const [data, setData] = useState<CaseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     apiClient.get(`/v1/cases/${id}`)
       .then(r => setData(r.data))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  useEffect(() => { load(); }, [id]);
+
+  const handleStatusChange = async (newStatus: number) => {
+    if (!data || saving) return;
+    setSaving(true); setError('');
+    try {
+      await apiClient.patch(`/v1/cases/${id}/status`, { status: newStatus });
+      await load();
+      onStatusChanged?.();
+    } catch (e: any) { setError(e.message || 'Eroare la schimbarea statusului'); }
+    finally { setSaving(false); }
+  };
 
   return (
     <div className="lro-overlay" style={overlayStyle} onClick={onClose}>
@@ -115,11 +130,23 @@ function CaseDetailModal({ id, onClose }: { id: string; onClose: () => void }) {
 
         {data && (
           <>
-            {/* Status + badges row */}
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-              <span style={badgeStyle(CASE_STATUS_COLORS[data.status] ?? '#999')}>
-                {CASE_STATUS[data.status] ?? '-'}
-              </span>
+            {/* Status change buttons */}
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <span style={{ fontSize: '0.78rem', color: '#777', marginRight: '0.25rem' }}>Status:</span>
+              {Object.entries(CASE_STATUS).map(([k, label]) => {
+                const s = Number(k);
+                const isActive = data.status === s;
+                return (
+                  <button key={s} disabled={saving || isActive} onClick={() => handleStatusChange(s)} style={{
+                    padding: '0.22rem 0.75rem', borderRadius: '12px', cursor: isActive ? 'default' : 'pointer',
+                    fontSize: '0.76rem', fontWeight: isActive ? 700 : 400,
+                    border: '1px solid ' + (CASE_STATUS_COLORS[s] ?? '#999'),
+                    background: isActive ? (CASE_STATUS_COLORS[s] ?? '#999') : 'white',
+                    color: isActive ? 'white' : (CASE_STATUS_COLORS[s] ?? '#999'),
+                    opacity: saving && !isActive ? 0.5 : 1,
+                  }}>{label}</button>
+                );
+              })}
               <span style={badgeStyle('#5c6bc0')}>{PRACTICE_AREA[data.practiceArea] ?? '-'}</span>
               <span style={badgeStyle('#00838f')}>{CASE_TYPE[data.caseType] ?? '-'}</span>
               {data.billingArrangement && (
@@ -533,7 +560,7 @@ export function CasesPage() {
         )}
       </div>
 
-      {selectedId && <CaseDetailModal id={selectedId} onClose={() => setSelectedId(null)} />}
+      {selectedId && <CaseDetailModal id={selectedId} onClose={() => { setSelectedId(null); load(); }} onStatusChanged={load} />}
       {showCreate && (
         <CreateCaseModal
           onClose={() => { setShowCreate(false); setCreatePrefill(null); }}

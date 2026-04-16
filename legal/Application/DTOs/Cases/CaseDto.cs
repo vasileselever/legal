@@ -36,6 +36,11 @@ public class UpdateCaseRequest
     public BillingArrangement? BillingArrangement { get; set; }
 }
 
+public class PatchCaseStatusRequest
+{
+    public CaseStatus Status { get; set; }
+}
+
 /// <summary>
 /// DTO for case response
 /// </summary>

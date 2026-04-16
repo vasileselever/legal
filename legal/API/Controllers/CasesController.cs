@@ -326,6 +326,43 @@ public class CasesController : ControllerBase
     }
 
     /// <summary>
+    /// Update only the status of a case
+    /// </summary>
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> PatchCaseStatus(Guid id, [FromBody] PatchCaseStatusRequest request)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
+
+        var caseEntity = await _context.Cases
+            .Where(c => c.Id == id && c.FirmId == firmId)
+            .FirstOrDefaultAsync();
+
+        if (caseEntity == null)
+            return NotFound(new ApiError { Code = "NOT_FOUND", Message = "Case not found" });
+
+        var oldStatus = caseEntity.Status;
+        caseEntity.Status = request.Status;
+        caseEntity.UpdatedBy = userId.ToString();
+
+        if (request.Status == CaseStatus.Closed && !caseEntity.ClosingDate.HasValue)
+            caseEntity.ClosingDate = DateTime.UtcNow;
+
+        _context.Activities.Add(new Activity
+        {
+            CaseId = caseEntity.Id,
+            UserId = userId,
+            ActivityType = "StatusChanged",
+            Description = $"Status changed from {oldStatus} to {request.Status}"
+        });
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Case {CaseId} status changed from {Old} to {New} by {UserId}", id, oldStatus, request.Status, userId);
+
+        return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Status updated" });
+    }
+
+    /// <summary>
     /// Delete a case (soft delete)
     /// </summary>
     [HttpDelete("{id}")]
