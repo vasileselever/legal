@@ -130,6 +130,29 @@ IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '2026
 
 IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260408081554_AddLeadFiscalFields')
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20260408081554_AddLeadFiscalFields', '8.0.0');
+
+-- 8. LeadDocuments.GeneratedDocumentId (for attaching generated docs to leads)
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='LeadDocuments' AND COLUMN_NAME='GeneratedDocumentId')
+BEGIN
+    ALTER TABLE [legal].[LeadDocuments] ADD [GeneratedDocumentId] uniqueidentifier NULL;
+    PRINT 'Added LeadDocuments.GeneratedDocumentId';
+END
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_LeadDocuments_GeneratedDocumentId' AND object_id = OBJECT_ID('legal.LeadDocuments'))
+BEGIN
+    CREATE INDEX [IX_LeadDocuments_GeneratedDocumentId] ON [legal].[LeadDocuments] ([GeneratedDocumentId]);
+    PRINT 'Created IX_LeadDocuments_GeneratedDocumentId';
+END
+IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260404104103_AddGeneratedDocumentIdToLeadDocument')
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20260404104103_AddGeneratedDocumentIdToLeadDocument', '8.0.0');
+
+-- 9. Documents.GeneratedDocumentId (for attaching generated docs to cases/dosare)
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='legal' AND TABLE_NAME='Documents' AND COLUMN_NAME='GeneratedDocumentId')
+BEGIN
+    ALTER TABLE [legal].[Documents] ADD [GeneratedDocumentId] uniqueidentifier NULL;
+    PRINT 'Added Documents.GeneratedDocumentId';
+END
+IF NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = '20260421134404_AddGeneratedDocumentIdToDocument')
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ('20260421134404_AddGeneratedDocumentIdToDocument', '8.0.0');
 "
 
 echo -e "${GREEN}? DB hotfix complete.${NC}"
