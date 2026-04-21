@@ -23,15 +23,15 @@ public class EmailNotificationService
         _logger = logger;
     }
 
-    public async Task SendEmailAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct = default)
+    public async Task SendEmailAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct = default, (string fileName, byte[] data)? attachment = null)
     {
         if (_settings.Smtp is { IsEnabled: true })
         {
-            await SendViaSmtpAsync(toEmail, toName, subject, htmlBody, ct);
+            await SendViaSmtpAsync(toEmail, toName, subject, htmlBody, ct, attachment);
         }
         else if (_settings.SendGrid.IsEnabled)
         {
-            await SendViaSendGridAsync(toEmail, toName, subject, htmlBody, ct);
+            await SendViaSendGridAsync(toEmail, toName, subject, htmlBody, ct, attachment);
         }
         else
         {
@@ -39,7 +39,7 @@ public class EmailNotificationService
         }
     }
 
-    private async Task SendViaSmtpAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct)
+    private async Task SendViaSmtpAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct, (string fileName, byte[] data)? attachment = null)
     {
         try
         {
@@ -47,7 +47,26 @@ public class EmailNotificationService
             message.From.Add(new MailboxAddress(_settings.FirmName, _settings.FirmEmail));
             message.To.Add(new MailboxAddress(toName, toEmail));
             message.Subject = subject;
-            message.Body = new TextPart("html") { Text = htmlBody };
+
+            var bodyPart = new TextPart("html") { Text = htmlBody };
+            if (attachment is { } att)
+            {
+                var multipart = new MimeKit.Multipart("mixed");
+                multipart.Add(bodyPart);
+                var attPart = new MimeKit.MimePart("application", "pdf")
+                {
+                    Content = new MimeKit.MimeContent(new MemoryStream(att.data)),
+                    ContentDisposition = new MimeKit.ContentDisposition(MimeKit.ContentDisposition.Attachment),
+                    ContentTransferEncoding = MimeKit.ContentEncoding.Base64,
+                    FileName = att.fileName
+                };
+                multipart.Add(attPart);
+                message.Body = multipart;
+            }
+            else
+            {
+                message.Body = bodyPart;
+            }
 
             using var client = new SmtpClient();
             await client.ConnectAsync(_settings.Smtp!.Host, _settings.Smtp.Port,
@@ -74,7 +93,7 @@ public class EmailNotificationService
         }
     }
 
-    private async Task SendViaSendGridAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct)
+    private async Task SendViaSendGridAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct, (string fileName, byte[] data)? attachment = null)
     {
         try
         {
@@ -82,6 +101,8 @@ public class EmailNotificationService
             var from = new EmailAddress(_settings.SendGrid.FromEmail, _settings.SendGrid.FromName);
             var to = new EmailAddress(toEmail, toName);
             var msg = MailHelper.CreateSingleEmail(from, to, subject, null, htmlBody);
+            if (attachment is { } att)
+                msg.AddAttachment(att.fileName, Convert.ToBase64String(att.data), "application/pdf");
 
             var response = await client.SendEmailAsync(msg, ct);
 
@@ -395,6 +416,105 @@ public class EmailNotificationService
             """;
 
         await SendEmailAsync(lawyerEmail, lawyerName, subject, html, ct);
+    }
+
+    public async Task SendInvoiceEmailAsync(
+        string toEmail, string toName, string invoiceNumber, DateTime invoiceDate, DateTime dueDate,
+        decimal totalAmount, string currency, byte[]? pdfAttachment = null, CancellationToken ct = default)
+    {
+        var subject = $"🧾 Factura {invoiceNumber} — {_settings.FirmName}";
+        var year = DateTime.UtcNow.Year;
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="ro">
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Factura {System.Net.WebUtility.HtmlEncode(invoiceNumber)}</title></head>
+            <body style="margin:0;padding:0;background:#f4f6fb;font-family:Arial,Helvetica,sans-serif">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:32px 0">
+                <tr><td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+                    <tr>
+                      <td style="background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);padding:36px 40px;text-align:center">
+                        <div style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:1px">⚖️ {_settings.FirmName}</div>
+                        <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;letter-spacing:0.5px">Servicii juridice profesionale</div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background:#e8f5e9;padding:18px 40px;text-align:center;border-bottom:1px solid #c8e6c9">
+                        <span style="display:inline-block;background:#2e7d32;color:white;font-size:13px;font-weight:700;padding:6px 20px;border-radius:20px;letter-spacing:0.5px">
+                          🧾 FACTURA EMISA
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:36px 40px 0">
+                        <p style="font-size:18px;font-weight:700;color:#1a237e;margin:0 0 12px">Buna ziua, {System.Net.WebUtility.HtmlEncode(toName)},</p>
+                        <p style="font-size:15px;color:#444;line-height:1.7;margin:0">
+                          Va transmitem factura fiscala emisa de catre <strong>{_settings.FirmName}</strong>.
+                          Va rugam sa efectuati plata pana la data scadentei.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:24px 40px">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ff;border-radius:8px;border:1px solid #c5cae9;overflow:hidden">
+                          <tr>
+                            <td style="padding:16px 20px;border-bottom:1px solid #c5cae9;background:#e8eaf6">
+                              <span style="font-size:11px;font-weight:700;color:#1a237e;text-transform:uppercase;letter-spacing:1px">Detalii factura</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:16px 20px">
+                              <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td style="font-size:13px;color:#666;padding:4px 0;width:160px">Numar factura:</td>
+                                  <td style="font-size:14px;color:#1a237e;font-weight:800;padding:4px 0">{System.Net.WebUtility.HtmlEncode(invoiceNumber)}</td>
+                                </tr>
+                                <tr>
+                                  <td style="font-size:13px;color:#666;padding:4px 0">Data emiterii:</td>
+                                  <td style="font-size:13px;color:#333;font-weight:600;padding:4px 0">{invoiceDate.ToString("dd MMMM yyyy", _ro)}</td>
+                                </tr>
+                                <tr>
+                                  <td style="font-size:13px;color:#666;padding:4px 0">Data scadentei:</td>
+                                  <td style="font-size:13px;color:#c62828;font-weight:700;padding:4px 0">{dueDate.ToString("dd MMMM yyyy", _ro)}</td>
+                                </tr>
+                                <tr>
+                                  <td style="font-size:13px;color:#666;padding:4px 0">Total de plata:</td>
+                                  <td style="font-size:15px;color:#1a237e;font-weight:800;padding:4px 0">{totalAmount.ToString("N2")} {System.Net.WebUtility.HtmlEncode(currency)}</td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0 40px 24px">
+                        <div style="padding:16px 20px;background:#fff8e1;border-radius:8px;border-left:4px solid #f57c00">
+                          <p style="font-size:13px;color:#555;margin:0;font-weight:600">📬 Intrebari despre factura?</p>
+                          <p style="font-size:13px;color:#666;margin:6px 0 0;line-height:1.6">
+                            Ne puteti contacta la 📧 <a href="mailto:{_settings.FirmEmail}" style="color:#1a237e;text-decoration:none;font-weight:600">{_settings.FirmEmail}</a>
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background:#1a237e;padding:20px 40px;text-align:center">
+                        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin:0">
+                          © {year} {_settings.FirmName}. Toate drepturile rezervate.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+            """;
+
+        var attachment = pdfAttachment is { Length: > 0 }
+            ? ($"Factura_{invoiceNumber}.pdf", pdfAttachment)
+            : ((string, byte[])?)null;
+        await SendEmailAsync(toEmail, toName, subject, html, ct, attachment);
     }
 
     public async Task SendLeadMessageEmailAsync(

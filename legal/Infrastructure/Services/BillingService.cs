@@ -6,6 +6,8 @@ using LegalRO.CaseManagement.Domain.Enums;
 using LegalRO.CaseManagement.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 
 namespace LegalRO.CaseManagement.Infrastructure.Services;
 
@@ -13,11 +15,13 @@ public class BillingService : IBillingService
 {
     private readonly ApplicationDbContext _db;
     private readonly ILogger<BillingService> _logger;
+    private readonly EmailNotificationService _email;
 
-    public BillingService(ApplicationDbContext db, ILogger<BillingService> logger)
+    public BillingService(ApplicationDbContext db, ILogger<BillingService> logger, EmailNotificationService email)
     {
         _db = db;
         _logger = logger;
+        _email = email;
     }
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -521,7 +525,9 @@ public class BillingService : IBillingService
 
     public async Task<InvoiceDto> SendInvoiceAsync(Guid firmId, Guid userId, Guid id)
     {
-        var inv = await _db.Invoices.FirstOrDefaultAsync(i => i.Id == id && i.FirmId == firmId)
+        var inv = await _db.Invoices
+            .Include(i => i.Client)
+            .FirstOrDefaultAsync(i => i.Id == id && i.FirmId == firmId)
             ?? throw new KeyNotFoundException("Invoice not found");
 
         if (inv.Status != InvoiceStatus.Draft)
@@ -533,6 +539,42 @@ public class BillingService : IBillingService
         await _db.SaveChangesAsync();
 
         _logger.LogInformation("Invoice {Number} sent by {UserId}", inv.InvoiceNumber, userId);
+
+        if (inv.Client is not null && !string.IsNullOrWhiteSpace(inv.Client.Email))
+        {
+            try
+            {
+                // Generate invoice PDF
+                byte[]? pdfBytes = null;
+                try
+                {
+                    await _db.Entry(inv).Reference(i => i.Firm).LoadAsync();
+                    await _db.Entry(inv).Collection(i => i.LineItems).LoadAsync();
+                    QuestPDF.Settings.License = LicenseType.Community;
+                    var pdfDoc = new InvoicePdfDocument(inv, inv.Firm);
+                    pdfBytes = pdfDoc.GeneratePdf();
+                }
+                catch (Exception pdfEx)
+                {
+                    _logger.LogWarning(pdfEx, "PDF generation failed for invoice {Number}; sending email without attachment", inv.InvoiceNumber);
+                }
+
+                await _email.SendInvoiceEmailAsync(
+                    inv.Client.Email,
+                    inv.Client.Name,
+                    inv.InvoiceNumber,
+                    inv.InvoiceDate,
+                    inv.DueDate,
+                    inv.TotalAmount,
+                    inv.Currency.ToString(),
+                    pdfBytes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send invoice email for {Number} to {Email}", inv.InvoiceNumber, inv.Client.Email);
+            }
+        }
+
         return await GetInvoiceAsync(firmId, id);
     }
 
