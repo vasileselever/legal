@@ -11,12 +11,15 @@ import {
   getTemplates, getTemplate, getSessions, getSession, startSession, submitAnswers,
   generateDocument, getGeneratedDocuments, getGeneratedDocument, runQualityCheck,
   getClauses, getDocAutomationStats, abandonSession, deleteGeneratedDocument,
-  createTemplate, updateTemplate, deleteTemplate, saveGeneratedToLead,
+  createTemplate, updateTemplate, deleteTemplate, saveGeneratedToLead, saveGeneratedToCase,
   DOCUMENT_CATEGORIES, PRACTICE_AREAS, FIELD_TYPES, RISK_LEVELS,
   SESSION_STATUSES, LANGUAGES,
 } from '../../api/documentAutomationService';
 import { leadService } from '../../api/leadService';
 import type { LeadItem } from '../../api/leadService';
+import { apiClient } from '../../api/apiClient';
+
+interface CasePickerItem { id: string; caseNumber: string; title: string; clientName: string; }
 
 // ── Shared styles ────────────────────────────────────────────────────
 
@@ -500,6 +503,10 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [leadsSearch, setLeadsSearch] = useState('');
+  const [showCasePicker, setShowCasePicker] = useState(false);
+  const [cases, setCases] = useState<CasePickerItem[]>([]);
+  const [casesLoading, setCasesLoading] = useState(false);
+  const [casesSearch, setCasesSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState('');
   const [saveError, setSaveError] = useState('');
@@ -515,6 +522,19 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
     setLeadsLoading(false);
   };
 
+  const openCasePicker = async () => {
+    setShowCasePicker(true);
+    setCasesLoading(true);
+    setSaveSuccess(''); setSaveError('');
+    try {
+      const { data } = await apiClient.get('/v1/cases', { params: { pageSize: 100 } });
+      setCases((data.data ?? []).map((c: any) => ({
+        id: c.id, caseNumber: c.caseNumber, title: c.title, clientName: c.clientName,
+      })));
+    } catch (e: any) { setSaveError(e.message); }
+    setCasesLoading(false);
+  };
+
   const handleSaveToLead = async (leadId: string, leadName: string) => {
     setSaving(true); setSaveError('');
     try {
@@ -525,10 +545,27 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
     setSaving(false);
   };
 
+  const handleSaveToCase = async (caseId: string, caseLabel: string) => {
+    setSaving(true); setSaveError('');
+    try {
+      await saveGeneratedToCase(caseId, doc.id);
+      setSaveSuccess(`Document atașat cu succes la dosarul „${caseLabel}"`);
+      setShowCasePicker(false);
+    } catch (e: any) { setSaveError(e.message); }
+    setSaving(false);
+  };
+
   const filteredLeads = leads.filter(l =>
     l.name.toLowerCase().includes(leadsSearch.toLowerCase()) ||
     l.email.toLowerCase().includes(leadsSearch.toLowerCase())
   );
+
+  const filteredCases = cases.filter(c => {
+    const q = casesSearch.toLowerCase();
+    return c.title.toLowerCase().includes(q) ||
+      c.caseNumber.toLowerCase().includes(q) ||
+      (c.clientName ?? '').toLowerCase().includes(q);
+  });
 
   const handleQa = async () => {
     setRunningQa(true);
@@ -563,6 +600,7 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
                 if (w) { w.document.write(showEn && doc.contentHtmlEn ? doc.contentHtmlEn : doc.contentHtml); w.document.close(); w.print(); }
               }} style={btn('#00796b')}>🖨 Printează</button>
               <button onClick={openLeadPicker} style={btn('#e65100')}>📎 Salvează la Lead</button>
+              <button onClick={openCasePicker} style={btn('#1565c0')}>📁 Salvează la Dosar</button>
             </div>
           </div>
 
@@ -634,6 +672,58 @@ function GeneratedDocumentView({ doc, onBack }: { doc: GeneratedDocumentDetail; 
                           <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1a237e' }}>{l.name}</div>
                           <div style={{ fontSize: '0.78rem', color: '#888', marginTop: '0.15rem' }}>
                             {l.email} · {PRACTICE_AREAS[l.practiceArea] ?? ''}
+                          </div>
+                        </div>
+                      ))
+                  }
+                </div>
+                {saving && (
+                  <div style={{ textAlign: 'center', padding: '0.75rem', color: '#666', fontSize: '0.85rem' }}>
+                    ⏳ Se atașează documentul...
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Case picker modal */}
+          {showCasePicker && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000,
+              display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={e => { if (e.target === e.currentTarget) setShowCasePicker(false); }}>
+              <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem',
+                width: '100%', maxWidth: '520px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ margin: 0, color: '#1a237e' }}>📁 Alege Dosarul</h3>
+                  <button onClick={() => setShowCasePicker(false)}
+                    style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#666' }}>×</button>
+                </div>
+                <input
+                  placeholder="Caută după titlu, număr sau client..."
+                  value={casesSearch}
+                  onChange={e => setCasesSearch(e.target.value)}
+                  style={{ ...inputStyle, marginBottom: '0.75rem' }}
+                  autoFocus
+                />
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  {casesLoading
+                    ? <div style={{ textAlign: 'center', padding: '1rem' }}><Spinner /></div>
+                    : filteredCases.length === 0
+                      ? <div style={{ textAlign: 'center', color: '#aaa', padding: '1.5rem' }}>Niciun dosar găsit.</div>
+                      : filteredCases.map(c => (
+                        <div key={c.id}
+                          onClick={() => !saving && handleSaveToCase(c.id, `${c.caseNumber} – ${c.title}`)}
+                          style={{ padding: '0.75rem 1rem', borderRadius: '8px',
+                            cursor: saving ? 'not-allowed' : 'pointer', marginBottom: '0.4rem',
+                            border: '1px solid #e8eaf6', background: 'white', opacity: saving ? 0.6 : 1 }}
+                          onMouseEnter={e => { if (!saving) (e.currentTarget as HTMLDivElement).style.background = '#f0f4ff'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'white'; }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1a237e' }}>
+                            {c.caseNumber} – {c.title}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: '#888', marginTop: '0.15rem' }}>
+                            {c.clientName}
                           </div>
                         </div>
                       ))
@@ -778,6 +868,7 @@ function DocumentsPanel() {
                 <th style={{ padding: '0.6rem' }}>Versiune</th>
                 <th style={{ padding: '0.6rem' }}>Lizibilitate</th>
                 <th style={{ padding: '0.6rem' }}>Atașat la Lead</th>
+                <th style={{ padding: '0.6rem' }}>Atașat la Dosar</th>
                 <th style={{ padding: '0.6rem' }}>Creat</th>
                 <th style={{ padding: '0.6rem' }}>Acțiuni</th>
               </tr>
@@ -802,6 +893,23 @@ function DocumentsPanel() {
                               border: '1px solid #ffcc80',
                             }}>
                               📎 {l.leadName}
+                            </span>
+                          ))}
+                        </div>
+                    }
+                  </td>
+                  <td style={{ padding: '0.6rem' }}>
+                    {(!d.linkedCases || d.linkedCases.length === 0)
+                      ? <span style={{ color: '#bbb', fontSize: '0.8rem' }}>—</span>
+                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                          {d.linkedCases.map(c => (
+                            <span key={c.caseId} title={c.caseId} style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                              padding: '0.2rem 0.55rem', borderRadius: '12px', fontSize: '0.75rem',
+                              fontWeight: 600, background: '#e3f2fd', color: '#1565c0',
+                              border: '1px solid #90caf9',
+                            }}>
+                              📁 {c.caseNumber} – {c.caseTitle}
                             </span>
                           ))}
                         </div>

@@ -33,6 +33,12 @@ public class Document : BaseEntity
     /// </summary>
     public int Version { get; set; } = 1;
     public Guid? ParentDocumentId { get; set; }
+
+    /// <summary>
+    /// Set when this document was produced by Document Automation.
+    /// Used to show the "Atasat la Dosar" indicator in the Documents list.
+    /// </summary>
+    public Guid? GeneratedDocumentId { get; set; }
     
     // Navigation properties
     public Case Case { get; set; } = null!;

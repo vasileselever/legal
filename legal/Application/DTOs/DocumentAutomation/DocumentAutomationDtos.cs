@@ -287,12 +287,22 @@ public class GeneratedDocumentListDto
 
     /// <summary>Leads this document has been saved to (name + id pairs).</summary>
     public List<LinkedLeadDto> LinkedLeads { get; set; } = new();
+
+    /// <summary>Cases (dosare) this document has been saved to (name + id pairs).</summary>
+    public List<LinkedCaseDto> LinkedCases { get; set; } = new();
 }
 
 public class LinkedLeadDto
 {
     public Guid LeadId { get; set; }
     public string LeadName { get; set; } = string.Empty;
+}
+
+public class LinkedCaseDto
+{
+    public Guid CaseId { get; set; }
+    public string CaseTitle { get; set; } = string.Empty;
+    public string CaseNumber { get; set; } = string.Empty;
 }
 
 public class GeneratedDocumentDetailDto

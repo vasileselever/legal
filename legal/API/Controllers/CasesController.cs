@@ -18,11 +18,15 @@ public class CasesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<CasesController> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public CasesController(ApplicationDbContext context, ILogger<CasesController> logger)
+    private string UploadsRoot => Path.Combine(_env.ContentRootPath, "uploads");
+
+    public CasesController(ApplicationDbContext context, ILogger<CasesController> logger, IWebHostEnvironment env)
     {
         _context = context;
         _logger = logger;
+        _env = env;
     }
 
     /// <summary>
@@ -139,13 +143,22 @@ public class CasesController : ControllerBase
             .Include(c => c.ResponsibleLawyer)
             .Include(c => c.AssignedUsers)
                 .ThenInclude(cu => cu.User)
-            .Include(c => c.Documents)
-            .Include(c => c.Tasks)
-            .Include(c => c.Deadlines)
             .FirstOrDefaultAsync();
 
         if (caseEntity == null)
             return NotFound(new ApiError { Code = "NOT_FOUND", Message = "Case not found" });
+
+        var documentCount = await _context.Documents
+            .CountAsync(d => d.CaseId == id && !d.IsDeleted);
+
+        var openTaskCount = await _context.Tasks
+            .CountAsync(t => t.CaseId == id && !t.IsDeleted && t.Status != TaskStatusEnum.Completed);
+
+        var nextDeadline = await _context.Deadlines
+            .Where(d => d.CaseId == id && !d.IsDeleted && !d.IsCompleted && d.DueDate >= DateTime.UtcNow)
+            .OrderBy(d => d.DueDate)
+            .Select(d => (DateTime?)d.DueDate)
+            .FirstOrDefaultAsync();
 
         var response = new CaseResponse
         {
@@ -187,13 +200,9 @@ public class CasesController : ControllerBase
                 Email = cu.User.Email,
                 Role = cu.User.Role
             }).ToList(),
-            DocumentCount = caseEntity.Documents.Count,
-            OpenTaskCount = caseEntity.Tasks.Count(t => t.Status != TaskStatusEnum.Completed),
-            NextDeadline = caseEntity.Deadlines
-                .Where(d => !d.IsCompleted && d.DueDate >= DateTime.UtcNow)
-                .OrderBy(d => d.DueDate)
-                .Select(d => (DateTime?)d.DueDate)
-                .FirstOrDefault(),
+            DocumentCount = documentCount,
+            OpenTaskCount = openTaskCount,
+            NextDeadline = nextDeadline,
             CreatedAt = caseEntity.CreatedAt,
             UpdatedAt = caseEntity.UpdatedAt
         };
@@ -262,10 +271,109 @@ public class CasesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        // Copy any documents attached to leads that were converted into this client
+        // so the new dosar starts with the intake documents already attached.
+        await CopyLeadDocumentsToCaseAsync(newCase, userId, request.LeadId);
+
         _logger.LogInformation("Case {CaseNumber} created by user {UserId}", newCase.CaseNumber, userId);
 
         // Fetch the complete case to return
         return await GetCase(newCase.Id);
+    }
+
+    /// <summary>
+    /// Copy every LeadDocument belonging to leads related to the new case's client into the Documents table.
+    /// Matching priority:
+    ///   1. Explicit <paramref name="leadId"/> passed from the UI (most reliable).
+    ///   2. Any lead whose <c>ConvertedToClientId</c> points to the case's client.
+    ///   3. As a last resort, any lead sharing the client's email or phone.
+    /// Files are physically copied into <c>uploads/cases/{caseId}</c>.
+    /// </summary>
+    private async Task CopyLeadDocumentsToCaseAsync(Case newCase, Guid userId, Guid? leadId)
+    {
+        // Resolve the set of candidate leadIds.
+        var leadIds = new HashSet<Guid>();
+
+        if (leadId.HasValue)
+        {
+            var explicitExists = await _context.Leads
+                .AnyAsync(l => l.Id == leadId.Value && l.FirmId == newCase.FirmId);
+            if (explicitExists) leadIds.Add(leadId.Value);
+        }
+
+        var convertedLeadIds = await _context.Leads
+            .Where(l => l.FirmId == newCase.FirmId && l.ConvertedToClientId == newCase.ClientId)
+            .Select(l => l.Id)
+            .ToListAsync();
+        foreach (var id in convertedLeadIds) leadIds.Add(id);
+
+        if (leadIds.Count == 0)
+        {
+            // Fallback: match by email / phone on the client.
+            var client = await _context.Clients
+                .Where(c => c.Id == newCase.ClientId && c.FirmId == newCase.FirmId)
+                .Select(c => new { c.Email, c.Phone })
+                .FirstOrDefaultAsync();
+
+            if (client != null)
+            {
+                var matched = await _context.Leads
+                    .Where(l => l.FirmId == newCase.FirmId
+                             && ((client.Email != null && l.Email == client.Email)
+                              || (client.Phone != null && l.Phone == client.Phone)))
+                    .Select(l => l.Id)
+                    .ToListAsync();
+                foreach (var id in matched) leadIds.Add(id);
+            }
+        }
+
+        if (leadIds.Count == 0) return;
+
+        var leadDocs = await _context.LeadDocuments
+            .Where(ld => leadIds.Contains(ld.LeadId))
+            .ToListAsync();
+
+        if (leadDocs.Count == 0) return;
+
+        var caseUploadsDir = Path.Combine(UploadsRoot, "cases", newCase.Id.ToString());
+        Directory.CreateDirectory(caseUploadsDir);
+
+        foreach (var ld in leadDocs)
+        {
+            string copiedPath = ld.FilePath;
+            try
+            {
+                if (System.IO.File.Exists(ld.FilePath))
+                {
+                    var destName = $"{Guid.NewGuid()}_{Path.GetFileName(ld.FilePath)}";
+                    copiedPath = Path.Combine(caseUploadsDir, destName);
+                    System.IO.File.Copy(ld.FilePath, copiedPath, overwrite: false);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not copy lead document file {Path} to case {CaseId}", ld.FilePath, newCase.Id);
+            }
+
+            _context.Documents.Add(new Document
+            {
+                CaseId = newCase.Id,
+                UploadedBy = userId,
+                FileName = ld.FileName,
+                FilePath = copiedPath,
+                FileSize = ld.FileSize,
+                MimeType = ld.FileType,
+                Title = ld.FileName,
+                Description = ld.Description ?? "Document preluat de la lead",
+                Category = "FromLead",
+                GeneratedDocumentId = ld.GeneratedDocumentId,
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation(
+            "Copied {Count} lead document(s) from {LeadCount} lead(s) to case {CaseId}",
+            leadDocs.Count, leadIds.Count, newCase.Id);
     }
 
     /// <summary>
@@ -386,5 +494,72 @@ public class CasesController : ControllerBase
         _logger.LogInformation("Case {CaseNumber} deleted by user {UserId}", caseEntity.CaseNumber, userId);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Save a generated document (from Document Automation) as an attachment on a case.
+    /// </summary>
+    [HttpPost("{id}/documents/from-generated/{generatedDocId}")]
+    public async Task<ActionResult<ApiResponse<CaseDocumentDto>>> AttachGeneratedDocument(
+        Guid id, Guid generatedDocId)
+    {
+        var firmId = ClaimsHelper.GetFirmId(User);
+        var userId = ClaimsHelper.GetUserId(User);
+
+        var caseEntity = await _context.Cases
+            .FirstOrDefaultAsync(c => c.Id == id && c.FirmId == firmId);
+        if (caseEntity == null)
+            return NotFound(new ApiResponse<CaseDocumentDto> { Success = false, Message = "Dosar negasit" });
+
+        var generated = await _context.GeneratedDocuments
+            .FirstOrDefaultAsync(d => d.Id == generatedDocId && d.FirmId == firmId);
+        if (generated == null)
+            return NotFound(new ApiResponse<CaseDocumentDto> { Success = false, Message = "Document generat negasit" });
+
+        var uploadsDir = Path.Combine(UploadsRoot, "cases", id.ToString());
+        Directory.CreateDirectory(uploadsDir);
+
+        var safeTitle = string.Concat(generated.Title.Split(Path.GetInvalidFileNameChars()));
+        var uniqueName = $"{Guid.NewGuid()}_{safeTitle}.html";
+        var filePath = Path.Combine(uploadsDir, uniqueName);
+        await System.IO.File.WriteAllTextAsync(filePath, generated.ContentHtml);
+
+        var doc = new Document
+        {
+            CaseId = id,
+            UploadedBy = userId,
+            FileName = uniqueName,
+            FilePath = filePath,
+            FileSize = System.Text.Encoding.UTF8.GetByteCount(generated.ContentHtml),
+            MimeType = "text/html",
+            Title = generated.Title,
+            Description = $"Document generat automat: {generated.Title}",
+            GeneratedDocumentId = generatedDocId,
+            Category = "Generated",
+        };
+
+        _context.Documents.Add(doc);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Generated document {GeneratedDocId} attached to case {CaseId} as {FileName}",
+            generatedDocId, id, uniqueName);
+
+        return Ok(new ApiResponse<CaseDocumentDto>
+        {
+            Success = true,
+            Data = new CaseDocumentDto
+            {
+                Id = doc.Id,
+                FileName = doc.FileName,
+                Title = doc.Title,
+                Description = doc.Description,
+                FileSize = doc.FileSize,
+                MimeType = doc.MimeType,
+                GeneratedDocumentId = doc.GeneratedDocumentId,
+                CreatedAt = doc.CreatedAt,
+            },
+            Message = "Document ata?at cu succes la dosar"
+        });
     }
 }

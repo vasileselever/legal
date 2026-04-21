@@ -199,6 +199,7 @@ export function LeadDetailModal({ leadId, onClose, onStatusChanged, refreshTrigg
           practiceArea: lead.practiceArea,
           assignedTo: lead.assignedTo,
           assignedToName: lead.assignedToName,
+          leadId,
         }
       });
     } catch (e: any) { setError(e.message); }

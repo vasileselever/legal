@@ -252,9 +252,10 @@ interface CreateCaseModalProps {
   prefilledClientName?: string;
   prefilledPracticeArea?: number;
   prefilledLawyerId?: string;
+  prefilledLeadId?: string;
 }
 
-function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClientName, prefilledPracticeArea, prefilledLawyerId }: CreateCaseModalProps) {
+function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClientName, prefilledPracticeArea, prefilledLawyerId, prefilledLeadId }: CreateCaseModalProps) {
   const [clients,     setClients]     = useState<{ id: string; name: string; assignedLawyerId?: string; assignedLawyerName?: string }[]>([]);
   const [lawyers,     setLawyers]     = useState<UserInfo[]>([]);
   const [loading,     setLoading]     = useState(false);
@@ -309,6 +310,7 @@ function CreateCaseModal({ onClose, onCreated, prefilledClientId, prefilledClien
         opposingParty:       form.opposingParty || undefined,
         caseValue:           form.caseValue !== '' ? form.caseValue : undefined,
         billingArrangement:  form.billingArrangement,
+        leadId:              prefilledLeadId || undefined,
       });
       onCreated();
       onClose();
@@ -428,13 +430,13 @@ export function CasesPage() {
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [createPrefill, setCreatePrefill] = useState<{ clientId?: string; clientName?: string; practiceArea?: number; assignedTo?: string } | null>(null);
+  const [createPrefill, setCreatePrefill] = useState<{ clientId?: string; clientName?: string; practiceArea?: number; assignedTo?: string; leadId?: string } | null>(null);
 
   const location = useLocation();
   useEffect(() => {
     const s = location.state as any;
     if (s?.openCreate) {
-      setCreatePrefill({ clientId: s.clientId, clientName: s.clientName, practiceArea: s.practiceArea, assignedTo: s.assignedTo });
+      setCreatePrefill({ clientId: s.clientId, clientName: s.clientName, practiceArea: s.practiceArea, assignedTo: s.assignedTo, leadId: s.leadId });
       setShowCreate(true);
       window.history.replaceState({}, '');
     }
@@ -569,6 +571,7 @@ export function CasesPage() {
           prefilledClientName={createPrefill?.clientName}
           prefilledPracticeArea={createPrefill?.practiceArea}
           prefilledLawyerId={createPrefill?.assignedTo}
+          prefilledLeadId={createPrefill?.leadId}
         />
       )}
     </AdminLayout>

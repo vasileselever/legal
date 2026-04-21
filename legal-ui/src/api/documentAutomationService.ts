@@ -171,6 +171,7 @@ export interface GeneratedDocumentListItem {
   exportedFilePath?: string;
   createdAt: string;
   linkedLeads: { leadId: string; leadName: string }[];
+  linkedCases: { caseId: string; caseTitle: string; caseNumber: string }[];
 }
 
 export interface GeneratedDocumentDetail {
@@ -281,6 +282,12 @@ export const runQualityCheck = (documentId: string) =>
 
 export const saveGeneratedToLead = (leadId: string, generatedDocId: string) =>
   apiClient.post(`/leads/${leadId}/documents/from-generated/${generatedDocId}`)
+    .then(r => { if (!r.data.success) throw new Error(r.data.message); return r.data.data; });
+
+// ── Save generated document as a Case (dosar) attachment ─────────────
+
+export const saveGeneratedToCase = (caseId: string, generatedDocId: string) =>
+  apiClient.post(`/v1/cases/${caseId}/documents/from-generated/${generatedDocId}`)
     .then(r => { if (!r.data.success) throw new Error(r.data.message); return r.data.data; });
 
 // ── Stats ────────────────────────────────────────────────────────────

@@ -654,6 +654,15 @@ public class DocumentAutomationService : IDocumentAutomationService
                         LeadId = ld.LeadId,
                         LeadName = ld.Lead.Name
                     })
+                    .ToList(),
+                LinkedCases = _db.Documents
+                    .Where(cd => cd.GeneratedDocumentId == g.Id)
+                    .Select(cd => new LinkedCaseDto
+                    {
+                        CaseId = cd.CaseId,
+                        CaseTitle = cd.Case.Title,
+                        CaseNumber = cd.Case.CaseNumber
+                    })
                     .ToList()
             })
             .ToListAsync(ct);

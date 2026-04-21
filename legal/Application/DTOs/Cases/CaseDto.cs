@@ -17,6 +17,12 @@ public class CreateCaseRequest
     public string? OpposingParty { get; set; }
     public decimal? CaseValue { get; set; }
     public BillingArrangement? BillingArrangement { get; set; }
+
+    /// <summary>
+    /// Optional. When provided, any documents previously attached to this lead
+    /// will be copied to the new case during creation.
+    /// </summary>
+    public Guid? LeadId { get; set; }
 }
 
 /// <summary>
@@ -109,4 +115,16 @@ public class UserSummaryDto
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public UserRole Role { get; set; }
+}
+
+public class CaseDocumentDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public long FileSize { get; set; }
+    public string? MimeType { get; set; }
+    public Guid? GeneratedDocumentId { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
