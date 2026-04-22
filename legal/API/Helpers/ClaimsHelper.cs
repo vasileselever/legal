@@ -7,8 +7,9 @@ namespace LegalRO.CaseManagement.API.Helpers;
 /// </summary>
 public static class ClaimsHelper
 {
-    public const string FirmIdClaim = "firm_id";
-    public const string UserIdClaim = "sub";
+    public const string FirmIdClaim  = "firm_id";
+    public const string UserIdClaim  = "sub";
+    public const string RoleClaim    = "role";
 
     public static Guid GetFirmId(ClaimsPrincipal user)
     {
@@ -36,5 +37,24 @@ public static class ClaimsHelper
     {
         var claim = user.FindFirstValue(UserIdClaim);
         return Guid.TryParse(claim, out userId);
+    }
+
+    /// <summary>
+    /// Returns true when the authenticated user has the SuperAdmin role.
+    /// SuperAdmin is cross-tenant and bypasses firm-scoping on all resources.
+    /// </summary>
+    public static bool IsSuperAdmin(ClaimsPrincipal user)
+    {
+        var claim = user.FindFirstValue(RoleClaim);
+        return claim == "SuperAdmin" || claim == "0";
+    }
+
+    /// <summary>
+    /// Returns true when the caller is either SuperAdmin or Admin within their firm.
+    /// </summary>
+    public static bool IsAdminOrAbove(ClaimsPrincipal user)
+    {
+        var claim = user.FindFirstValue(RoleClaim);
+        return claim is "SuperAdmin" or "0" or "Admin" or "1";
     }
 }

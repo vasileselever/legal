@@ -40,9 +40,11 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetUsers([FromQuery] bool includeInactive = false)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        // SuperAdmin sees all users across all firms; others are scoped to their firm.
+        IQueryable<User> query = ClaimsHelper.IsSuperAdmin(User)
+            ? _context.Users
+            : _context.Users.Where(u => u.FirmId == ClaimsHelper.GetFirmId(User));
 
-        var query = _context.Users.Where(u => u.FirmId == firmId);
         if (!includeInactive)
             query = query.Where(u => u.IsActive);
 
@@ -147,20 +149,21 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<UserDto>>> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
         var callerId = ClaimsHelper.GetUserId(User);
 
-        // Only admins can update users
+        // Only admins (or SuperAdmin) can update users
         var caller = await _userManager.FindByIdAsync(callerId.ToString());
-        if (caller == null || caller.Role != UserRole.Admin)
+        if (caller == null || !ClaimsHelper.IsAdminOrAbove(User))
             return StatusCode(403, new ApiResponse<UserDto> { Success = false, Message = "Nu aveti permisiuni pentru aceasta actiune." });
 
         var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null || user.FirmId != firmId)
+        // SuperAdmin can update users in any firm; Admin is scoped to own firm
+        var firmId = ClaimsHelper.IsSuperAdmin(User) ? user?.FirmId ?? Guid.Empty : ClaimsHelper.GetFirmId(User);
+        if (user == null || (!ClaimsHelper.IsSuperAdmin(User) && user.FirmId != firmId))
             return NotFound(new ApiResponse<UserDto> { Success = false, Message = "User not found" });
 
-        // Prevent changing the role of an Admin user or promoting to Admin
-        if (dto.Role.HasValue)
+        // Prevent Admin from changing roles they shouldn't (SuperAdmin can change any role)
+        if (dto.Role.HasValue && !ClaimsHelper.IsSuperAdmin(User))
         {
             if (user.Role == UserRole.Admin && dto.Role.Value != UserRole.Admin)
                 return BadRequest(new ApiResponse<UserDto>
@@ -174,6 +177,13 @@ public class UsersController : ControllerBase
                 {
                     Success = false,
                     Message = "Cannot promote a user to Admin role"
+                });
+
+            if (dto.Role.Value == UserRole.SuperAdmin)
+                return BadRequest(new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = "Only a SuperAdmin can assign the SuperAdmin role"
                 });
         }
 

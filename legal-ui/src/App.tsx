@@ -12,6 +12,7 @@ import { CasesPage } from './pages/admin/CasesPage';
 import { LegalResearchPage } from './pages/admin/LegalResearchPage';
 import DocumentAutomationPage from './pages/admin/DocumentAutomationPage';
 import BillingPage from './pages/admin/BillingPage';
+import MarketingEmailPreviewPage from './pages/admin/MarketingEmailPreviewPage';
 import { DreptCivil } from './pages/DreptCivil';
 import { DreptComercial } from './pages/DreptComercial';
 import { DreptPenal } from './pages/DreptPenal';
@@ -96,6 +97,7 @@ function App() {
           <Route path="/admin/research"      element={<PR><LegalResearchPage /></PR>} />
           <Route path="/admin/documents"     element={<PR><DocumentAutomationPage /></PR>} />
           <Route path="/admin/users"         element={<PR><UsersPage /></PR>} />
+          <Route path="/admin/marketing-email" element={<PR><MarketingEmailPreviewPage /></PR>} />
 
           {/* Public site */}
           <Route path="/*" element={

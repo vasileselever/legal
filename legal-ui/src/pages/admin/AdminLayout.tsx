@@ -12,6 +12,7 @@ const NAV = [
   { path: '/admin/research',       icon: '🔍', label: 'Cercetare AI' },
   { path: '/admin/billing',        icon: '💰', label: 'Facturare' },
   { path: '/admin/users',          icon: '👥', label: 'Utilizatori' },
+  { path: '/admin/marketing-email', icon: '📧', label: 'Email Marketing' },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -192,6 +193,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.firstName} {user?.lastName}
               </div>
+              {user?.role === 0 && (
+                <div style={{ fontSize: '0.65rem', background: '#4a148c', color: 'white', borderRadius: '4px', padding: '1px 6px', display: 'inline-block', marginTop: '2px', letterSpacing: '0.5px' }}>
+                  SUPER ADMIN
+                </div>
+              )}
               <div style={{ fontSize: '0.68rem', opacity: 0.55, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.email}
               </div>

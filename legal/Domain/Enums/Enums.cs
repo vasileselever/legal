@@ -55,6 +55,7 @@ public enum BillingArrangement
 /// </summary>
 public enum UserRole
 {
+    SuperAdmin = 0,     // Cross-tenant platform administrator
     Admin = 1,
     Lawyer = 2,
     Associate = 3,

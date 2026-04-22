@@ -12,6 +12,11 @@ public static class DatabaseSeeder
 
     public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager)
     {
+        if (!await context.Users.AnyAsync(u => u.Role == UserRole.SuperAdmin))
+        {
+            await SeedSuperAdminAsync(userManager);
+        }
+
         if (!await context.Firms.AnyAsync())
         {
             await SeedCoreDataAsync(context, userManager);
@@ -21,6 +26,26 @@ public static class DatabaseSeeder
         {
             await SeedDocumentAutomationAsync(context);
         }
+    }
+
+    private static async Task SeedSuperAdminAsync(UserManager<User> userManager)
+    {
+        var superAdmin = new User
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            UserName = "superadmin@juridicro.ro",
+            Email = "superadmin@juridicro.ro",
+            FirstName = "Super",
+            LastName = "Admin",
+            FirmId = Guid.Empty,          // SuperAdmin is not bound to a firm
+            Role = UserRole.SuperAdmin,
+            EmailConfirmed = true,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await userManager.CreateAsync(superAdmin, "SuperAdmin@2026!");
+        superAdmin.Role = UserRole.SuperAdmin;  // Ensure EF tracks the change
     }
 
     private static async Task SeedCoreDataAsync(ApplicationDbContext context, UserManager<User> userManager)
