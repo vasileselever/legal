@@ -298,7 +298,16 @@ public class LeadsController : ControllerBase
             else if (Request.Headers.TryGetValue("X-Firm-Id", out var headerFirmId) && Guid.TryParse(headerFirmId, out var parsedFirmId))
                 firmId = parsedFirmId;
             else
-                return BadRequest(new ApiResponse<CreateLeadResponseDto> { Success = false, Message = "Firm identifier is required" });
+            {
+                // Single-tenant fallback: use the one and only firm in the database.
+                var singleFirmId = await _context.Firms
+                    .Where(f => !f.IsDeleted)
+                    .Select(f => (Guid?)f.Id)
+                    .FirstOrDefaultAsync();
+                if (singleFirmId == null)
+                    return BadRequest(new ApiResponse<CreateLeadResponseDto> { Success = false, Message = "Firm identifier is required" });
+                firmId = singleFirmId.Value;
+            }
 
             var lead = new Lead
             {
