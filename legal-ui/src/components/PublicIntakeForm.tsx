@@ -169,10 +169,10 @@ export function PublicIntakeForm() {
           </div>
         </div>
 
-        {/* ?? GDPR Disclaimer ?? */}
+        {/* 🔒 GDPR Disclaimer 🔒 */}
         <div style={{ background: '#fafafa', border: '1px solid #e0e0e0', borderRadius: '10px', padding: '1.1rem', marginBottom: '1.25rem' }}>
           <div style={{ fontWeight: 700, color: '#1a237e', fontSize: '0.92rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            ?? Informare privind prelucrarea datelor cu caracter personal (GDPR)
+            🔒 Informare privind prelucrarea datelor cu caracter personal (GDPR)
           </div>
 
           <div style={{ fontSize: '0.78rem', color: '#444', lineHeight: 1.65, background: '#fff', border: '1px solid #e8eaf6', borderRadius: '6px', padding: '0.85rem', maxHeight: '120px', overflowY: 'auto', marginBottom: '0.9rem' }}>
@@ -210,7 +210,7 @@ export function PublicIntakeForm() {
           fontSize: '1.05rem', fontWeight: 700,
           cursor: loading ? 'not-allowed' : 'pointer',
         }}>
-          {loading ? '? Se trimite...' : '?? Trimite Cererea'}
+          {loading ? '⏳ Se trimite...' : '📨 Trimite Cererea'}
         </button>
       </form>
     </div>
