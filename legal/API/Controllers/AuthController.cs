@@ -215,6 +215,50 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Development-only: force-reset a user's password without requiring the old one.
+    /// Only enabled when ASPNETCORE_ENVIRONMENT=Development. Returns 404 in any other env.
+    /// </summary>
+    [HttpPost("dev-reset-password")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<bool>>> DevResetPassword(
+        [FromServices] IWebHostEnvironment env,
+        [FromBody] DevResetPasswordDto dto)
+    {
+        if (!env.IsDevelopment())
+            return NotFound();
+
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return NotFound(new ApiResponse<bool> { Success = false, Message = "User not found" });
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new ApiResponse<bool>
+            {
+                Success = false,
+                Message = string.Join("; ", result.Errors.Select(e => e.Description))
+            });
+
+        // Clear any lockout state
+        await _userManager.SetLockoutEndDateAsync(user, null);
+        await _userManager.ResetAccessFailedCountAsync(user);
+
+        return Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Data = true,
+            Message = $"Password for {dto.Email} has been reset"
+        });
+    }
+
+    public class DevResetPasswordDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+    }
+
+    /// <summary>
     /// Invite a new user to the firm
     /// </summary>
     [HttpPost("invite")]

@@ -1102,7 +1102,6 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public override int SaveChanges()
     {
         UpdateAuditFields();
-        Database.ExecuteSqlRaw("SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;");
         return base.SaveChanges();
     }
 
@@ -1112,7 +1111,6 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         UpdateAuditFields();
-        await Database.ExecuteSqlRawAsync("SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;", cancellationToken);
         return await base.SaveChangesAsync(cancellationToken);
     }
 

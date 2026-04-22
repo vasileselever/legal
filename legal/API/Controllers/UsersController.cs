@@ -43,7 +43,9 @@ public class UsersController : ControllerBase
         // SuperAdmin sees all users across all firms; others are scoped to their firm.
         IQueryable<User> query = ClaimsHelper.IsSuperAdmin(User)
             ? _context.Users
-            : _context.Users.Where(u => u.FirmId == ClaimsHelper.GetFirmId(User));
+            : _context.Users
+                .Where(u => u.FirmId == ClaimsHelper.GetFirmId(User))
+                .Where(u => u.Role != UserRole.SuperAdmin);   // Hide SuperAdmin from non-SuperAdmins
 
         if (!includeInactive)
             query = query.Where(u => u.IsActive);
@@ -82,11 +84,16 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<UserDto>>> GetUser(Guid id)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        var isSuperAdmin = ClaimsHelper.IsSuperAdmin(User);
 
-        var user = await _context.Users
-            .Where(u => u.Id == id && u.FirmId == firmId)
-            .FirstOrDefaultAsync();
+        IQueryable<User> query = isSuperAdmin
+            ? _context.Users.Where(u => u.Id == id)
+            : _context.Users
+                .Where(u => u.Id == id
+                         && u.FirmId == ClaimsHelper.GetFirmId(User)
+                         && u.Role != UserRole.SuperAdmin);
+
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null)
             return NotFound(new ApiResponse<UserDto> { Success = false, Message = "User not found" });
@@ -117,11 +124,16 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<UserStatsDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<UserStatsDto>>> GetUserStats(Guid id)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        var isSuperAdmin = ClaimsHelper.IsSuperAdmin(User);
 
-        var user = await _context.Users
-            .Where(u => u.Id == id && u.FirmId == firmId)
-            .FirstOrDefaultAsync();
+        IQueryable<User> query = isSuperAdmin
+            ? _context.Users.Where(u => u.Id == id)
+            : _context.Users
+                .Where(u => u.Id == id
+                         && u.FirmId == ClaimsHelper.GetFirmId(User)
+                         && u.Role != UserRole.SuperAdmin);
+
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null)
             return NotFound(new ApiResponse<UserStatsDto> { Success = false, Message = "User not found" });

@@ -51,14 +51,16 @@ try
     }
 
     // Configure SQL Server with Entity Framework Core
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    builder.Services.AddSingleton<SqlServerSessionInterceptor>();
+    builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         options.UseSqlServer(connectionString, sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
-        }));
+        })
+        .AddInterceptors(sp.GetRequiredService<SqlServerSessionInterceptor>()));
 
     // Configure Identity
     builder.Services.AddIdentityCore<User>(options =>
