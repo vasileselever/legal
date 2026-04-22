@@ -26,19 +26,22 @@ public class LeadsController : ControllerBase
     private readonly INotificationService _notifications;
     private readonly IWebHostEnvironment _env;
     private readonly NotificationSettings _notificationSettings;
+    private readonly IConfiguration _configuration;
 
     public LeadsController(
         ApplicationDbContext context,
         ILogger<LeadsController> logger,
         INotificationService notifications,
         IWebHostEnvironment env,
-        IOptions<NotificationSettings> notificationSettings)
+        IOptions<NotificationSettings> notificationSettings,
+        IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
         _notifications = notifications;
         _env = env;
         _notificationSettings = notificationSettings.Value;
+        _configuration = configuration;
     }
 
     // Absolute base directory for lead document uploads.
@@ -299,14 +302,24 @@ public class LeadsController : ControllerBase
                 firmId = parsedFirmId;
             else
             {
-                // Single-tenant fallback: use the one and only firm in the database.
-                var singleFirmId = await _context.Firms
-                    .Where(f => !f.IsDeleted)
-                    .Select(f => (Guid?)f.Id)
-                    .FirstOrDefaultAsync();
-                if (singleFirmId == null)
-                    return BadRequest(new ApiResponse<CreateLeadResponseDto> { Success = false, Message = "Firm identifier is required" });
-                firmId = singleFirmId.Value;
+                // Single-tenant fallback: use the DefaultFirmId from configuration,
+                // or the first (and normally only) firm in the database.
+                // In a multi-tenant deployment, set App:DefaultFirmId in appsettings.Production.json
+                // to the GUID of the firm that should receive public intake submissions.
+                var configFirmId = _configuration["App:DefaultFirmId"];
+                if (!string.IsNullOrWhiteSpace(configFirmId) && Guid.TryParse(configFirmId, out var cfId))
+                    firmId = cfId;
+                else
+                {
+                    var singleFirmId = await _context.Firms
+                        .Where(f => !f.IsDeleted)
+                        .OrderBy(f => f.CreatedAt)
+                        .Select(f => (Guid?)f.Id)
+                        .FirstOrDefaultAsync();
+                    if (singleFirmId == null)
+                        return BadRequest(new ApiResponse<CreateLeadResponseDto> { Success = false, Message = "Firm identifier is required" });
+                    firmId = singleFirmId.Value;
+                }
             }
 
             var lead = new Lead

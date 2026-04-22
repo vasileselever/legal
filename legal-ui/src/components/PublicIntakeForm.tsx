@@ -60,7 +60,7 @@ export function PublicIntakeForm() {
 
   if (step === 'success') return (
     <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>?</div>
+      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
       <h2 style={{ color: '#2e7d32', marginBottom: '0.75rem' }}>Cerere trimisa cu succes!</h2>
 
       {/* Email confirmation notice */}
@@ -69,7 +69,7 @@ export function PublicIntakeForm() {
         padding: '1rem 1.25rem', marginBottom: '1.5rem',
         display: 'flex', alignItems: 'flex-start', gap: '0.75rem', textAlign: 'left',
       }}>
-        <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>??</span>
+        <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>📧</span>
         <div>
           <div style={{ fontWeight: 700, color: '#1565c0', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
             Email de confirmare trimis!
