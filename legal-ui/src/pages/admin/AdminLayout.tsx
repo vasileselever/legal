@@ -4,15 +4,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 
 const NAV = [
-  { path: '/admin/dashboard',      icon: '📊', label: 'Dashboard' },
-  { path: '/admin/leads',          icon: '🎯', label: 'Lead-uri' },
-  { path: '/admin/cases',          icon: '⚖️',  label: 'Dosare' },
-  { path: '/admin/consultations',  icon: '📅', label: 'Consultatii' },
-  { path: '/admin/documents',      icon: '📄', label: 'Documente' },
-  { path: '/admin/research',       icon: '🔍', label: 'Cercetare AI' },
-  { path: '/admin/billing',        icon: '💰', label: 'Facturare' },
-  { path: '/admin/users',          icon: '👥', label: 'Utilizatori' },
-  { path: '/admin/marketing-email', icon: '📧', label: 'Email Marketing' },
+  { path: '/admin/dashboard',       icon: '📊', label: 'Dashboard' },
+  { path: '/admin/leads',           icon: '🎯', label: 'Lead-uri' },
+  { path: '/admin/cases',           icon: '⚖️',  label: 'Dosare' },
+  { path: '/admin/consultations',   icon: '📅', label: 'Consultatii' },
+  { path: '/admin/documents',       icon: '📄', label: 'Documente' },
+  { path: '/admin/research',        icon: '🔍', label: 'Cercetare AI' },
+  { path: '/admin/billing',         icon: '💰', label: 'Facturare' },
+  { path: '/admin/users',           icon: '👥', label: 'Utilizatori' },
+  { path: '/admin/marketing-email', icon: '📧', label: 'Email Marketing', superAdminOnly: true },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -155,7 +155,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <button onClick={() => setDrawerOpen(false)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
         <nav style={{ flex: 1, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          {NAV.map(n => {
+          {NAV.filter(n => !n.superAdminOnly || user?.role === 0).map(n => {
             const active = location.pathname === n.path;
             const badge = n.path === '/admin/leads' && unreadCount > 0 ? unreadCount : 0;
             return (
@@ -223,7 +223,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <div style={{ fontSize: '0.75rem', opacity: 0.65, marginTop: '0.15rem' }}>Panou de administrare</div>
           </div>
           <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            {NAV.map(n => {
+            {NAV.filter(n => !n.superAdminOnly || user?.role === 0).map(n => {
               const active = location.pathname === n.path;
               const badge = n.path === '/admin/leads' && unreadCount > 0 ? unreadCount : 0;
               return (
@@ -280,7 +280,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Mobile bottom nav (hidden on desktop via CSS) ── */}
       <nav className="lro-bottom-nav" aria-label="Navigare principala">
-        {NAV.slice(0, 5).map(n => (
+        {NAV.filter(n => !n.superAdminOnly || user?.role === 0).slice(0, 5).map(n => (
           <Link key={n.path} to={n.path} className={location.pathname === n.path ? 'active' : ''}>
             <span className="bnav-icon">{n.icon}</span>
             <span className="bnav-label">{n.label}</span>
