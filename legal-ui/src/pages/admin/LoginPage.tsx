@@ -40,9 +40,8 @@ export function LoginPage() {
     if (!form.email || !form.password) { setError('Completati toate campurile'); return; }
     try {
       await login(form);
-      // saveSession() has already written localStorage synchronously.
-      // ProtectedRoute reads localStorage directly, so it passes immediately.
-      navigate(from, { replace: true });
+      // Always redirect to dashboard after login regardless of where the user came from.
+      navigate('/admin/dashboard', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Eroare la autentificare');
     }
