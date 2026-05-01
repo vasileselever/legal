@@ -722,6 +722,46 @@ public class ConsultationsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Save consultation notes (scoped to the user's firm)
+    /// </summary>
+    [HttpPatch("{id}/notes")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> UpdateConsultationNotes(
+        Guid id,
+        [FromBody] UpdateConsultationNotesDto dto)
+    {
+        try
+        {
+            var firmId = ClaimsHelper.GetFirmId(User);
+
+            var consultation = await _context.Consultations
+                .Include(c => c.Lead)
+                .Where(c => c.Id == id && c.Lead.FirmId == firmId)
+                .FirstOrDefaultAsync();
+
+            if (consultation == null)
+                return NotFound(new ApiResponse<bool> { Success = false, Message = "Consultation not found" });
+
+            consultation.ConsultationNotes = dto.ConsultationNotes;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Consultation notes updated: {ConsultationId} by {UserId}", id, ClaimsHelper.GetUserId(User));
+
+            return Ok(new ApiResponse<bool> { Success = true, Data = true, Message = "Notes saved successfully" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new ApiResponse<bool> { Success = false, Message = "User not associated with a firm" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating notes for consultation {ConsultationId}", id);
+            return StatusCode(500, new ApiResponse<bool> { Success = false, Message = "An error occurred while saving notes" });
+        }
+    }
+
     #region Private Methods
 
     /// <summary>

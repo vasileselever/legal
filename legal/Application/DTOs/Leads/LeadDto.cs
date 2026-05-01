@@ -407,3 +407,8 @@ public class CreateLeadResponseDto
     public List<PriorLeadDto> PriorLeads { get; set; } = new();
     public bool HasPriorLeads => PriorLeads.Count > 0;
 }
+
+public class UpdateConsultationNotesDto
+{
+    public string? ConsultationNotes { get; set; }
+}
