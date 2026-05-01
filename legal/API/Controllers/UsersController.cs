@@ -264,15 +264,18 @@ public class UsersController : ControllerBase
     /// Activate user
     /// </summary>
     [HttpPost("{id:guid}/activate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> ActivateUser(Guid id)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        if (!ClaimsHelper.IsAdminOrAbove(User))
+            return StatusCode(403, new ApiResponse<bool> { Success = false, Message = "Nu aveti permisiuni pentru aceasta actiune." });
 
-        var user = await _context.Users
-            .Where(u => u.Id == id && u.FirmId == firmId)
-            .FirstOrDefaultAsync();
+        IQueryable<User> query = ClaimsHelper.IsSuperAdmin(User)
+            ? _context.Users.Where(u => u.Id == id)
+            : _context.Users.Where(u => u.Id == id && u.FirmId == ClaimsHelper.GetFirmId(User));
+
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null)
             return NotFound(new ApiResponse<bool> { Success = false, Message = "User not found" });
@@ -294,11 +297,13 @@ public class UsersController : ControllerBase
     /// Deactivate user
     /// </summary>
     [HttpPost("{id:guid}/deactivate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeactivateUser(Guid id)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        if (!ClaimsHelper.IsAdminOrAbove(User))
+            return StatusCode(403, new ApiResponse<bool> { Success = false, Message = "Nu aveti permisiuni pentru aceasta actiune." });
+
         var adminId = ClaimsHelper.GetUserId(User);
 
         // Cannot deactivate yourself
@@ -309,9 +314,11 @@ public class UsersController : ControllerBase
                 Message = "You cannot deactivate your own account"
             });
 
-        var user = await _context.Users
-            .Where(u => u.Id == id && u.FirmId == firmId)
-            .FirstOrDefaultAsync();
+        IQueryable<User> query = ClaimsHelper.IsSuperAdmin(User)
+            ? _context.Users.Where(u => u.Id == id)
+            : _context.Users.Where(u => u.Id == id && u.FirmId == ClaimsHelper.GetFirmId(User));
+
+        var user = await query.FirstOrDefaultAsync();
 
         if (user == null)
             return NotFound(new ApiResponse<bool> { Success = false, Message = "User not found" });
@@ -341,14 +348,16 @@ public class UsersController : ControllerBase
     /// Reset user password (admin only)
     /// </summary>
     [HttpPost("{id:guid}/reset-password")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<string>>> ResetPassword(Guid id)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        if (!ClaimsHelper.IsAdminOrAbove(User))
+            return StatusCode(403, new ApiResponse<string> { Success = false, Message = "Nu aveti permisiuni pentru aceasta actiune." });
 
         var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null || user.FirmId != firmId)
+        var isSuperAdmin = ClaimsHelper.IsSuperAdmin(User);
+        if (user == null || (!isSuperAdmin && user.FirmId != ClaimsHelper.GetFirmId(User)))
             return NotFound(new ApiResponse<string> { Success = false, Message = "User not found" });
 
         // Generate password reset token
@@ -382,12 +391,15 @@ public class UsersController : ControllerBase
     /// Delete user (soft delete)
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteUser(Guid id)
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        if (!ClaimsHelper.IsAdminOrAbove(User))
+            return StatusCode(403, new ApiResponse<bool> { Success = false, Message = "Nu aveti permisiuni pentru aceasta actiune." });
+
         var adminId = ClaimsHelper.GetUserId(User);
+        var isSuperAdmin = ClaimsHelper.IsSuperAdmin(User);
 
         // Cannot delete yourself
         if (id == adminId)
@@ -398,7 +410,7 @@ public class UsersController : ControllerBase
             });
 
         var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null || user.FirmId != firmId)
+        if (user == null || (!isSuperAdmin && user.FirmId != ClaimsHelper.GetFirmId(User)))
             return NotFound(new ApiResponse<bool> { Success = false, Message = "User not found" });
 
         // Cannot delete an Admin user

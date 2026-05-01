@@ -346,10 +346,11 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<UserInfoDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<UserInfoDto>>>> GetFirmUsers()
     {
-        var firmId = ClaimsHelper.GetFirmId(User);
+        IQueryable<User> query = ClaimsHelper.IsSuperAdmin(User)
+            ? _context.Users.Where(u => u.IsActive)
+            : _context.Users.Where(u => u.FirmId == ClaimsHelper.GetFirmId(User) && u.IsActive);
 
-        var users = await _context.Users
-            .Where(u => u.FirmId == firmId && u.IsActive)
+        var users = await query
             .OrderBy(u => u.LastName)
             .ThenBy(u => u.FirstName)
             .Select(u => new UserInfoDto
